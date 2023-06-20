@@ -1,6 +1,5 @@
 # The kind or type of this cluster template.  Currently this can be `heat`.
 kind: heat
-{
 
 # Brief description of the purpose of the cluster.
 title: High-Performance Computing (HPC)

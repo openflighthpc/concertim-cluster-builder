@@ -40,15 +40,12 @@ class HeatHandler:
             stacks = self.list_stacks()
             stack = next(stacks)
         except Exception as e:
-            # XXX Handle this properly.  Raise an exception?
             self.logger.debug(e)
-            # pass
-            # abort(400, description=f'Upstream error: {e}')
+            raise
         else:
             if stack is None:
                 self.logger.debug(f"faking cluster creation failure")
-                # XXX Handle this properly.  Raise an exception?
-                # pass
+                return None
             else:
                 self.logger.debug(f"fake created cluster {stack.id}")
                 return Cluster(id=stack.id, name=stack.stack_name)

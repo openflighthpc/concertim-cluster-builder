@@ -23,7 +23,7 @@ class OpenStackAuth:
             for required_params in required_params_list:
                 if required_params.issubset(self.auth_dict.keys()):
                     self.__log()
-                    return session.Session(auth=method(**self.auth_dict))
+                    return session.Session(auth=method(**self.auth_dict), timeout=30)
         raise ValueError(f"Invalid auth_dict provided. It must contain one of the valid sets of parameters: {self.auth_methods}")
 
     def __log(self):

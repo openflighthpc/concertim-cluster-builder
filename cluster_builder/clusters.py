@@ -4,8 +4,6 @@ from flask_expects_json import expects_json
 from .openstack.auth import OpenStackAuth
 from .openstack.heat_handler import HeatHandler
 
-import keystoneauth1.exceptions.http as ks_exceptions
-
 bp = Blueprint('clusters', __name__, url_prefix="/clusters")
 
 create_schema = {
@@ -41,18 +39,18 @@ create_schema = {
 def create_cluster():
     # * [X] Authenticate request
     # * [X] Connect to HEAT
+    # * [X] Handle errors gracefully
     # * [ ] Create cluster via HEAT
 
     sess = OpenStackAuth(g.data["cloud_env"], current_app.logger).get_session()
     handler = HeatHandler(sess, current_app.logger)
-    try:
-        cluster = handler.create_cluster(g.data["cluster"])
-        current_app.logger.debug(f"created cluster {cluster}")
-    except Exception as e:
-        raise e
+    cluster = handler.create_cluster(g.data["cluster"])
+    if cluster is None:
+        abort(502, "Expected server to already have some stacks")
     else:
-        data =  { "id": cluster.id, "name": cluster.name }
-        return make_response(data, 201)
+        current_app.logger.debug(f"created cluster {cluster}")
+        body = {"id": cluster.id, "name": cluster.name}
+        return make_response(body, 201)
 
 
 @bp.get('/<uuid:cluster_id>')
