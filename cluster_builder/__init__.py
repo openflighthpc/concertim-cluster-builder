@@ -9,7 +9,7 @@ from werkzeug.exceptions import HTTPException
 import keystoneauth1.exceptions.connection as ks_connection_exceptions
 import keystoneauth1.exceptions.http as ks_http_exceptions
 
-def create_app(test_config=None):
+def create_app(instance_path=None, test_config=None):
     # dictConfig({
     #     'version': 1,
     #     'formatters': {'default': {
@@ -25,7 +25,7 @@ def create_app(test_config=None):
     #         'handlers': ['wsgi']
     #     }
     # })
-    app = Flask(__name__, instance_relative_config=True)
+    app = Flask(__name__, instance_relative_config=True, instance_path=instance_path)
     # app.config.from_mapping()
 
     if test_config is None:
@@ -33,12 +33,9 @@ def create_app(test_config=None):
     else:
         app.config.from_mapping(test_config)
 
-    try:
-        os.makedirs(app.instance_path)
-        os.makedirs(os.path.join(app.instance_path, "cluster-types-enabled"))
-        os.makedirs(os.path.join(app.instance_path, "cluster-types-available"))
-    except OSError:
-        pass
+    os.makedirs(app.instance_path, exist_ok=True)
+    os.makedirs(os.path.join(app.instance_path, "cluster-types-enabled"), exist_ok=True)
+    os.makedirs(os.path.join(app.instance_path, "cluster-types-available"), exist_ok=True)
 
     from . import cluster_types
     app.register_blueprint(cluster_types.bp)
