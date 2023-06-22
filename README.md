@@ -79,5 +79,10 @@ the service running inside the container.
 
 [Example cluster type definitions](cluster-types-examples/) are available.
 These can be installed by symlinking them into
-`instance/cluster-types-enabled/`.  See [configuration](#configuration) above
-for more details.
+`instance/cluster-types-enabled/`.
+
+```
+for i in cluster-types-examples/* ; do
+  ln -s ../../${i} instance/cluster-types-enabled/
+done
+```
