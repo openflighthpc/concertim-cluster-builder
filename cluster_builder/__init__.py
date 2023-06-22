@@ -37,6 +37,12 @@ def create_app(instance_path=None, test_config=None):
     os.makedirs(os.path.join(app.instance_path, "cluster-types-enabled"), exist_ok=True)
     os.makedirs(os.path.join(app.instance_path, "cluster-types-available"), exist_ok=True)
 
+    from .models import ClusterType
+    ClusterType.configure(
+            types_dir=os.path.join(app.instance_path, "cluster-types-enabled"),
+            logger=app.logger,
+            )
+
     from . import cluster_types
     app.register_blueprint(cluster_types.bp)
     
