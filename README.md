@@ -65,21 +65,39 @@ The HTTP API is documented in the [API documentation](/docs/api.md).
 ## Development
 
 There is a [docker-compose](docker-compose.yml) file that creates a docker
-container suitable for development. Note this docker-compose.yml file is not
-intended for a production deployment.
+container suitable for development. The contents of this repository are shared
+with the docker container using docker volumes, meaning that any changes made
+to the local source code will be automatically picked up by the service running
+inside the container.
 
-The development docker container can be started with:
+Note: this docker-compose.yml file is not intended for a production deployment.
+
+To setup for development you will need to:
+
+1. Create a docker-compose.override.yml file.
+2. Start the docker container.
+3. Copy across the example cluter type definition.
+
+These are explained in more detail below.
+
+Copy the example [docker-compose-override](docker-compose.override.yml.example)
+to `docker-compose.override.yml` and edit to set your local user's (that is the
+user on your laptop) UID and GID. Doing this will prevent issues with file
+permissions for the shared files.
+
+```
+cp docker-compose.override.yml.example docker-compose.override.yml
+$EDITOR docker-compose.override.yml
+```
+
+Start the docker container by running the following.  This will cause certain
+"per-instance" directories to be created.
 
 ```
 docker compose up
 ```
 
-Any changes made to the local source code will be automatically picked up by
-the service running inside the container.
-
-[Example cluster type definitions](cluster-types-examples/) are available.
-These can be installed by symlinking them into
-`instance/cluster-types-enabled/`.
+Finally, copy across the example cluster type definitions.
 
 ```
 for i in cluster-types-examples/* ; do

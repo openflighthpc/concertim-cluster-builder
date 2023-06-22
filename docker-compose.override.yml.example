@@ -1,0 +1,5 @@
+services:
+  cluster_builder: 
+    # Use the same UID and GID as is used for the local user.  This prevents
+    # issues with permissions for files in the mounted volume.
+    user: "1000:1000"
