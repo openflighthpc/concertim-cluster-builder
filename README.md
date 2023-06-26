@@ -19,16 +19,26 @@ documentation](/docs/api.md).
 ### Cluster type definitions
 
 Concertim cluster builder needs to be configured with the available cluster
-type definitions.  This is done by copying (or symlinking) files into
-[instance/cluster-types-enabled/](instance/cluster-types-enabled/).
+type definitions.  This is done by copying (or symlinking) files into the
+docker container's `/app/instance/cluster-types-enabled/` directory.
+
+Currently, all cluster types are backed by OpenStack HEAT and need to specify a
+path to a HOT template.  The path should be relative to the docker container's
+`/app/instance/hot/` directory.
+
+In production, you may wish to use a docker volume to contain the cluster type
+definitions and HOT templates.  If so, the volume should be mounted on the
+container at `/app/instance/`.  If following the development build
+instructions, the local directory `.` is already mounted on the docker
+container as `/app`.
+
+If you wish to use the example cluster type definitions, see [installing
+example cluster types](#installing-example-cluster-types) below.
 
 Currently, there is no documentation on the format for the cluster type
 definition files beyond the [well-documented
 examples](cluster-types-examples/).  They should prove sufficient.
 
-In production, you may wish to use a docker volume to contain the cluster type
-definitions.  If so, the volume should be mounted on the container at
-`/app/instance/cluster-types-enabled/`.
 
 ## Installation
 
@@ -76,7 +86,7 @@ To setup for development you will need to:
 
 1. Create a docker-compose.override.yml file.
 2. Start the docker container.
-3. Copy across the example cluter type definition.
+3. Copy across the example cluter type definitions and their HOT templates.
 
 These are explained in more detail below.
 
@@ -97,10 +107,23 @@ Start the docker container by running the following.  This will cause certain
 docker compose up
 ```
 
-Finally, copy across the example cluster type definitions.
+Finally, copy across the example cluster type definitions.  See [installing
+example cluster types](#installing-example-cluster-types) below.
+
+
+### Installing example cluster types
+
+When the service first starts it will create the expected directory hierarchy
+in its instance directory.  Once it has done so, you can copy across the
+example cluster type definitions and their HOT templates.
 
 ```
-for i in cluster-types-examples/* ; do
+for i in examples/cluster-types/* ; do
   ln -s ../../${i} instance/cluster-types-enabled/
 done
+
+for i in examples/hot/* ; do
+  ln -s ../../${i} instance/hot/
+done
 ```
+

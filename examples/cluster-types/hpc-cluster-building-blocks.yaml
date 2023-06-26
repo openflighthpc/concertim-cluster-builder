@@ -1,6 +1,3 @@
-# The kind or type of this cluster template.  Currently this can be `heat`.
-kind: heat
-
 # Brief description of the purpose of the cluster.
 title: High-Performance Computing (HPC)
 
@@ -13,6 +10,7 @@ description: |
   Once the cluster is ready you will be able to access it via SSH using the SSH
   key you have configured, or through the Flight Web suite.
 
+
 # The parameters to expose through Concertim.  This could be the full set of
 # parameters for the HEAT template or a subset.  It is a template author error
 # to have parameters here that are not present in the heat template.
@@ -24,43 +22,52 @@ parameters:
   clustername:
     type: string
     label: Cluster name
-    description: The name your cluster should be given
-    default: mycluster
+    description: The name to give the cluster
     constraints:
       - length: { min: 6, max: 255 }
         description: Cluster name must be between 6 and 255 characters
       - allowed_pattern: "[a-zA-Z]+[a-zA-Z0-9\\-\\_]*"
         description: Cluster name can contain only alphanumeric characters, hyphens and underscores
 
-  count:
-    type: number
-    label: Number of compute nodes
-    description: How many compute nodes should your cluster contain?
-    default: 3
-    constraints:
-      - range: { min: 1 }
-        description: Number of compute nodes cannot be less than one
-
-  node-flavour:
+  external-network:
     type: string
-    label: Node flavour
-    description: Which flavour should be be used for the compute nodes?
-    default: m1.small
-    constraints:
-      - allowed_values:
-        - m1.small
-        - m1.medium
-        - m1.large
-        - m1.xxlarge
-        - m1.xxxlarge
+    label: External Network Name
+    description: The name of the external network to bridge network to
+    default: public1
+
+  network-cidr-pri:
+    type: string
+    label: Primary Nework CIDR
+    description: Network CIDR to be used for primary network
+    default: "10.100.0.0/16"
+
+  ssh-key:
+    type: string
+    label: SSH Key for Access
+
+  solo-image:
+    type: string
+    label: Flight Solo Image ID
+    default: "Flight Solo 2023.2"
+
+  gateway-pri-ip:
+    type: string
+    label: Gateway Primary IP Address
+
+  gateway-flavour:
+    type: string
+    label: Gateway node flavour
+    default: m1.medium
 
 
-# Below here we have a list of attributes that are specific to a given cluster
-# type.  That is HOT/HEAT will have different attributes than, say, sahara.
+# The kind or type of this cluster template.  Currently this can only be
+# `heat`.
+kind: heat
+
+# The path to the HOT template to use for this cluster-type.
 #
-# Perhaps these need to have already been checked out.  Or perhaps they can be
-# specified as a URL in the API call to HOT.
+# Paths are relative to the `hot` directory in the Flask servers instance path
+# directory.
 #
-# Some templates such as those used in cluster-building-blocks are created from
-# multiple HEAT templates.  Need to consider how that is going to be handled.
-heat_template_url: path or URL to heat template to use for this cluster type
+# Currently, each cluster type supports running a single HOT template.
+heat_template_url: cluster-building-blocks/hpc-core-base.yaml

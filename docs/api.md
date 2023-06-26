@@ -132,9 +132,9 @@ Creates a cluster.
 {
   "cloud_env": {
     "auth_url": "http://10.151.0.184:35357/v3",
-    "username": "admin",
+    "username": "test-user",
     "password": "reelshanRojPak8",
-    "project_name": "admin",
+    "project_name": "test-project",
     "user_domain_name": "default",
     "project_domain_name": "default"
   },
