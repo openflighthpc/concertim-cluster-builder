@@ -1,6 +1,6 @@
 # Cluster types
 
-## `GET /cluster-types`  List available cluster types
+## `GET /cluster-types/`  List available cluster types
 
 Lists all enabled cluster types.
 
@@ -98,7 +98,7 @@ Lists all enabled cluster types.
 
 # Clusters
 
-## `POST /clusters` Create a cluster
+## `POST /clusters/` Create a cluster
 
 Creates a cluster.
 
@@ -241,5 +241,5 @@ For example if `cloud_env.username` was set to `null`:
 # Authentication
 
 Any requests requiring authentication send the necessary credentials in the
-body of the request as part of the `cloud_env` object.  See `POST /clusters`
+body of the request as part of the `cloud_env` object.  See `POST /clusters/`
 for more details.
