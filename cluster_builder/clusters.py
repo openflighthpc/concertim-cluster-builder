@@ -25,10 +25,10 @@ create_schema = {
                 "type": "object",
                 "properties": {
                     "name": { "type": "string" },
-                    "type_id": { "type": "string" },
+                    "cluster_type_id": { "type": "string" },
                     "parameters": { "type": "object" }
                     },
-                "required": ["name", "type_id"]
+                "required": ["name", "cluster_type_id"]
                 }
             },
         "required": ["cloud_env", "cluster"]

@@ -122,8 +122,8 @@ Creates a cluster.
 * `cloud_env.project_domain_name` : `string` : Project domain name to use for connecting to the cloud environment's identification service.
 * `cluster` : `object` : Object defining configuration for the cluster.
 * `cluster.name` : `string` : The name of the cluster.
-* `cluster.type_id` : `string` : The identifier of the cluster type this cluster will be created from.
-* `cluster.parameters` : `object` : Object defining the parameters passed to the cluster creation mechanism.  They keys should match the keys in the `parameters` section for the cluster type specified in `cluster.type_id`.
+* `cluster.cluster_type_id` : `string` : The identifier of the cluster type this cluster will be created from.
+* `cluster.parameters` : `object` : Object defining the parameters passed to the cluster creation mechanism.  They keys should match the keys in the `parameters` section for the cluster type specified in `cluster.cluster_type_id`.
 
 
 ### Request Example
@@ -140,10 +140,10 @@ Creates a cluster.
   },
   "cluster": {
     "name": "my-cluster",
-    "type_id": "database-cluster",
+    "cluster_type_id": "database-cluster",
     "parameters": {
       "clustername": "my-cluster",
-      "database-flavour": "PostgreSQL",
+      "database-flavour": "PostgreSQL"
     }
   }
 }
