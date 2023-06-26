@@ -72,5 +72,6 @@ parameters:
 # Some templates such as those used in cluster-building-blocks are created from
 # multiple HEAT templates.  Need to consider how that is going to be handled.
 #
-# Relative paths are relative to the Flask servers instance path.
+# Paths are relative to the `hot` directory in the Flask servers instance path
+# directory.
 heat_template_url: cluster-building-blocks/hpc-core-base.yaml
