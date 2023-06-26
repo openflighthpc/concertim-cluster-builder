@@ -23,7 +23,6 @@ parameters:
     type: string
     label: Cluster name
     description: The name your cluster should be given
-    default: mycluster
     constraints:
       - length: { min: 6, max: 255 }
         description: Cluster name must be between 6 and 255 characters

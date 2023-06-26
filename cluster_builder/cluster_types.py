@@ -1,4 +1,4 @@
-from flask import (Blueprint)
+from flask import Blueprint
 
 from .models import ClusterType
 
@@ -6,4 +6,8 @@ bp = Blueprint('cluster-types', __name__, url_prefix="/cluster-types")
 
 @bp.route('/')
 def index():
-    return ClusterType.all()
+    attributes = ["id", "title", "description", "parameters"]
+    cluster_types = []
+    for ct in ClusterType.all():
+        cluster_types.append(ct.asdict(attributes))
+    return cluster_types
