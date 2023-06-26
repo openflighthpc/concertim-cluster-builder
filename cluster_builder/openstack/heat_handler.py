@@ -41,8 +41,9 @@ class HeatHandler:
         self.logger.info(f"Creating cluster {cluster_data['name']} from {cluster_data['cluster_type_id']}")
         response = None
         try:
+            stack_name = "{}-{}".format(cluster_data["name"], cluster_type.id)
             response = self.client.stacks.create(
-                    stack_name=cluster_data["name"],
+                    stack_name=stack_name,
                     template=self._template_stream(cluster_type),
                     parameters=ClusterType.merge_parameters(cluster_type, cluster_data.get("parameters"))
                     )
@@ -50,7 +51,7 @@ class HeatHandler:
             self.logger.exception(e)
             raise
         else:
-            return Cluster(id=response["stack"]["id"], name=cluster_data["name"])
+            return Cluster(id=response["stack"]["id"], name=stack_name)
 
 
     def _template_stream(self, cluster_type):
