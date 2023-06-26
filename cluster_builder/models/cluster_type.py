@@ -17,7 +17,6 @@ class ClusterType:
     title: str
     description: str
     parameters: dict
-    # XXX Don't want to include this in the serialization.
     heat_template_url: str
 
     @classmethod
