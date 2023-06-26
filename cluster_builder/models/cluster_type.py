@@ -35,7 +35,7 @@ class ClusterType:
 
         for file in glob.glob(os.path.join(cls.types_dir, "*.yaml")):
             id = os.path.splitext(os.path.basename(file))[0]
-            cluster_type = cls.load(id, file)
+            cluster_type = cls._load(id, file)
             if cluster_type is not None:
                 types.append(cluster_type)
 
@@ -43,9 +43,12 @@ class ClusterType:
 
     @classmethod
     def find(cls, id):
+        """
+        Return the specified cluster type or abort with a 404.
+        """
         file = os.path.join(cls.types_dir, f"{id}.yaml")
         cls.logger.info(f"Finding cluster type: {id}:{file}")
-        cluster_type = cls.load(id, file)
+        cluster_type = cls._load(id, file)
         if cluster_type is None:
             abort(404, f"Unknown cluster type: {id}")
         else:
@@ -53,7 +56,7 @@ class ClusterType:
 
 
     @classmethod
-    def load(cls, id, file):
+    def _load(cls, id, file):
         try:
             with open(file, 'r') as stream:
                 try:
