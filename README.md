@@ -26,14 +26,24 @@ Currently, all cluster types are backed by OpenStack HEAT and need to specify a
 path to a HOT template.  The path should be relative to the docker container's
 `/app/instance/hot/` directory.
 
-In production, you may wish to use a docker volume to contain the cluster type
-definitions and HOT templates.  If so, the volume should be mounted on the
-container at `/app/instance/`.  If following the development build
-instructions, the local directory `.` is already mounted on the docker
-container as `/app`.
+In production, you should configure the `instance` directory prior to building
+the image.  To use the example cluster types, run the following:
 
-If you wish to use the example cluster type definitions, see [installing
-example cluster types](#installing-example-cluster-types) below.
+```
+mkdir -p instance/cluster-types-enabled
+mkdir -p instance/hot
+
+for i in examples/cluster-types/* ; do
+  ln -s ../../${i} instance/cluster-types-enabled/
+done
+
+for i in examples/hot/* ; do
+  ln -s ../../${i} instance/hot/
+done
+```
+
+Currently, each time the cluster types definitions are changed, the image will
+need to be rebuilt.
 
 Currently, there is no documentation on the format for the cluster type
 definition files beyond the [well-documented
@@ -54,18 +64,19 @@ docker build --tag concertim-cluster-builder:latest .
 
 ## Usage
 
-Once the docker image is built (see [Installation](#installation) above) a
-container can be started from that image with the following command.  You may
-wish to change the port and interface that the service is published on.
+Once the docker image is configured with cluster type definitions and has been
+built (see [Cluster type definitions](#cluster-type-definitions) and
+[Installation](#installation) above) a container can be started from that image
+with the following command.
 
 ```
-docker run --rm --name concertim-cluster-builder --publish 127.0.0.1:42378:42378 concertim-cluster-builder
+docker compose -f docker-compose-prod.yml up
 ```
 
 The container will need to be able to receive HTTP requests from the
 concertim-visualisation-app container and be able to make HTTP requests to the
-openstack containers, specifically keystone and heat.  Configuring the
-container networks to support that is left as an exercise for the reader.
+openstack containers, specifically keystone and heat.  You may wish to edit the
+docker compose file to achieve that.
 
 ## HTTP API
 
@@ -74,13 +85,13 @@ The HTTP API is documented in the [API documentation](/docs/api.md).
 
 ## Development
 
-There is a [docker-compose](docker-compose.yml) file that creates a docker
+There is a [docker-compose-dev.yml](docker-compose.yml) file that creates a docker
 container suitable for development. The contents of this repository are shared
 with the docker container using docker volumes, meaning that any changes made
 to the local source code will be automatically picked up by the service running
 inside the container.
 
-Note: this docker-compose.yml file is not intended for a production deployment.
+Note: this docker-compose-dev.yml file is not intended for a production deployment.
 
 To setup for development you will need to:
 
@@ -104,7 +115,7 @@ Start the docker container by running the following.  This will cause certain
 "per-instance" directories to be created.
 
 ```
-docker compose up
+docker compose -f docker-compose-dev.yml up
 ```
 
 Finally, copy across the example cluster type definitions.  See [installing
