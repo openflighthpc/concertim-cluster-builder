@@ -1,0 +1,19 @@
+# This docker compose file is intended for production deployments of
+# concertim-cluster-builder.  It is *NOT* suitable for development usage.  See
+# the README.md for development installation instructions.
+
+services:
+  cluster_builder: 
+    image: concertim-cluster-builder
+
+    # flask requires SIGINT to stop gracefully
+    # (default stop signal from Compose is SIGTERM)
+    stop_signal: SIGINT
+
+    ports:
+      - '127.0.0.1:42378:42378'
+
+    # Optionally, mount `instance` to `/app/instance` to allow easier
+    # configuration of the cluster type definitions.
+    # volumes:
+    #   - instance/:/app/instance
