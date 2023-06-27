@@ -7,10 +7,27 @@ from .openstack.heat_handler import HeatHandler
 
 bp = Blueprint('clusters', __name__, url_prefix="/clusters")
 
+# XXX Consider if we want to support using both project_name and project_id here.
 create_schema = {
-        "type": "object",
-        "properties": {
-            "cloud_env": {
+        "$defs": {
+            "project_id": {
+                "$id": "/schemas/project_id",
+
+                "type": "object",
+                "properties": {
+                    "auth_url": { "type": "string", "format": "uri" },
+                    "username": { "type": "string" },
+                    "password": { "type": "string" },
+                    "project_id": { "type": "string" },
+                    "user_domain_name": { "type": "string" }
+                    },
+                "required": ["auth_url", "username", "password", "project_id", "user_domain_name"]
+
+                },
+
+            "project_name": {
+                "$id": "/schemas/project_name",
+
                 "type": "object",
                 "properties": {
                     "auth_url": { "type": "string", "format": "uri" },
@@ -21,6 +38,14 @@ create_schema = {
                     "user_domain_name": { "type": "string" }
                     },
                 "required": ["auth_url", "username", "password", "project_name", "project_domain_name", "user_domain_name"]
+                }
+            },
+
+        "type": "object",
+        "properties": {
+            "cloud_env": {
+                "type": "object",
+                "oneOf": [{"$ref": "/schemas/project_id"}, {"$ref": "/schemas/project_name"}]
                 },
             "cluster": {
                 "type": "object",

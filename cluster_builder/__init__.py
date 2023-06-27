@@ -5,6 +5,7 @@ import os
 
 from flask import (Flask, current_app, make_response, jsonify, request)
 from jsonschema import ValidationError
+from jsonschema.exceptions import (best_match)
 from werkzeug.exceptions import HTTPException
 import keystoneauth1.exceptions.connection as ks_connection_exceptions
 import keystoneauth1.exceptions.http as ks_http_exceptions
@@ -67,7 +68,11 @@ def create_app(instance_path=None, test_config=None):
             jsonschema_error = error.description
             title = "JSON schema error"
             source = {"pointer": "/{}".format("/".join(jsonschema_error.absolute_path))}
-            detail = jsonschema_error.message
+            if jsonschema_error.validator == 'oneOf':
+                additional = best_match(jsonschema_error.context).message
+                detail = "{}: the best matched error is: {}".format(jsonschema_error.message, additional)
+            else:
+                detail = jsonschema_error.message
             errors = [{"status": f"{error.code}", "title": title, "detail": detail, "source": source}]
             app.logger.debug(f'jsonschema validation error: {errors}')
             return make_response(jsonify({'errors': errors}), error.code)

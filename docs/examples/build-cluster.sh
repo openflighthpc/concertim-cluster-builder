@@ -2,15 +2,17 @@
 
 set -e
 set -o pipefail
+# set -x
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 # The base URL against which relative URLs are constructed.
-BASE_URL="http://localhost:42378"
+OPENSTACK_HOST=${OPENSTACK_HOST:-localhost}
+BASE_URL="http://${OPENSTACK_HOST}:42378"
 
 USERNAME=${1}
 PASSWORD=${2}
-PROJECT_NAME=${3}
+PROJECT_ID=${3}
 CLUSTER_NAME=${4}
 GATEWAY_IP=${5}
 SSH_KEY=${6}
@@ -18,7 +20,7 @@ SSH_KEY=${6}
 BODY=$(jq --null-input \
     --arg username "${USERNAME}" \
     --arg password "${PASSWORD}" \
-    --arg project_name "${PROJECT_NAME}" \
+    --arg project_id "${PROJECT_ID}" \
     --arg cluster_name "${CLUSTER_NAME}" \
     --arg gateway_pri_ip "${GATEWAY_IP}" \
     --arg ssh_key "${SSH_KEY}" \
@@ -28,7 +30,7 @@ BODY=$(jq --null-input \
         "auth_url": "http://10.151.0.184:35357/v3",
         "username": $username,
         "password": $password,
-        "project_name": $project_name,
+        "project_id": $project_id,
         "user_domain_name": "default",
         "project_domain_name": "default"
     },
