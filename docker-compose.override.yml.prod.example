@@ -1,0 +1,7 @@
+# This docker compose override file is intended for production overrides that
+# are likely to differ from one installation to another. These overrides are
+# *NOT* intended for development.
+services:
+  cluster_builder: 
+    volumes:
+      - /usr/share/concertim-cluster-builder/:/app/instance

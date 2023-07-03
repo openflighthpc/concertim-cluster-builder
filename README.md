@@ -37,12 +37,10 @@ template) enabled by default.
 
 If you wish to configure additional cluster type definitions, the docker
 container should be started with a host directory, say,
-`/usr/share/concertim-cluster-builder/` mounted to `/app/instance/` (see the
-[docker-compose-prod.yml volumes
-section](https://github.com/alces-flight/concertim-cluster-builder/blob/main/docker-compose-prod.yml#L18)
-for details on how to do this). The example cluster type definitions can then
-be copied to `/usr/share/concertim-cluster-builder/` and new definitions added.
-To do this follow the steps below:
+`/usr/share/concertim-cluster-builder/` mounted to `/app/instance/`. The
+example cluster type definitions can then be copied to
+`/usr/share/concertim-cluster-builder/` and new definitions added. To do this
+follow the steps below:
 
 Create the directory structure.
 
@@ -70,13 +68,16 @@ for i in ../cluster-types-available/* ; do
 done
 ```
 
-Edit `docker-compose-prod.yml` and change the [volumes
-section](https://github.com/alces-flight/concertim-cluster-builder/blob/main/docker-compose-prod.yml#L18)
-to mount `/usr/share/concertim-cluster-builder/` to `/app/instance/`.
+Copy the example
+[docker-compose.override.yml.prod.example](docker-compose.override.yml.prod.example)
+to `docker-compose.override.yml` to enable the mount
+`/usr/share/concertim-cluster-builder/`.
 
 ```bash
-$EDITOR docker-compose-prod.yml
+cp docker-compose.override.yml.prod.example docker-compose.override.yml
 ```
+
+If the container is already running, restart it.
 
 Currently, there is no documentation on the format for the cluster type
 definition files beyond the [well-documented
@@ -134,13 +135,14 @@ To setup for development you will need to:
 
 These are explained in more detail below.
 
-Copy the example [docker-compose-override](docker-compose.override.yml.example)
-to `docker-compose.override.yml` and edit to set your local user's (that is the
+Copy the example [dev
+docker-compose-override](docker-compose.override.yml.dev.example) to
+`docker-compose.override.yml` and edit to set your local user's (that is the
 user on your laptop) UID and GID. Doing this will prevent issues with file
 permissions for the shared files.
 
 ```bash
-cp docker-compose.override.yml.example docker-compose.override.yml
+cp docker-compose.override.yml.dev.example docker-compose.override.yml
 $EDITOR docker-compose.override.yml
 ```
 

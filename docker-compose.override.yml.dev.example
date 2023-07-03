@@ -1,3 +1,6 @@
+# This docker compose override file is intended for development overrides that
+# should not be committed. These overrides are *NOT* intended for production
+# usage.
 services:
   cluster_builder: 
     # Use the same UID and GID as is used for the local user.  This prevents
