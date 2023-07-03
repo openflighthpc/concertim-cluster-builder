@@ -12,38 +12,72 @@ when they become available.
 
 ## Configuration
 
+Concertim Cluster Builder has two separate elements to its configuration: 1)
+configuring access to the cloud environment; and 2) configuring the enabled
+cluster type definitions.  These are detailed below.
+
+### Cloud environment access
+
 All required configuration to access the cloud environment is sent in the
-request to build a cluster.  More details can be found in the [API
-documentation](/docs/api.md).
+request to build a cluster.  More details on the format can be found in the
+[API documentation](/docs/api.md).
 
 ### Cluster type definitions
 
-Concertim cluster builder needs to be configured with the available cluster
-type definitions.  This is done by copying (or symlinking) files into the
-docker container's `/app/instance/cluster-types-enabled/` directory.
+Concertim cluster builder needs to be configured with the enabled cluster type
+definitions. The enabled definitions are to be created in the docker
+container's `/app/instance/cluster-types-enabled/` directory.
 
 Currently, all cluster types are backed by OpenStack HEAT and need to specify a
 path to a HOT template.  The path should be relative to the docker container's
 `/app/instance/hot/` directory.
 
-In production, you should configure the `instance` directory prior to building
-the image.  To use the example cluster types, run the following:
+The Docker image is built with an example cluster type definition (and its HOT
+template) enabled by default.
 
+If you wish to configure additional cluster type definitions, the docker
+container should be started with a host directory, say,
+`/usr/share/concertim-cluster-builder/` mounted to `/app/instance/`. The
+example cluster type definitions can then be copied to
+`/usr/share/concertim-cluster-builder/` and new definitions added. To do this
+follow the steps below:
+
+Create the directory structure.
+
+```bash
+mkdir -p /usr/share/concertim-cluster-builder/{cluster-types-available,cluster-types-enabled,hot}
 ```
-mkdir -p instance/cluster-types-enabled
-mkdir -p instance/hot
 
+Copy across the example definition and its HOT template.
+
+```bash
 for i in examples/cluster-types/* ; do
-  ln -s ../../${i} instance/cluster-types-enabled/
+  cp -a $i /usr/share/concertim-cluster-builder/cluster-types-available/
 done
-
 for i in examples/hot/* ; do
-  ln -s ../../${i} instance/hot/
+  cp -a $i /usr/share/concertim-cluster-builder/hot/
 done
 ```
 
-Currently, each time the cluster types definitions are changed, the image will
-need to be rebuilt.
+Optionally, enable the example definition
+
+```bash
+cd /usr/share/concertim-cluster-builder/cluster-types-enabled/
+for i in ../cluster-types-available/* ; do
+  ln -s ${i} .
+done
+```
+
+Copy the example
+[docker-compose.override.yml.prod.example](docker-compose.override.yml.prod.example)
+to `docker-compose.override.yml` to enable the mount
+`/usr/share/concertim-cluster-builder/`.
+
+```bash
+cp docker-compose.override.yml.prod.example docker-compose.override.yml
+```
+
+If the container is already running, restart it.
 
 Currently, there is no documentation on the format for the cluster type
 definition files beyond the [well-documented
@@ -58,7 +92,7 @@ cluster builder service is configured to run on port `42378` of the container.
 
 An image can be built with the following command:
 
-```
+```bash
 docker build --tag concertim-cluster-builder:latest .
 ```
 
@@ -69,7 +103,7 @@ built (see [Cluster type definitions](#cluster-type-definitions) and
 [Installation](#installation) above) a container can be started from that image
 with the following command.
 
-```
+```bash
 docker compose -f docker-compose-prod.yml up
 ```
 
@@ -101,34 +135,20 @@ To setup for development you will need to:
 
 These are explained in more detail below.
 
-Copy the example [docker-compose-override](docker-compose.override.yml.example)
-to `docker-compose.override.yml` and edit to set your local user's (that is the
+Copy the example [dev
+docker-compose-override](docker-compose.override.yml.dev.example) to
+`docker-compose.override.yml` and edit to set your local user's (that is the
 user on your laptop) UID and GID. Doing this will prevent issues with file
 permissions for the shared files.
 
-```
-cp docker-compose.override.yml.example docker-compose.override.yml
+```bash
+cp docker-compose.override.yml.dev.example docker-compose.override.yml
 $EDITOR docker-compose.override.yml
 ```
 
-Start the docker container by running the following.  This will cause certain
-"per-instance" directories to be created.
+Copy across the example cluster type definitions.
 
-```
-docker compose -f docker-compose-dev.yml up
-```
-
-Finally, copy across the example cluster type definitions.  See [installing
-example cluster types](#installing-example-cluster-types) below.
-
-
-### Installing example cluster types
-
-When the service first starts it will create the expected directory hierarchy
-in its instance directory.  Once it has done so, you can copy across the
-example cluster type definitions and their HOT templates.
-
-```
+```bash
 for i in examples/cluster-types/* ; do
   ln -s ../../${i} instance/cluster-types-enabled/
 done
@@ -138,3 +158,8 @@ for i in examples/hot/* ; do
 done
 ```
 
+Start the docker container by running the following.
+
+```bash
+docker compose -f docker-compose-dev.yml up
+```
