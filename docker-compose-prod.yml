@@ -13,7 +13,8 @@ services:
     ports:
       - '127.0.0.1:42378:42378'
 
-    # Optionally, mount `instance` to `/app/instance` to allow easier
-    # configuration of the cluster type definitions.
+    # Optionally, mount a volume to `/app/instance` to allow configuration of
+    # the cluster type definitions.  Without this (or some similar mechanism),
+    # the example cluster types will be used.
     # volumes:
-    #   - instance/:/app/instance
+    #   - /usr/share/concertim-cluster-builder/:/app/instance
