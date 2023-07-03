@@ -32,11 +32,6 @@ class HeatHandler:
         raise Exception("Failed to create Heat client after multiple attempts.")
 
 
-    def list_stacks(self):
-        self.logger.debug(f"Fetching all stacks")
-        return self.client.stacks.list()
-
-
     def create_cluster(self, cluster_data, cluster_type):
         self.logger.info(f"Creating cluster {cluster_data['name']} from {cluster_data['cluster_type_id']}")
         response = None

@@ -74,12 +74,3 @@ def create_cluster():
         current_app.logger.debug(f"created cluster {cluster}")
         body = {"id": cluster.id, "name": cluster.name}
         return make_response(body, 201)
-
-
-@bp.get('/<uuid:cluster_id>')
-def show_cluster(cluster_id):
-    return {
-            "id": cluster_id,
-            "name": "test-cluster",
-            "status": "pending"
-            }
