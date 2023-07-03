@@ -1,6 +1,7 @@
 from logging.config import dictConfig
 import json
 import os
+import traceback
 
 from flask import (Flask, make_response, jsonify)
 from jsonschema import ValidationError
@@ -84,7 +85,7 @@ def create_app(instance_path=None, test_config=None):
 
 
     @app.errorhandler(HTTPException)
-    def handle_exception(error):
+    def handle_http_exception(error):
         """Return JSON instead of HTML for HTTP errors."""
         response = error.get_response()
         response.data = json.dumps({
@@ -96,5 +97,15 @@ def create_app(instance_path=None, test_config=None):
         })
         response.content_type = "application/json"
         return response
+
+    @app.errorhandler(Exception)
+    def handle_exception(error):
+        """Return JSON instead of HTML for all errors."""
+        app.logger.exception(error)
+        title = "500 Server Error"
+        detail = "{}: {}".format(type(error).__name__, error)
+        meta = {"traceback": traceback.format_tb(error.__traceback__)}
+        body = [{"status": 500, "title": title, "detail": detail, "meta": meta}]
+        return make_response(jsonify({"errors": body}), 500)
 
     return app
