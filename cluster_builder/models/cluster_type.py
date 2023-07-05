@@ -17,7 +17,9 @@ class ClusterType:
     title: str
     description: str
     parameters: dict
+    kind: str
     heat_template_url: str
+    magnum_cluster_template: str
 
     @classmethod
     def configure(cls, hot_templates_dir, types_dir, logger):
@@ -70,7 +72,9 @@ class ClusterType:
                             title=template.get("title", ""),
                             description=template.get("description", id),
                             parameters=template.get("parameters", []),
-                            heat_template_url=template.get("heat_template_url")
+                            kind=template.get("kind"),
+                            heat_template_url=template.get("heat_template_url"),
+                            magnum_cluster_template=template.get("magnum_cluster_template")
                             )
                     return cluster_type
         except FileNotFoundError as exc:

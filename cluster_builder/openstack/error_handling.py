@@ -5,6 +5,7 @@ from flask import (current_app, make_response, jsonify, request)
 import keystoneauth1.exceptions.connection as ks_connection_exceptions
 import keystoneauth1.exceptions.http as ks_http_exceptions
 import heatclient.exc as heat_exceptions
+import magnumclient.exceptions as magnum_exceptions
 
 def setup_error_handling(app):
     """
@@ -24,6 +25,11 @@ def setup_error_handling(app):
         if inspect.isclass(exc) and issubclass(exc, heat_exceptions.HTTPException):
             app.logger.debug(f"adding handler for {exc.__module__}.{exc.__qualname__}")
             app.register_error_handler(exc, _handle_heat_http_exception)
+
+    for exc in map(magnum_exceptions.__dict__.get, magnum_exceptions.__dict__):
+        if inspect.isclass(exc) and issubclass(exc, magnum_exceptions.HttpError):
+            app.logger.debug(f"adding handler for {exc.__module__}.{exc.__qualname__}")
+            app.register_error_handler(exc, _handle_magnum_http_exception)
 
 
 def _handle_keystone_http_exception(error):
@@ -55,3 +61,12 @@ def _handle_heat_http_exception(error):
     detail = original_error['error']['message']
     body = [{"status": str(error.code), "title": title, "detail": detail}]
     return make_response(jsonify({"errors": body}), error.code)
+
+
+def _handle_magnum_http_exception(error):
+    current_app.logger.debug(f"handling error {error.__class__} with _handle_magnum_http_exception")
+    current_app.logger.info(str(error))
+    title = error.__class__.__name__
+    detail = error.details
+    body = [{"status": str(error.http_status), "title": title, "detail": detail}]
+    return make_response(jsonify({"errors": body}), error.http_status)
