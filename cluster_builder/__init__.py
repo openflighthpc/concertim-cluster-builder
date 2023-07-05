@@ -104,8 +104,10 @@ def create_app(instance_path=None, test_config=None):
         app.logger.exception(error)
         title = "500 Server Error"
         detail = "{}: {}".format(type(error).__name__, error)
-        meta = {"traceback": traceback.format_tb(error.__traceback__)}
-        body = [{"status": 500, "title": title, "detail": detail, "meta": meta}]
+        body = [{"status": 500, "title": title, "detail": detail}]
+        if app.debug:
+            meta = {"traceback": traceback.format_tb(error.__traceback__)}
+            body[0]["meta"] = meta
         return make_response(jsonify({"errors": body}), 500)
 
     return app
