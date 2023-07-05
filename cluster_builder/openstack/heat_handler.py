@@ -1,5 +1,6 @@
 import time
 import yaml
+import secrets
 
 from heatclient.client import Client as HeatClient
 from heatclient.common import template_utils
@@ -36,7 +37,7 @@ class HeatHandler:
         self.logger.info(f"Creating cluster {cluster_data['name']} from {cluster_data['cluster_type_id']}")
         response = None
         try:
-            stack_name = "{}-{}".format(cluster_data["name"], cluster_type.id)
+            stack_name = "{}--{}".format(cluster_data["name"], secrets.token_urlsafe(16))
             response = self.client.stacks.create(
                     stack_name=stack_name,
                     template=self._template_stream(cluster_type),
