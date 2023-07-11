@@ -16,7 +16,7 @@ def index():
         if last_modified == "" or ct.last_updated > last_modified: last_modified = ct.last_updated
         cluster_types.append(ct.asdict(attributes))
     if (request.if_modified_since and last_modified != "" and
-       int(request.if_modified_since.timestamp()) >= int(last_modified.timestamp())):
+       int(request.if_modified_since.timestamp()) == int(last_modified.timestamp())):
        return '', 304
 
     r = make_response(cluster_types)
