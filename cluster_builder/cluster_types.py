@@ -9,11 +9,11 @@ bp = Blueprint('cluster-types', __name__, url_prefix="/cluster-types")
 
 @bp.route('/')
 def index():
-    attributes = ["id", "title", "description", "parameters", "last_updated"]
+    attributes = ["id", "title", "description", "parameters", "last_modified"]
     cluster_types = []
     last_modified = ""
     for ct in ClusterType.all():
-        if last_modified == "" or ct.last_updated > last_modified: last_modified = ct.last_updated
+        if last_modified == "" or ct.last_modified > last_modified: last_modified = ct.last_modified
         cluster_types.append(ct.asdict(attributes))
     if (request.if_modified_since and last_modified != "" and
        int(request.if_modified_since.timestamp()) == int(last_modified.timestamp())):
