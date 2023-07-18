@@ -7,6 +7,7 @@ class OpenStackAuth:
         self.auth_dict = auth_dict
         self.auth_methods = {
             v3.Password: [
+                {'auth_url', 'user_id', 'password', 'project_id'},
                 {'auth_url', 'username', 'password', 'project_id', 'user_domain_name'},
                 {'auth_url', 'username', 'password', 'project_name', 'project_domain_id', 'user_domain_id'},
                 {'auth_url', 'username', 'password', 'project_name', 'project_domain_name', 'user_domain_name'}

@@ -8,9 +8,22 @@ from .openstack.magnum_handler import MagnumHandler
 
 bp = Blueprint('clusters', __name__, url_prefix="/clusters")
 
-# XXX Consider if we want to support using both project_name and project_id here.
+# XXX Consider if we want to support all of these different ways of specifying a user/project.
 create_schema = {
         "$defs": {
+            "user_id_and_project_id": {
+                "$id": "/schemas/user_id_and_project_id",
+
+                "type": "object",
+                "properties": {
+                    "auth_url": { "type": "string", "format": "uri" },
+                    "user_id": { "type": "string" },
+                    "password": { "type": "string" },
+                    "project_id": { "type": "string" },
+                    },
+                "required": ["auth_url", "user_id", "password", "project_id"]
+                },
+
             "project_id": {
                 "$id": "/schemas/project_id",
 
@@ -23,7 +36,6 @@ create_schema = {
                     "user_domain_name": { "type": "string" }
                     },
                 "required": ["auth_url", "username", "password", "project_id", "user_domain_name"]
-
                 },
 
             "project_name": {
@@ -46,7 +58,7 @@ create_schema = {
         "properties": {
             "cloud_env": {
                 "type": "object",
-                "oneOf": [{"$ref": "/schemas/project_id"}, {"$ref": "/schemas/project_name"}]
+                "oneOf": [{"$ref": "/schemas/user_id_and_project_id"}, {"$ref": "/schemas/project_id"}, {"$ref": "/schemas/project_name"}]
                 },
             "cluster": {
                 "type": "object",
