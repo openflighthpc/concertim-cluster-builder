@@ -77,6 +77,6 @@ def create_cluster():
     sess = OpenStackAuth(g.data["cloud_env"], current_app.logger).get_session()
     handler = handler_class(sess, current_app.logger)
     cluster = handler.create_cluster(g.data["cluster"], cluster_type)
-    current_app.logger.debug(f"created cluster {cluster}")
+    current_app.logger.debug(f"created cluster {cluster.id}:{cluster.name}")
     body = {"id": cluster.id, "name": cluster.name}
     return make_response(body, 201)

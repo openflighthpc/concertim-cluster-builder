@@ -37,11 +37,13 @@ class HeatHandler:
         self.logger.info(f"Creating cluster {cluster_data['name']} from {cluster_data['cluster_type_id']}")
         response = None
         try:
+            parameters = ClusterType.merge_parameters(cluster_type, cluster_data.get("parameters"))
+            self.logger.debug(f"parameters: {parameters}")
             stack_name = "{}--{}".format(cluster_data["name"], secrets.token_urlsafe(16))
             response = self.client.stacks.create(
                     stack_name=stack_name,
                     template=self._template_stream(cluster_type),
-                    parameters=ClusterType.merge_parameters(cluster_type, cluster_data.get("parameters"))
+                    parameters=parameters
                     )
         except Exception as e:
             self.logger.exception(e)
