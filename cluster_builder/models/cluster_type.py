@@ -1,4 +1,5 @@
 from dataclasses import asdict, dataclass
+import datetime
 import glob
 import os
 import yaml
@@ -20,6 +21,7 @@ class ClusterType:
     kind: str
     heat_template_url: str
     magnum_cluster_template: str
+    last_modified: str
 
     @classmethod
     def configure(cls, hot_templates_dir, types_dir, logger):
@@ -74,7 +76,8 @@ class ClusterType:
                             parameters=template.get("parameters", []),
                             kind=template.get("kind"),
                             heat_template_url=template.get("heat_template_url"),
-                            magnum_cluster_template=template.get("magnum_cluster_template")
+                            magnum_cluster_template=template.get("magnum_cluster_template"),
+                            last_modified=datetime.datetime.fromtimestamp(os.path.getmtime(file))
                             )
                     return cluster_type
         except FileNotFoundError as exc:
