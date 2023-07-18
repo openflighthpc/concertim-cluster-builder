@@ -17,7 +17,7 @@ def index():
         cluster_types.append(ct.asdict(ATTRIBUTES))
     if (request.if_modified_since and last_modified != None and
        int(request.if_modified_since.timestamp()) == int(last_modified.timestamp())):
-       return '', 304
+        return '', 304
 
     r = make_response(cluster_types)
     r.last_modified = last_modified
@@ -28,7 +28,7 @@ def show_cluster_type(id):
     type = ClusterType.find(id)
     last_modified = type.last_modified
     if (request.if_modified_since and int(request.if_modified_since.timestamp()) == int(last_modified.timestamp())):
-           return '', 304
+        return '', 304
 
     r = make_response(type.asdict(ATTRIBUTES))
     r.last_modified = type.last_modified
