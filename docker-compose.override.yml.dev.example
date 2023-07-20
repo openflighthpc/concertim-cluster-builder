@@ -6,3 +6,8 @@ services:
     # Use the same UID and GID as is used for the local user.  This prevents
     # issues with permissions for files in the mounted volume.
     user: "1000:1000"
+
+    # # Uncomment this section and change to limit the IP addresses that the
+    # # service is exposed on.
+    # ports:
+    #   - '<IP>:42378:42378'

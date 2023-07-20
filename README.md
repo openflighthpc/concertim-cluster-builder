@@ -22,6 +22,13 @@ All required configuration to access the cloud environment is sent in the
 request to build a cluster.  More details on the format can be found in the
 [API documentation](/docs/api.md).
 
+### Exposing the service on the desired network
+
+By default, Concertim cluster builder is configured to expose its service on
+all of the host machine's IP addresses.  If this is not suitable for you, it
+can be configured by editing the `docker-compose-prod.yml` file and changing
+the `ports` entry.
+
 ### Cluster type definitions
 
 Concertim cluster builder needs to be configured with the enabled cluster type
@@ -139,7 +146,9 @@ Copy the example [dev
 docker-compose-override](docker-compose.override.yml.dev.example) to
 `docker-compose.override.yml` and edit to set your local user's (that is the
 user on your laptop) UID and GID. Doing this will prevent issues with file
-permissions for the shared files.
+permissions for the shared files.  By default, the service is exposed on all of
+the host machine's IP addresses, you can change this by editing the `ports`
+section of the override file.
 
 ```bash
 cp docker-compose.override.yml.dev.example docker-compose.override.yml

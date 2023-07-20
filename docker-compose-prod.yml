@@ -11,7 +11,7 @@ services:
     stop_signal: SIGINT
 
     ports:
-      - '127.0.0.1:42378:42378'
+      - '42378:42378'
 
     # Optionally, mount a volume to `/app/instance` to allow configuration of
     # the cluster type definitions.  Without this (or some similar mechanism),

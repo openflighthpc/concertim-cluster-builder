@@ -11,7 +11,7 @@ services:
     stop_signal: SIGINT
 
     ports:
-      - '127.0.0.1:42378:42378'
+      - '42378:42378'
 
     # Override the command in the Dockerfile to start add in the `--debug`
     # flag.  Is there a better way of appending a single argument?
