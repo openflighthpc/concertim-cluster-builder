@@ -10,11 +10,27 @@ Service](https://github.com/alces-flight/concertim-openstack-service) will
 report the existence of those clusters to Concertim Visualisation App as and
 when they become available.
 
+## Installation
+
+Concertim Cluster Builder is intended to be deployed as a Docker container.
+There is a Dockerfile in this repo that the image can be built from and a
+docker compose file that should be used to start the container.
+
+1. Clone the repository
+    ```bash
+    git clone https://github.com/alces-flight/concertim-cluster-builder.git
+    ```
+2. Build the docker image
+    ```bash
+    docker build --network=host --tag concertim-cluster-builder:latest .
+    ```
+
 ## Configuration
 
-Concertim Cluster Builder has two separate elements to its configuration: 1)
-configuring access to the cloud environment; and 2) configuring the enabled
-cluster type definitions.  These are detailed below.
+Concertim Cluster Builder has three separate elements to its configuration: 1)
+configuring access to the cloud environment; 2) configuring the network the
+service is exposed on; and 3) configuring the enabled cluster type definitions.
+These are detailed below.
 
 ### Cloud environment access
 
@@ -91,18 +107,6 @@ definition files beyond the [well-documented
 examples](cluster-types-examples/).  They should prove sufficient.
 
 
-## Installation
-
-Concertim Cluster Builder is intended to be deployed as a Docker container.
-There is a Dockerfile in this repo that the image can be built from.  The
-cluster builder service is configured to run on port `42378` of the container.
-
-An image can be built with the following command:
-
-```bash
-docker build --tag concertim-cluster-builder:latest .
-```
-
 ## Usage
 
 Once the docker image is configured with cluster type definitions and has been
@@ -126,49 +130,5 @@ The HTTP API is documented in the [API documentation](/docs/api.md).
 
 ## Development
 
-There is a [docker-compose-dev.yml](docker-compose.yml) file that creates a docker
-container suitable for development. The contents of this repository are shared
-with the docker container using docker volumes, meaning that any changes made
-to the local source code will be automatically picked up by the service running
-inside the container.
-
-Note: this docker-compose-dev.yml file is not intended for a production deployment.
-
-To setup for development you will need to:
-
-1. Create a docker-compose.override.yml file.
-2. Start the docker container.
-3. Copy across the example cluter type definitions and their HOT templates.
-
-These are explained in more detail below.
-
-Copy the example [dev
-docker-compose-override](docker-compose.override.yml.dev.example) to
-`docker-compose.override.yml` and edit to set your local user's (that is the
-user on your laptop) UID and GID. Doing this will prevent issues with file
-permissions for the shared files.  By default, the service is exposed on all of
-the host machine's IP addresses, you can change this by editing the `ports`
-section of the override file.
-
-```bash
-cp docker-compose.override.yml.dev.example docker-compose.override.yml
-$EDITOR docker-compose.override.yml
-```
-
-Copy across the example cluster type definitions.
-
-```bash
-for i in examples/cluster-types/* ; do
-  ln -s ../../${i} instance/cluster-types-enabled/
-done
-
-for i in examples/hot/* ; do
-  ln -s ../../${i} instance/hot/
-done
-```
-
-Start the docker container by running the following.
-
-```bash
-docker compose -f docker-compose-dev.yml up
-```
+See the [development docs](docs/DEVELOPMENT.md) for details on development and
+getting started with development.

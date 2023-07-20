@@ -34,10 +34,12 @@ class MagnumHandler:
             cluster_name = cluster_data["name"]
             self.logger.debug(f"getting cluster template {cluster_type.magnum_cluster_template}")
             magnum_cluster_template = self.client.cluster_templates.get(cluster_type.magnum_cluster_template)
+            parameters = ClusterType.merge_parameters(cluster_type, cluster_data.get("parameters"))
+            self.logger.debug(f"parameters: {parameters}")
             magnum_cluster = self.client.clusters.create(
                     name=cluster_name,
                     cluster_template_id=magnum_cluster_template.uuid,
-                    **ClusterType.merge_parameters(cluster_type, cluster_data.get("parameters"))
+                    **parameters
                     )
         except Exception as e:
             self.logger.exception(e)
