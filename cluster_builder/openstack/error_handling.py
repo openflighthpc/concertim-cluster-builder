@@ -1,4 +1,5 @@
 import inspect
+import re
 
 from flask import (current_app, make_response, jsonify, request)
 
@@ -6,6 +7,8 @@ import keystoneauth1.exceptions.connection as ks_connection_exceptions
 import keystoneauth1.exceptions.http as ks_http_exceptions
 import heatclient.exc as heat_exceptions
 import magnumclient.exceptions as magnum_exceptions
+
+BAD_PARAMETER_REGEXP = re.compile("^Parameter '([^']*)' is invalid: (.*)")
 
 def setup_error_handling(app):
     """
@@ -23,8 +26,12 @@ def setup_error_handling(app):
 
     for exc in map(heat_exceptions.__dict__.get, heat_exceptions.__dict__):
         if inspect.isclass(exc) and issubclass(exc, heat_exceptions.HTTPException):
-            app.logger.debug(f"adding handler for {exc.__module__}.{exc.__qualname__}")
-            app.register_error_handler(exc, _handle_heat_http_exception)
+            if issubclass(exc, heat_exceptions.HTTPBadRequest):
+                app.logger.debug(f"adding handler for {exc.__module__}.{exc.__qualname__}")
+                app.register_error_handler(exc, _handle_heat_http_bad_request)
+            else:
+                app.logger.debug(f"adding handler for {exc.__module__}.{exc.__qualname__}")
+                app.register_error_handler(exc, _handle_heat_http_exception)
 
     for exc in map(magnum_exceptions.__dict__.get, magnum_exceptions.__dict__):
         if inspect.isclass(exc) and issubclass(exc, magnum_exceptions.HttpError):
@@ -39,34 +46,49 @@ def _handle_keystone_http_exception(error):
             "Authorization failed. %(exception)s from %(remote_addr)s",
             {'exception': error, 'remote_addr': request.remote_addr})
     else:
-        current_app.logger.info(str(error))
+        current_app.logger.info(f"{error.__module__}.{error.__class__.__qualname__}: {error}")
     title = error.__class__.__name__
-    body = [{"status": str(error.http_status), "title": title, "detail": error.message}]
-    return make_response(jsonify({"errors": body}), error.http_status)
+    errors = [{"status": str(error.http_status), "title": title, "detail": error.message}]
+    return make_response(jsonify({"errors": errors}), error.http_status)
 
 
 def _handle_keystone_connection_exception(error):
     current_app.logger.debug(f"handling error {error.__class__} with _handle_keystone_connection_exception")
-    current_app.logger.info(str(error))
+    current_app.logger.info(f"{error.__module__}.{error.__class__.__qualname__}: {error}")
     title = error.__class__.__name__
-    body = [{"status": "502", "title": title, "detail": error.message}]
-    return make_response(jsonify({"errors": body}), 502)
+    errors = [{"status": "502", "title": title, "detail": error.message}]
+    return make_response(jsonify({"errors": errors}), 502)
 
 
 def _handle_heat_http_exception(error):
     current_app.logger.debug(f"handling error {error.__class__} with _handle_heat_http_exception")
-    current_app.logger.info(str(error))
+    current_app.logger.info(f"{error.__module__}.{error.__class__.__qualname__}: {error}")
     original_error = error.error
     title = original_error['title']
     detail = original_error['error']['message']
-    body = [{"status": str(error.code), "title": title, "detail": detail}]
-    return make_response(jsonify({"errors": body}), error.code)
+    errors = [{"status": str(error.code), "title": title, "detail": detail}]
+    return make_response(jsonify({"errors": errors}), error.code)
+
+
+def _handle_heat_http_bad_request(error):
+    current_app.logger.debug(f"handling error {error.__class__} with _handle_heat_http_bad_request")
+    current_app.logger.info(f"{error.__module__}.{error.__class__.__qualname__}: {error}")
+    original_error = error.error
+    title = original_error['title']
+    detail = original_error['error']['message']
+    match = BAD_PARAMETER_REGEXP.match(detail)
+    errors = [{"status": str(error.code), "title": title, "detail": detail}]
+    if match is not None:
+        if len(match.group(2)):
+            errors[0]["detail"] = match.group(2)
+        errors[0]["source"] = {"pointer": f"/cluster/parameters/{match.group(1)}"}
+    return make_response(jsonify({"errors": errors}), error.code)
 
 
 def _handle_magnum_http_exception(error):
     current_app.logger.debug(f"handling error {error.__class__} with _handle_magnum_http_exception")
-    current_app.logger.info(str(error))
+    current_app.logger.info(f"{error.__module__}.{error.__class__.__qualname__}: {error}")
     title = error.__class__.__name__
     detail = error.details
-    body = [{"status": str(error.http_status), "title": title, "detail": detail}]
-    return make_response(jsonify({"errors": body}), error.http_status)
+    errors = [{"status": str(error.http_status), "title": title, "detail": detail}]
+    return make_response(jsonify({"errors": errors}), error.http_status)
