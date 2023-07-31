@@ -9,11 +9,15 @@ parameters:
     type: string
     label: External Network Name
     description: The name of the external network to bridge network to
+    constraints:
+      - custom_constraint: neutron.network
 
   network-cidr-pri:
     type: string
     label: Primary Nework CIDR
     description: Network CIDR to be used for primary network
+    constraints:
+      - custom_constraint: net_cidr
 
   ssh-key:
     type: string
@@ -22,14 +26,20 @@ parameters:
   solo-image:
     type: string
     label: Flight Solo Image ID
+    constraints:
+      - custom_constraint: glance.image
 
   gateway-pri-ip:
     type: string
     label: Gateway Primary IP Address
+    constraints:
+      - custom_constraint: ip_addr
 
   gateway-flavour:
     type: string
     label: Gateway node flavour
+    constraints:
+      - custom_constraint: nova.flavor
 
 resources:
   external-route:
