@@ -8,7 +8,8 @@ import keystoneauth1.exceptions.http as ks_http_exceptions
 import heatclient.exc as heat_exceptions
 import magnumclient.exceptions as magnum_exceptions
 
-BAD_PARAMETER_REGEXP = re.compile("^Parameter '([^']*)' is invalid: (.*)")
+HEAT_BAD_PARAMETER_REGEXP = re.compile("^Parameter '([^']*)' is invalid: (.*)")
+MAGNUM_BAD_PARAMETER_REGEXP = re.compile("^Unable to find ([^ ]*) (.*).")
 
 def setup_error_handling(app):
     """
@@ -35,8 +36,12 @@ def setup_error_handling(app):
 
     for exc in map(magnum_exceptions.__dict__.get, magnum_exceptions.__dict__):
         if inspect.isclass(exc) and issubclass(exc, magnum_exceptions.HttpError):
-            app.logger.debug(f"adding handler for {exc.__module__}.{exc.__qualname__}")
-            app.register_error_handler(exc, _handle_magnum_http_exception)
+            if issubclass(exc, magnum_exceptions.BadRequest):
+                app.logger.debug(f"adding handler for {exc.__module__}.{exc.__qualname__}")
+                app.register_error_handler(exc, _handle_magnum_http_bad_request)
+            else:
+                app.logger.debug(f"adding handler for {exc.__module__}.{exc.__qualname__}")
+                app.register_error_handler(exc, _handle_magnum_http_exception)
 
 
 def _handle_keystone_http_exception(error):
@@ -76,7 +81,7 @@ def _handle_heat_http_bad_request(error):
     original_error = error.error
     title = original_error['title']
     detail = original_error['error']['message']
-    match = BAD_PARAMETER_REGEXP.match(detail)
+    match = HEAT_BAD_PARAMETER_REGEXP.match(detail)
     errors = [{"status": str(error.code), "title": title, "detail": detail}]
     if match is not None:
         if len(match.group(2)):
@@ -91,4 +96,22 @@ def _handle_magnum_http_exception(error):
     title = error.__class__.__name__
     detail = error.details
     errors = [{"status": str(error.http_status), "title": title, "detail": detail}]
+    return make_response(jsonify({"errors": errors}), error.http_status)
+
+
+def _handle_magnum_http_bad_request(error):
+    current_app.logger.debug(f"handling error {error.__class__} with _handle_magnum_http_bad_request")
+    current_app.logger.info(f"{error.__module__}.{error.__class__.__qualname__}: {error}")
+    title = error.__class__.__name__
+    detail = error.details
+    errors = [{"status": str(error.http_status), "title": title, "detail": detail}]
+    try:
+        match = MAGNUM_BAD_PARAMETER_REGEXP.match(detail)
+        if match is not None:
+            request_params = request.get_json()["cluster"]["parameters"]
+            for param, val in request_params.items():
+                if val == match.group(2):
+                    errors[0]["source"] = {"pointer": f"/cluster/parameters/{param}"}
+    except:
+        pass
     return make_response(jsonify({"errors": errors}), error.http_status)
