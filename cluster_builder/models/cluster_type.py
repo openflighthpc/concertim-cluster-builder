@@ -12,15 +12,9 @@ import jsonschema
 
 # JSON Schema definition for cluster type definitions.
 SCHEMA = {
-        "type": "object",
-        "properties": {
-            "title": { "type": "string" },
-            "description": { "type": "string" },
-            "kind": {
-                "type": "string",
-                "enum": ["heat", "magnum"]
-                },
+        "$defs": {
             "parameters": {
+                "$id": "/schemas/parameters",
                 "type": "object",
                 "patternProperties": {
                     "^.*$": {
@@ -50,6 +44,15 @@ SCHEMA = {
                         }
                     },
                 "additionalProperties": False
+                },
+            },
+        "type": "object",
+        "properties": {
+            "title": { "type": "string" },
+            "description": { "type": "string" },
+            "kind": {
+                "type": "string",
+                "enum": ["heat", "magnum"]
                 }
             },
         "required": ["title", "description", "kind"],
@@ -60,7 +63,10 @@ SCHEMA = {
                     "required": ["kind"]
                     },
                 "then": {
-                    "properties": { "heat_template_url": { "type": "string" } },
+                    "properties": {
+                        "heat_template_url": { "type": "string" },
+                        "parameters": False
+                        },
                     "required": ["heat_template_url"],
                     },
                 },
@@ -70,8 +76,11 @@ SCHEMA = {
                     "required": ["kind"]
                     },
                 "then": {
-                    "properties": { "magnum_cluster_template": { "type": "string" } },
-                    "required": ["magnum_cluster_template"],
+                    "properties": {
+                        "magnum_cluster_template": { "type": "string" },
+                        "parameters": {"$ref": "/schemas/parameters"}
+                        },
+                    "required": ["magnum_cluster_template", "parameters"],
                     },
                 }
             ]
@@ -163,14 +172,18 @@ class ClusterType:
                                 "id": id,
                                 "title": definition["title"],
                                 "description": definition["description"],
-                                "parameters": definition.get("parameters", []),
                                 "kind": definition["kind"],
                                 "last_modified": datetime.datetime.fromtimestamp(os.path.getmtime(file))
                                 }
                         if definition["kind"] == "heat":
                             fields["upstream_template"] = definition.get("heat_template_url")
+                            # For heat-based cluster definitions, load the
+                            # parameters directly from the HOT template.
+                            hot_template = cls._hot_template_contents(fields["upstream_template"])
+                            fields["parameters"] = hot_template["parameters"]
                         elif definition["kind"] == "magnum":
                             fields["upstream_template"] = definition.get("magnum_cluster_template")
+                            fields["parameters"] = definition.get("parameters", {})
                         cluster_type = cls(**fields)
                         return cluster_type
         except FileNotFoundError as exc:
@@ -186,8 +199,7 @@ class ClusterType:
             # the template, such as it not being found at that path, not being
             # valid YAML and some schema issues too.
             try:
-                hot_template_path = cls._hot_template_path(definition.get("heat_template_url"))
-                _files, hot_template = template_utils.get_template_contents(hot_template_path)
+                hot_template = cls._hot_template_contents(definition.get("heat_template_url"))
             except urllib.error.URLError as exc:
                 filename = None
                 try:
@@ -213,6 +225,13 @@ class ClusterType:
     @classmethod
     def _hot_template_path(cls, relative_path):
         return os.path.join(cls.hot_templates_dir, relative_path)
+
+
+    @classmethod
+    def _hot_template_contents(cls, relative_path):
+        hot_template_path = cls._hot_template_path(relative_path)
+        _files, hot_template = template_utils.get_template_contents(hot_template_path)
+        return hot_template
 
 
     @staticmethod

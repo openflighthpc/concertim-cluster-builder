@@ -4,11 +4,17 @@ parameters:
     type: string
     label: Cluster Name
     description: The name to give the cluster
+    constraints:
+      - length: { min: 6, max: 255 }
+        description: Cluster name must be between 6 and 255 characters
+      - allowed_pattern: "^[a-zA-Z][a-zA-Z0-9\\-_]*$"
+        description: Cluster name can contain only alphanumeric characters, hyphens and underscores
 
   external-network:
     type: string
     label: External Network Name
     description: The name of the external network to bridge network to
+    default: public1
     constraints:
       - custom_constraint: neutron.network
 
@@ -16,6 +22,7 @@ parameters:
     type: string
     label: Primary Nework CIDR
     description: Network CIDR to be used for primary network
+    default: "10.100.0.0/16"
     constraints:
       - custom_constraint: net_cidr
 
@@ -26,6 +33,7 @@ parameters:
   solo-image:
     type: string
     label: Flight Solo Image ID
+    default: "Flight Solo 2023.2"
     constraints:
       - custom_constraint: glance.image
 
@@ -38,12 +46,14 @@ parameters:
   gateway-flavour:
     type: string
     label: Gateway node flavour
+    default: m1.medium
     constraints:
       - custom_constraint: nova.flavor
 
   infra01-create:
     type: boolean
     label: Create Infra01 Node?
+    default: True
 
   infra01-pri-ip:
     type: string
@@ -54,12 +64,14 @@ parameters:
   infra01-flavour:
     type: string
     label: Infra01 node flavour
+    default: m1.small
     constraints:
       - custom_constraint: nova.flavor
 
   infra02-create:
     type: boolean
     label: Create Infra02 Node?
+    default: False
 
   infra02-pri-ip:
     type: string
@@ -70,12 +82,14 @@ parameters:
   infra02-flavour:
     type: string
     label: Infra02 node flavour
+    default: m1.small
     constraints:
       - custom_constraint: nova.flavor
 
   storage1-create:
     type: boolean
     label: Create Storage1 Node?
+    default: False
 
   storage1-pri-ip:
     type: string
@@ -86,6 +100,7 @@ parameters:
   storage1-flavour:
     type: string
     label: Storage1 node flavour
+    default: m1.medium
     constraints:
       - custom_constraint: nova.flavor
 
