@@ -5,8 +5,9 @@ import os
 import yaml
 
 from flask import (abort)
-import jsonschema
+from heatclient.common import template_utils
 from jsonschema.exceptions import (best_match)
+import jsonschema
 
 # JSON Schema definition for cluster type definitions.
 SCHEMA = {
@@ -152,6 +153,15 @@ class ClusterType:
     @classmethod
     def _validate(cls, template):
         jsonschema.validate(instance=template, schema=SCHEMA)
+        # Attempt to load the HOT.  This will catch some possible issues with
+        # the template, such as it not being found at that path, not being
+        # valid YAML and some schema issues too.
+        hot_template_path = cls._template_path(template.get("heat_template_url"))
+        template_utils.get_template_contents(hot_template_path)
+
+    @classmethod
+    def _template_path(cls, relative_path):
+        return os.path.join(cls.hot_templates_dir, relative_path)
 
 
     @staticmethod
@@ -187,7 +197,7 @@ class ClusterType:
 
 
     def template_path(self):
-        return os.path.join(self.hot_templates_dir, self.heat_template_url)
+        return self._template_path(self.heat_template_url)
 
 
     def asdict(self, attributes=None):
