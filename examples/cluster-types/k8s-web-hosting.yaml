@@ -53,7 +53,11 @@ parameters:
 kind: magnum
 
 # The name of the magnum cluster template used when creating magnum clusters
-# from this cluster type definition.  The magnum cluster template must have
-# already been created in magnum.  It is a template author error if a magnum
-# cluster template of this name does not exist.
+# from this cluster type definition.
+#
+# * The magnum cluster template must have already been created in magnum.
+# * The magnum cluster template must be public. Or at least be available to all
+#   concertim users.
+#
+# It is a template author error if either of the above conditions is not met.
 magnum_cluster_template: web-hosting-test
