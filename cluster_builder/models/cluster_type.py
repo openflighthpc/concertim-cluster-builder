@@ -17,7 +17,7 @@ SCHEMA = {
             "description": { "type": "string" },
             "kind": {
                 "type": "string",
-                "enum": ["heat"]
+                "enum": ["heat", "magnum"]
                 },
             "parameters": {
                 "type": "object",
@@ -52,14 +52,27 @@ SCHEMA = {
                 }
             },
         "required": ["title", "description", "kind"],
-        "anyOf": [
-            { 
-             "properties": {
-                 "kind": { "const": "heat" },
-                 "heat_template_url": { "type": "string" },
-                 },
-             "required": ["heat_template_url"],
-             },
+        "allOf": [
+            {
+                "if": {
+                    "properties": { "kind": { "const": "heat" } },
+                    "required": ["kind"]
+                    },
+                "then": {
+                    "properties": { "heat_template_url": { "type": "string" } },
+                    "required": ["heat_template_url"],
+                    },
+                },
+            {
+                "if": {
+                    "properties": { "kind": { "const": "magnum" } },
+                    "required": ["kind"]
+                    },
+                "then": {
+                    "properties": { "magnum_cluster_template": { "type": "string" } },
+                    "required": ["magnum_cluster_template"],
+                    },
+                }
             ]
         }
 
@@ -159,27 +172,28 @@ class ClusterType:
     @classmethod
     def _validate(cls, template):
         jsonschema.validate(instance=template, schema=SCHEMA)
-        # Attempt to load the HOT.  This will catch some possible issues with
-        # the template, such as it not being found at that path, not being
-        # valid YAML and some schema issues too.
-        hot_template_path = cls._template_path(template.get("heat_template_url"))
-        _files, hot_template = template_utils.get_template_contents(hot_template_path)
-        # Check that the HOT includes a network and router in its resources.
-        # We require that all clusters are created on their own network not the
-        # public network.  The presence of OS::Neutron::{Router,Net} is the
-        # heuristic we use for this.
-        found_router = False
-        found_network = False
-        for resource in hot_template["resources"].values():
-            if resource["type"] == "OS::Neutron::Router":
-                found_router = True
-            if resource["type"] == "OS::Neutron::Net":
-                found_network = True
-        if not found_router or not found_network:
-            raise NetworkNotFoundError()
+        if template.get("kind") == "heat":
+            # Attempt to load the HOT.  This will catch some possible issues with
+            # the template, such as it not being found at that path, not being
+            # valid YAML and some schema issues too.
+            hot_template_path = cls._hot_template_path(template.get("heat_template_url"))
+            _files, hot_template = template_utils.get_template_contents(hot_template_path)
+            # Check that the HOT includes a network and router in its resources.
+            # We require that all clusters are created on their own network not the
+            # public network.  The presence of OS::Neutron::{Router,Net} is the
+            # heuristic we use for this.
+            found_router = False
+            found_network = False
+            for resource in hot_template["resources"].values():
+                if resource["type"] == "OS::Neutron::Router":
+                    found_router = True
+                if resource["type"] == "OS::Neutron::Net":
+                    found_network = True
+            if not found_router or not found_network:
+                raise NetworkNotFoundError()
 
     @classmethod
-    def _template_path(cls, relative_path):
+    def _hot_template_path(cls, relative_path):
         return os.path.join(cls.hot_templates_dir, relative_path)
 
 
@@ -215,8 +229,8 @@ class ClusterType:
             abort(400, "Missing parameters: {}".format(", ".join(missing)))
 
 
-    def template_path(self):
-        return self._template_path(self.heat_template_url)
+    def hot_template_path(self):
+        return self._hot_template_path(self.heat_template_url)
 
 
     def asdict(self, attributes=None):

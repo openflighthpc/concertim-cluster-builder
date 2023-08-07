@@ -106,8 +106,7 @@ parameters:
     label: Storage1 mounted disk size
 
 
-# The kind or type of this cluster template.  Currently this can only be
-# `heat`.
+# The kind or type of this cluster template.
 kind: heat
 
 # The path to the HOT template to use for this cluster-type.
