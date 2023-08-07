@@ -97,8 +97,7 @@ class ClusterType:
     description: str
     parameters: dict
     kind: str
-    heat_template_url: str
-    magnum_cluster_template: str
+    upstream_template: str
     last_modified: str
 
     @classmethod
@@ -160,16 +159,19 @@ class ClusterType:
                         cls.logger.debug(f'Loading {id} failed: {exc}')
                         return None
                     else:
-                        cluster_type = cls(
-                                id=id,
-                                title=template.get("title", ""),
-                                description=template.get("description", id),
-                                parameters=template.get("parameters", []),
-                                kind=template.get("kind"),
-                                heat_template_url=template.get("heat_template_url"),
-                                magnum_cluster_template=template.get("magnum_cluster_template"),
-                                last_modified=datetime.datetime.fromtimestamp(os.path.getmtime(file))
-                                )
+                        fields = {
+                                "id": id,
+                                "title": template.get("title", ""),
+                                "description": template.get("description", id),
+                                "parameters": template.get("parameters", []),
+                                "kind": template.get("kind"),
+                                "last_modified": datetime.datetime.fromtimestamp(os.path.getmtime(file))
+                                }
+                        if template["kind"] == "heat":
+                            fields["upstream_template"] = template.get("heat_template_url")
+                        elif template["kind"] == "magnum":
+                            fields["upstream_template"] = template.get("magnum_cluster_template")
+                        cluster_type = cls(**fields)
                         return cluster_type
         except FileNotFoundError as exc:
             cls.logger.error(f'Loading {id} failed: FileNotFoundError: {file}')
@@ -246,7 +248,7 @@ class ClusterType:
 
 
     def hot_template_path(self):
-        return self._hot_template_path(self.heat_template_url)
+        return self._hot_template_path(self.upstream_template)
 
 
     def asdict(self, attributes=None):
