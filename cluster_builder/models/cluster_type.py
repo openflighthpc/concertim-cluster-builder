@@ -63,6 +63,9 @@ SCHEMA = {
             ]
         }
 
+class NetworkNotFoundError(RuntimeError):
+    pass
+
 @dataclass
 class ClusterType:
     # Class variables configured in configure method.
@@ -123,15 +126,18 @@ class ClusterType:
                 try:
                     template = yaml.safe_load(stream)
                 except yaml.YAMLError as exc:
-                    cls.logger.error(f'Failed to load cluster type definition: {id} {exc}')
+                    cls.logger.error(f'Loading {id} failed: {exc}')
                     return None
                 else:
                     try:
                         cls._validate(template)
+                    except NetworkNotFoundError as exc:
+                        cls.logger.error(f'Loading {id} failed: network or router resource not found')
+                        cls.logger.debug(f'Loading {id} failed: HOT templates are expected to define a private network. It appears that this template does not.')
                     except jsonschema.ValidationError as exc:
                         error_message = best_match([exc]).message
-                        cls.logger.error(f'Failed to load cluster type definition: {id} {error_message}')
-                        cls.logger.debug(f'Failed to load cluster type definition: {id} {exc}')
+                        cls.logger.error(f'Loading {id} failed: {error_message}')
+                        cls.logger.debug(f'Loading {id} failed: {exc}')
                         return None
                     else:
                         cluster_type = cls(
@@ -146,7 +152,7 @@ class ClusterType:
                                 )
                         return cluster_type
         except FileNotFoundError as exc:
-            cls.logger.error(f'Failed to load cluster type definition: {id}:{file} FileNotFoundError')
+            cls.logger.error(f'Loading {id} failed: FileNotFoundError: {file}')
             return None
 
 
@@ -157,7 +163,20 @@ class ClusterType:
         # the template, such as it not being found at that path, not being
         # valid YAML and some schema issues too.
         hot_template_path = cls._template_path(template.get("heat_template_url"))
-        template_utils.get_template_contents(hot_template_path)
+        _files, hot_template = template_utils.get_template_contents(hot_template_path)
+        # Check that the HOT includes a network and router in its resources.
+        # We require that all clusters are created on their own network not the
+        # public network.  The presence of OS::Neutron::{Router,Net} is the
+        # heuristic we use for this.
+        found_router = False
+        found_network = False
+        for resource in hot_template["resources"].values():
+            if resource["type"] == "OS::Neutron::Router":
+                found_router = True
+            if resource["type"] == "OS::Neutron::Net":
+                found_network = True
+        if not found_router or not found_network:
+            raise NetworkNotFoundError()
 
     @classmethod
     def _template_path(cls, relative_path):
