@@ -141,13 +141,13 @@ class ClusterType:
         try:
             with open(file, 'r') as stream:
                 try:
-                    template = yaml.safe_load(stream)
+                    definition = yaml.safe_load(stream)
                 except yaml.YAMLError as exc:
                     cls.logger.error(f'Loading {id} failed: {exc}')
                     return None
                 else:
                     try:
-                        cls._validate(template)
+                        cls._validate(definition)
                     except HotNotFoundError as exc:
                         cls.logger.error(f'Loading {id} failed: HotNotFoundError: {exc}')
                     except NetworkNotFoundError as exc:
@@ -161,16 +161,16 @@ class ClusterType:
                     else:
                         fields = {
                                 "id": id,
-                                "title": template.get("title", ""),
-                                "description": template.get("description", id),
-                                "parameters": template.get("parameters", []),
-                                "kind": template.get("kind"),
+                                "title": definition["title"],
+                                "description": definition["description"],
+                                "parameters": definition.get("parameters", []),
+                                "kind": definition["kind"],
                                 "last_modified": datetime.datetime.fromtimestamp(os.path.getmtime(file))
                                 }
-                        if template["kind"] == "heat":
-                            fields["upstream_template"] = template.get("heat_template_url")
-                        elif template["kind"] == "magnum":
-                            fields["upstream_template"] = template.get("magnum_cluster_template")
+                        if definition["kind"] == "heat":
+                            fields["upstream_template"] = definition.get("heat_template_url")
+                        elif definition["kind"] == "magnum":
+                            fields["upstream_template"] = definition.get("magnum_cluster_template")
                         cluster_type = cls(**fields)
                         return cluster_type
         except FileNotFoundError as exc:
@@ -179,14 +179,14 @@ class ClusterType:
 
 
     @classmethod
-    def _validate(cls, template):
-        jsonschema.validate(instance=template, schema=SCHEMA)
-        if template.get("kind") == "heat":
+    def _validate(cls, definition):
+        jsonschema.validate(instance=definition, schema=SCHEMA)
+        if definition.get("kind") == "heat":
             # Attempt to load the HOT.  This will catch some possible issues with
             # the template, such as it not being found at that path, not being
             # valid YAML and some schema issues too.
             try:
-                hot_template_path = cls._hot_template_path(template.get("heat_template_url"))
+                hot_template_path = cls._hot_template_path(definition.get("heat_template_url"))
                 _files, hot_template = template_utils.get_template_contents(hot_template_path)
             except urllib.error.URLError as exc:
                 filename = None
