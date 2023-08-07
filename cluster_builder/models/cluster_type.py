@@ -5,6 +5,62 @@ import os
 import yaml
 
 from flask import (abort)
+import jsonschema
+from jsonschema.exceptions import (best_match)
+
+# JSON Schema definition for cluster type definitions.
+SCHEMA = {
+        "type": "object",
+        "properties": {
+            "title": { "type": "string" },
+            "description": { "type": "string" },
+            "kind": {
+                "type": "string",
+                "enum": ["heat"]
+                },
+            "parameters": {
+                "type": "object",
+                "patternProperties": {
+                    "^.*$": {
+                        "type": "object",
+                        "properties": {
+                            "type": {
+                                "type": "string",
+                                "enum": ["string", "number", "json", "comma_delimited_list", "boolean"]
+                                },
+                            "label": { "type": "string" },
+                            "description": { "type": "string" },
+                            "default": {},
+                            "hidden": { "type": "boolean" },
+                            "constraints": {
+                                "type": "array",
+                                # "items": {
+                                #     "type": "object",
+                                #     "properties": {},
+                                #     "additionalProperties": false
+                                #     }
+                                },
+                            "immutable": { "type": "boolean" },
+                            "tags": {}
+                            },
+                        "additionalProperties": False,
+                        "required": ["type"]
+                        }
+                    },
+                "additionalProperties": False
+                }
+            },
+        "required": ["title", "description", "kind"],
+        "anyOf": [
+            { 
+             "properties": {
+                 "kind": { "const": "heat" },
+                 "heat_template_url": { "type": "string" },
+                 },
+             "required": ["heat_template_url"],
+             },
+            ]
+        }
 
 @dataclass
 class ClusterType:
@@ -69,20 +125,33 @@ class ClusterType:
                     cls.logger.error(f'Failed to load cluster type definition: {id} {exc}')
                     return None
                 else:
-                    cluster_type = cls(
-                            id=id,
-                            title=template.get("title", ""),
-                            description=template.get("description", id),
-                            parameters=template.get("parameters", []),
-                            kind=template.get("kind"),
-                            heat_template_url=template.get("heat_template_url"),
-                            magnum_cluster_template=template.get("magnum_cluster_template"),
-                            last_modified=datetime.datetime.fromtimestamp(os.path.getmtime(file))
-                            )
-                    return cluster_type
+                    try:
+                        cls._validate(template)
+                    except jsonschema.ValidationError as exc:
+                        error_message = best_match([exc]).message
+                        cls.logger.error(f'Failed to load cluster type definition: {id} {error_message}')
+                        cls.logger.debug(f'Failed to load cluster type definition: {id} {exc}')
+                        return None
+                    else:
+                        cluster_type = cls(
+                                id=id,
+                                title=template.get("title", ""),
+                                description=template.get("description", id),
+                                parameters=template.get("parameters", []),
+                                kind=template.get("kind"),
+                                heat_template_url=template.get("heat_template_url"),
+                                magnum_cluster_template=template.get("magnum_cluster_template"),
+                                last_modified=datetime.datetime.fromtimestamp(os.path.getmtime(file))
+                                )
+                        return cluster_type
         except FileNotFoundError as exc:
             cls.logger.error(f'Failed to load cluster type definition: {id}:{file} FileNotFoundError')
             return None
+
+
+    @classmethod
+    def _validate(cls, template):
+        jsonschema.validate(instance=template, schema=SCHEMA)
 
 
     @staticmethod
