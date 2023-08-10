@@ -33,7 +33,7 @@ parameters:
   solo-image:
     type: string
     label: Flight Solo Image ID
-    default: "Flight Solo 2023.2"
+    # default: "Flight Solo 2023.2"
     constraints:
       - custom_constraint: glance.image
 

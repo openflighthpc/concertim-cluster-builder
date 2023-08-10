@@ -13,6 +13,13 @@ description: |
 # The kind or type of this cluster template.
 kind: heat
 
+# Any of the parameters defined in `heat_template_url` can be hardcoded here.
+# If they are hardcoded, the value provided here will be passed to Heat when
+# launching the cluster.  It will not be possible for the user to override this
+# value.
+# hardcoded_parameters:
+#   solo-image: "Flight Solo 2023.2"
+
 # The path to the HOT template to use for this cluster-type.
 #
 # Paths are relative to the `hot` directory in the Flask servers instance path

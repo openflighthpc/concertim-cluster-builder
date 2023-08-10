@@ -1,4 +1,4 @@
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 import datetime
 import glob
 import os
@@ -64,6 +64,15 @@ SCHEMA = {
                     },
                 "then": {
                     "properties": {
+                        "hardcoded_parameters": {
+                            "type": "object",
+                            "patternProperties": {
+                                "^.*$": {
+                                    "type": "string",
+                                    }
+                                },
+                            "additionalProperties": False
+                            },
                         "heat_template_url": { "type": "string" },
                         "parameters": False
                         },
@@ -108,6 +117,7 @@ class ClusterType:
     kind: str
     upstream_template: str
     last_modified: str
+    hardcoded_parameters: dict = field(default_factory=dict)
 
     @classmethod
     def configure(cls, hot_templates_dir, types_dir, logger):
@@ -176,11 +186,12 @@ class ClusterType:
                                 "last_modified": datetime.datetime.fromtimestamp(os.path.getmtime(file))
                                 }
                         if definition["kind"] == "heat":
-                            fields["upstream_template"] = definition.get("heat_template_url")
-                            # For heat-based cluster definitions, load the
-                            # parameters directly from the HOT template.
+                            fields["upstream_template"] = definition["heat_template_url"]
+                            # For heat-based cluster definitions, the
+                            # parameters are loaded from the HOT template.
                             hot_template = cls._hot_template_contents(fields["upstream_template"])
-                            fields["parameters"] = hot_template["parameters"]
+                            fields["hardcoded_parameters"] = definition.get("hardcoded_parameters", {})
+                            fields["parameters"] = cls.extract_parameters(hot_template, fields["hardcoded_parameters"])
                         elif definition["kind"] == "magnum":
                             fields["upstream_template"] = definition.get("magnum_cluster_template")
                             fields["parameters"] = definition.get("parameters", {})
@@ -214,7 +225,7 @@ class ClusterType:
                 # OS::Neutron::{Router,Net} is the heuristic we use for this.
                 found_router = False
                 found_network = False
-                for resource in hot_template["resources"].values():
+                for resource in hot_template.get("resources", {}).values():
                     if resource["type"] == "OS::Neutron::Router":
                         found_router = True
                     if resource["type"] == "OS::Neutron::Net":
@@ -235,10 +246,34 @@ class ClusterType:
 
 
     @staticmethod
+    def extract_parameters(hot_template, hardcoded_parameters):
+        if hardcoded_parameters is None:
+            return hot_template.get("parameters", {})
+        else:
+            params = {}
+            hardcoded_names = hardcoded_parameters.keys()
+            for key, value in hot_template.get("parameters", {}).items():
+                if key in hardcoded_names:
+                    # Hardcoded params are not displayed to the user.  The
+                    # hardcoded value will be provided to OpenStack exactly as
+                    # provided in the cluster definition.
+                    pass
+                else:
+                    params[key] = value
+            return params
+
+
+    @staticmethod
     def merge_parameters(cluster_type, given_answers):
         """
-        Return the given answers merged with the defaults for the cluster
-        type's parameters.  The given answers take precedence.
+        Return the parameters to be sent to the cloud service.
+
+        The value for each parameter can come from (in order of precedence):
+
+        1. Hardcoded parameters in the cluster type definition.
+        2. User given answer.
+        3. Default set in either the cluster type definition or the HOT
+        template.
         """
         merged_parameters = {}
         for name, parameter in cluster_type.parameters.items():
@@ -247,6 +282,8 @@ class ClusterType:
                 merged_parameters[name] = given_answer
             else:
                 merged_parameters[name] = parameter.get("default")
+        for name, value in cluster_type.hardcoded_parameters.items():
+            merged_parameters[name] = value
         return merged_parameters
 
 
