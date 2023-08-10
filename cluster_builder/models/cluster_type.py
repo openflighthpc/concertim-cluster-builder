@@ -3,6 +3,7 @@ import datetime
 import glob
 import os
 import yaml
+import urllib
 
 from flask import (abort)
 from heatclient.common import template_utils
@@ -79,6 +80,10 @@ SCHEMA = {
 class NetworkNotFoundError(RuntimeError):
     pass
 
+class HotNotFoundError(FileNotFoundError):
+    pass
+
+
 @dataclass
 class ClusterType:
     # Class variables configured in configure method.
@@ -144,6 +149,8 @@ class ClusterType:
                 else:
                     try:
                         cls._validate(template)
+                    except HotNotFoundError as exc:
+                        cls.logger.error(f'Loading {id} failed: HotNotFoundError: {exc}')
                     except NetworkNotFoundError as exc:
                         cls.logger.error(f'Loading {id} failed: network or router resource not found')
                         cls.logger.debug(f'Loading {id} failed: HOT templates are expected to define a private network. It appears that this template does not.')
@@ -176,21 +183,30 @@ class ClusterType:
             # Attempt to load the HOT.  This will catch some possible issues with
             # the template, such as it not being found at that path, not being
             # valid YAML and some schema issues too.
-            hot_template_path = cls._hot_template_path(template.get("heat_template_url"))
-            _files, hot_template = template_utils.get_template_contents(hot_template_path)
-            # Check that the HOT includes a network and router in its resources.
-            # We require that all clusters are created on their own network not the
-            # public network.  The presence of OS::Neutron::{Router,Net} is the
-            # heuristic we use for this.
-            found_router = False
-            found_network = False
-            for resource in hot_template["resources"].values():
-                if resource["type"] == "OS::Neutron::Router":
-                    found_router = True
-                if resource["type"] == "OS::Neutron::Net":
-                    found_network = True
-            if not found_router or not found_network:
-                raise NetworkNotFoundError()
+            try:
+                hot_template_path = cls._hot_template_path(template.get("heat_template_url"))
+                _files, hot_template = template_utils.get_template_contents(hot_template_path)
+            except urllib.error.URLError as exc:
+                filename = None
+                try:
+                    filename = exc.args[0].filename
+                except:
+                    pass
+                raise HotNotFoundError(filename) from exc
+            else:
+                # Check that the HOT includes a network and router in its
+                # resources. We require that all clusters are created on their
+                # own network not the public network.  The presence of
+                # OS::Neutron::{Router,Net} is the heuristic we use for this.
+                found_router = False
+                found_network = False
+                for resource in hot_template["resources"].values():
+                    if resource["type"] == "OS::Neutron::Router":
+                        found_router = True
+                    if resource["type"] == "OS::Neutron::Net":
+                        found_network = True
+                if not found_router or not found_network:
+                    raise NetworkNotFoundError()
 
     @classmethod
     def _hot_template_path(cls, relative_path):
