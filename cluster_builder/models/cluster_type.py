@@ -3,8 +3,86 @@ import datetime
 import glob
 import os
 import yaml
+import urllib
 
 from flask import (abort)
+from heatclient.common import template_utils
+from jsonschema.exceptions import (best_match)
+import jsonschema
+
+# JSON Schema definition for cluster type definitions.
+SCHEMA = {
+        "type": "object",
+        "properties": {
+            "title": { "type": "string" },
+            "description": { "type": "string" },
+            "kind": {
+                "type": "string",
+                "enum": ["heat", "magnum"]
+                },
+            "parameters": {
+                "type": "object",
+                "patternProperties": {
+                    "^.*$": {
+                        "type": "object",
+                        "properties": {
+                            "type": {
+                                "type": "string",
+                                "enum": ["string", "number", "json", "comma_delimited_list", "boolean"]
+                                },
+                            "label": { "type": "string" },
+                            "description": { "type": "string" },
+                            "default": {},
+                            "hidden": { "type": "boolean" },
+                            "constraints": {
+                                "type": "array",
+                                # "items": {
+                                #     "type": "object",
+                                #     "properties": {},
+                                #     "additionalProperties": false
+                                #     }
+                                },
+                            "immutable": { "type": "boolean" },
+                            "tags": {}
+                            },
+                        "additionalProperties": False,
+                        "required": ["type"]
+                        }
+                    },
+                "additionalProperties": False
+                }
+            },
+        "required": ["title", "description", "kind"],
+        "allOf": [
+            {
+                "if": {
+                    "properties": { "kind": { "const": "heat" } },
+                    "required": ["kind"]
+                    },
+                "then": {
+                    "properties": { "heat_template_url": { "type": "string" } },
+                    "required": ["heat_template_url"],
+                    },
+                },
+            {
+                "if": {
+                    "properties": { "kind": { "const": "magnum" } },
+                    "required": ["kind"]
+                    },
+                "then": {
+                    "properties": { "magnum_cluster_template": { "type": "string" } },
+                    "required": ["magnum_cluster_template"],
+                    },
+                }
+            ]
+        }
+
+class NetworkNotFoundError(RuntimeError):
+    pass
+
+class HotNotFoundError(FileNotFoundError):
+    pass
+
 
 @dataclass
 class ClusterType:
@@ -66,23 +144,73 @@ class ClusterType:
                 try:
                     template = yaml.safe_load(stream)
                 except yaml.YAMLError as exc:
-                    cls.logger.error(f'Failed to load cluster type definition: {id} {exc}')
+                    cls.logger.error(f'Loading {id} failed: {exc}')
                     return None
                 else:
-                    cluster_type = cls(
-                            id=id,
-                            title=template.get("title", ""),
-                            description=template.get("description", id),
-                            parameters=template.get("parameters", []),
-                            kind=template.get("kind"),
-                            heat_template_url=template.get("heat_template_url"),
-                            magnum_cluster_template=template.get("magnum_cluster_template"),
-                            last_modified=datetime.datetime.fromtimestamp(os.path.getmtime(file))
-                            )
-                    return cluster_type
+                    try:
+                        cls._validate(template)
+                    except HotNotFoundError as exc:
+                        cls.logger.error(f'Loading {id} failed: HotNotFoundError: {exc}')
+                    except NetworkNotFoundError as exc:
+                        cls.logger.error(f'Loading {id} failed: network or router resource not found')
+                        cls.logger.debug(f'Loading {id} failed: HOT templates are expected to define a private network. It appears that this template does not.')
+                    except jsonschema.ValidationError as exc:
+                        error_message = best_match([exc]).message
+                        cls.logger.error(f'Loading {id} failed: {error_message}')
+                        cls.logger.debug(f'Loading {id} failed: {exc}')
+                        return None
+                    else:
+                        cluster_type = cls(
+                                id=id,
+                                title=template.get("title", ""),
+                                description=template.get("description", id),
+                                parameters=template.get("parameters", []),
+                                kind=template.get("kind"),
+                                heat_template_url=template.get("heat_template_url"),
+                                magnum_cluster_template=template.get("magnum_cluster_template"),
+                                last_modified=datetime.datetime.fromtimestamp(os.path.getmtime(file))
+                                )
+                        return cluster_type
         except FileNotFoundError as exc:
-            cls.logger.error(f'Failed to load cluster type definition: {id}:{file} FileNotFoundError')
+            cls.logger.error(f'Loading {id} failed: FileNotFoundError: {file}')
             return None
+
+
+    @classmethod
+    def _validate(cls, template):
+        jsonschema.validate(instance=template, schema=SCHEMA)
+        if template.get("kind") == "heat":
+            # Attempt to load the HOT.  This will catch some possible issues with
+            # the template, such as it not being found at that path, not being
+            # valid YAML and some schema issues too.
+            try:
+                hot_template_path = cls._hot_template_path(template.get("heat_template_url"))
+                _files, hot_template = template_utils.get_template_contents(hot_template_path)
+            except urllib.error.URLError as exc:
+                filename = None
+                try:
+                    filename = exc.args[0].filename
+                except:
+                    pass
+                raise HotNotFoundError(filename) from exc
+            else:
+                # Check that the HOT includes a network and router in its
+                # resources. We require that all clusters are created on their
+                # own network not the public network.  The presence of
+                # OS::Neutron::{Router,Net} is the heuristic we use for this.
+                found_router = False
+                found_network = False
+                for resource in hot_template["resources"].values():
+                    if resource["type"] == "OS::Neutron::Router":
+                        found_router = True
+                    if resource["type"] == "OS::Neutron::Net":
+                        found_network = True
+                if not found_router or not found_network:
+                    raise NetworkNotFoundError()
+
+    @classmethod
+    def _hot_template_path(cls, relative_path):
+        return os.path.join(cls.hot_templates_dir, relative_path)
 
 
     @staticmethod
@@ -117,8 +245,8 @@ class ClusterType:
             abort(400, "Missing parameters: {}".format(", ".join(missing)))
 
 
-    def template_path(self):
-        return os.path.join(self.hot_templates_dir, self.heat_template_url)
+    def hot_template_path(self):
+        return self._hot_template_path(self.heat_template_url)
 
 
     def asdict(self, attributes=None):

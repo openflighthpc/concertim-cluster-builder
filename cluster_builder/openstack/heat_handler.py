@@ -50,5 +50,5 @@ class HeatHandler:
 
 
     def _template_stream(self, cluster_type):
-        _files, template = template_utils.get_template_contents(cluster_type.template_path())
+        _files, template = template_utils.get_template_contents(cluster_type.hot_template_path())
         return yaml.safe_dump(template)
