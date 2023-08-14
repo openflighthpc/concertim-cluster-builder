@@ -1,0 +1,107 @@
+heat_template_version: 2021-04-16
+
+parameters:
+  clustername:
+    type: string
+    label: Cluster Name
+    description: The name to give the cluster
+    constraints:
+      - length: { min: 6, max: 255 }
+        description: Cluster name must be between 6 and 255 characters
+      - allowed_pattern: "^[a-zA-Z][a-zA-Z0-9\\-_]*$"
+        description: Cluster name can contain only alphanumeric characters, hyphens and underscores
+
+  keypair:
+    type: string
+    label: "SSH keypair to use"
+    description: "The ID or name of the keypair to use."
+    constraints:
+      - custom_constraint: nova.keypair
+
+  external-network:
+    type: string
+    label: External Network Name
+    description: The name of the external network to bridge network to
+    default: public1
+    constraints:
+      - custom_constraint: neutron.network
+
+  network-cidr-pri:
+    type: string
+    label: Primary Nework CIDR
+    description: Network CIDR to be used for primary network
+    default: "10.100.0.0/16"
+    constraints:
+      - custom_constraint: net_cidr
+
+  cluster-template:
+    type: string
+    label: Cluster template
+    description:  The cluster template name or ID to use.
+    constraints:
+      - custom_constraint: sahara.cluster_template
+
+  image:
+    type: string
+    label: Image
+    description:  The image name or ID that will be used for cluster deployment.
+    constraints:
+      - custom_constraint: sahara.image
+
+  hadoop-version:
+    type: string
+    label: Hadoop version
+    description: The version of hadoop running on instances
+
+  plugin-name:
+    type: string
+    label: Plugin name
+    description: The name of the hadoop plugin
+    constraints:
+      - custom_constraint: sahara.plugin
+
+resources:
+  random-chars:
+    type: OS::Heat::RandomString
+    properties:
+      length: 4
+
+  external-route:
+    type: OS::Neutron::Router
+    depends_on: cluster-network-pri
+    properties:
+      name: { list_join: ['-', [ {get_param: clustername}, {get_resource: random-chars}, 'ext-route']] }
+      external_gateway_info:
+        network: { get_param: external-network }
+
+  external-route-iface:
+    type: OS::Neutron::RouterInterface
+    properties:
+      router: { get_resource: external-route }
+      subnet: { get_resource: cluster-network-pri }
+
+  cluster-network:
+    type: OS::Neutron::Net
+    properties:
+      name: { list_join: ['-', [{ get_param: clustername }, {get_resource: random-chars}, 'network']] }
+
+  cluster-network-pri:
+    type: OS::Neutron::Subnet
+    properties:
+      name: { list_join: ['-', [ {get_param: clustername}, {get_resource: random-chars}, 'network-pri']] }
+      network: { get_resource: cluster-network }
+      cidr: { get_param: network-cidr-pri }
+      ip_version: 4
+
+  cluster:
+    type: OS::Sahara::Cluster
+    properties:
+      cluster_template_id: {get_param: cluster-template}
+      default_image_id: {get_param: image}
+      hadoop_version: {get_param: hadoop-version}
+      key_name: {get_param: keypair}
+      name: { list_join: ['-', [{get_param: clustername}, {get_resource: random-chars}]] }
+      neutron_management_network: {get_resource: cluster-network}
+      plugin_name: {get_param: plugin-name}
+      # shares: [{"id": String, "path": String, "access_level": String}, {"id": String, "path": String, "access_level": String}, ...]
+      use_autoconfig: false
