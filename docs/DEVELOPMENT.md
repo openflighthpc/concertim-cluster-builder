@@ -50,3 +50,16 @@ Start the docker container by running the following.
 ```bash
 docker compose -f docker-compose-dev.yml up
 ```
+
+## Test suite
+
+There is a test suite located in the `tests` directory.  It can be ran in a
+temporary container by using the `pytest` test runner:
+
+```
+docker compose -f docker-compose-dev.yml run --rm cluster_builder pytest -v
+```
+
+Documentation on writting tests can be found at
+https://docs.pytest.org/en/7.4.x/ and
+https://flask.palletsprojects.com/en/2.3.x/testing/.
