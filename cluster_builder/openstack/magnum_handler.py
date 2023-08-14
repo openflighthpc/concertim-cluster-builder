@@ -32,8 +32,8 @@ class MagnumHandler:
         self.logger.info(f"Creating cluster {cluster_data['name']} from {cluster_data['cluster_type_id']}")
         try:
             cluster_name = cluster_data["name"]
-            self.logger.debug(f"getting cluster template {cluster_type.magnum_cluster_template}")
-            magnum_cluster_template = self.client.cluster_templates.get(cluster_type.magnum_cluster_template)
+            self.logger.debug(f"getting cluster template {cluster_type.upstream_template}")
+            magnum_cluster_template = self.client.cluster_templates.get(cluster_type.upstream_template)
             parameters = ClusterType.merge_parameters(cluster_type, cluster_data.get("parameters"))
             self.logger.debug(f"parameters: {parameters}")
             magnum_cluster = self.client.clusters.create(
