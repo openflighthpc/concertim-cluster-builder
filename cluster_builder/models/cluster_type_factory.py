@@ -190,6 +190,12 @@ class ClusterTypeFactory:
                             hot_template = self._hot_template_contents(fields["upstream_template"])
                             fields["hardcoded_parameters"] = definition.get("hardcoded_parameters", {})
                             fields["parameters"] = self._extract_parameters(hot_template, fields["hardcoded_parameters"])
+                            # Update the last_modified date if the HOT has been
+                            # modified more recently.
+                            hot_template_path = self.hot_template_path(definition.get("heat_template_url"))
+                            hot_last_modified = datetime.datetime.fromtimestamp(os.path.getmtime(hot_template_path))
+                            if hot_last_modified > fields["last_modified"]:
+                                fields["last_modified"] = hot_last_modified
                         elif definition["kind"] == "magnum":
                             fields["upstream_template"] = definition.get("magnum_cluster_template")
                             fields["parameters"] = definition.get("parameters", {})
