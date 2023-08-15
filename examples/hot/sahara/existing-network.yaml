@@ -18,33 +18,24 @@ parameters:
     constraints:
       - custom_constraint: nova.keypair
 
-  external-network:
+  cluster-network:
     type: string
-    label: External Network Name
-    description: The name of the external network to bridge network to
-    default: public1
+    label: Network
+    description:  The ID of the network to launch the cluster on.
     constraints:
       - custom_constraint: neutron.network
-
-  network-cidr-pri:
-    type: string
-    label: Primary Nework CIDR
-    description: Network CIDR to be used for primary network
-    default: "10.100.0.0/16"
-    constraints:
-      - custom_constraint: net_cidr
 
   cluster-template:
     type: string
     label: Cluster template
-    description:  The cluster template name or ID to use.
+    description:  The ID of the cluster template to use.
     constraints:
       - custom_constraint: sahara.cluster_template
 
   image:
     type: string
     label: Image
-    description:  The image name or ID that will be used for cluster deployment.
+    description:  The ID of the image that will be used for cluster deployment.
     constraints:
       - custom_constraint: sahara.image
 
@@ -66,32 +57,12 @@ resources:
     properties:
       length: 4
 
-  external-route:
+  # Unused resources that exist only to satisfy our validation that a network
+  # is going to be created.
+  unused-route:
     type: OS::Neutron::Router
-    depends_on: cluster-network-pri
-    properties:
-      name: { list_join: ['-', [ {get_param: clustername}, {get_resource: random-chars}, 'ext-route']] }
-      external_gateway_info:
-        network: { get_param: external-network }
-
-  external-route-iface:
-    type: OS::Neutron::RouterInterface
-    properties:
-      router: { get_resource: external-route }
-      subnet: { get_resource: cluster-network-pri }
-
-  cluster-network:
+  unused-network:
     type: OS::Neutron::Net
-    properties:
-      name: { list_join: ['-', [{ get_param: clustername }, {get_resource: random-chars}, 'network']] }
-
-  cluster-network-pri:
-    type: OS::Neutron::Subnet
-    properties:
-      name: { list_join: ['-', [ {get_param: clustername}, {get_resource: random-chars}, 'network-pri']] }
-      network: { get_resource: cluster-network }
-      cidr: { get_param: network-cidr-pri }
-      ip_version: 4
 
   cluster:
     type: OS::Sahara::Cluster
@@ -101,7 +72,7 @@ resources:
       hadoop_version: {get_param: hadoop-version}
       key_name: {get_param: keypair}
       name: { list_join: ['-', [{get_param: clustername}, {get_resource: random-chars}]] }
-      neutron_management_network: {get_resource: cluster-network}
+      neutron_management_network: {get_param: cluster-network}
       plugin_name: {get_param: plugin-name}
       # shares: [{"id": String, "path": String, "access_level": String}, {"id": String, "path": String, "access_level": String}, ...]
       use_autoconfig: false

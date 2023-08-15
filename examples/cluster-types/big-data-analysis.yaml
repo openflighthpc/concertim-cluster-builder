@@ -4,7 +4,8 @@ title: Big Data Analysis
 # Fuller description of the purpose of the cluster and how to use it.
 description: |
   Launch an Apache Hadoop cluster to process large data sets across a
-  distributed computing environment.
+  distributed computing environment.  A new network will be created for the
+  cluster.
 
 # The kind or type of this cluster template.
 kind: heat
@@ -13,6 +14,10 @@ kind: heat
 # If they are hardcoded, the value provided here will be passed to Heat when
 # launching the cluster.  It will not be possible for the user to override this
 # value.
+#
+# For sahara cluster types it might be desirable to hard code the
+# cluster-template, image, plugin and hadoop version, rather than present those
+# questions to the user.
 hardcoded_parameters:
   # cluster-template: "vanilla-default-cluster"
   cluster-template: "741102fd-6b59-4a4a-af71-0bbf039f0338"
@@ -28,4 +33,13 @@ hardcoded_parameters:
 # directory.
 #
 # Currently, each cluster type supports running a single HOT template.
-heat_template_url: sahara/big-data-analysis.yaml
+#
+# There are two HOTs available for sahara cluster types:
+#
+#   * `sahara/create-network.yaml`: creates a new network for the cluster and
+#     contains parameters to configure its creation.
+#   * `sahara/existing-network.yaml`: uses an existing network for the cluster
+#     and contains parameters to specify which network.
+#
+heat_template_url: sahara/create-network.yaml
+# heat_template_url: sahara/existing-network.yaml
