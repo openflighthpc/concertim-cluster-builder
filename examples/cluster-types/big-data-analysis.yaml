@@ -4,8 +4,8 @@ title: Big Data Analysis
 # Fuller description of the purpose of the cluster and how to use it.
 description: |
   Launch an Apache Hadoop cluster to process large data sets across a
-  distributed computing environment.  A new network will be created for the
-  cluster.
+  distributed computing environment.  The Sahara cluster is launched via a Heat
+  template, allowing for a network to be created specifically for the cluster.
 
 # The kind or type of this cluster template.
 kind: heat

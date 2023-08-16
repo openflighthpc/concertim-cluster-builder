@@ -1,0 +1,43 @@
+# Brief description of the purpose of the cluster.
+title: Big Data Analysis (Direct)
+
+# Fuller description of the purpose of the cluster and how to use it.
+description: |
+  Launch an Apache Hadoop cluster to process large data sets across a
+  distributed computing environment.  The Sahara cluster is launched directly
+  (not via a Heat template).  A network is not created.
+
+# The parameters to expose through Concertim.  There could be a parameter for
+# each of the command line arguments accepted by `openstack dataprocessing cluster create`
+# or a subset. It is a template author error to have parameters here that do
+# not map to a command line argument of `openstack dataprocessing cluster create`.
+parameters:
+  user_keypair:
+    type: string
+    label: "SSH keypair to use"
+    description: "The name or ID of the keypair to use."
+
+  # Unfortunately, this does need to be the ID and not the name at the moment.
+  network_id:
+    type: string
+    label: Network
+    description:  The ID of the network to launch the cluster on.
+
+  image:
+    type: string
+    label: "Sahara image"
+    description: "The name or ID of the sahara image to use"
+    default: "sahara-vanilla-latest-ubuntu"
+
+# The kind or type of this cluster template.
+kind: sahara
+
+# The name of the sahara cluster template used when creating sahara clusters
+# from this cluster type definition.
+#
+# * The sahara cluster template must have already been created in sahara.
+# * The sahara cluster template must be public. Or at least be available to all
+#   concertim users.
+#
+# It is a template author error if either of the above conditions is not met.
+sahara_cluster_template: vanilla-default-cluster
