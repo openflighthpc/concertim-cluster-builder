@@ -5,6 +5,7 @@ from .models import ClusterType
 from .openstack.auth import OpenStackAuth
 from .openstack.heat_handler import HeatHandler
 from .openstack.magnum_handler import MagnumHandler
+from .openstack.sahara_handler import SaharaHandler
 
 bp = Blueprint('clusters', __name__, url_prefix="/clusters")
 
@@ -76,6 +77,7 @@ create_schema = {
 handlers = {
         "heat": HeatHandler,
         "magnum": MagnumHandler,
+        "sahara": SaharaHandler,
         }
 
 @bp.post('/')

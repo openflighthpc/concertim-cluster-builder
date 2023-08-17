@@ -1,0 +1,40 @@
+# Brief description of the purpose of the cluster.
+title: Big Data Analysis
+
+# Fuller description of the purpose of the cluster and how to use it.
+description: |
+  Launch an Apache Hadoop cluster to process large data sets across a
+  distributed computing environment.  The Sahara cluster is launched via a Heat
+  template, allowing for a network to be created specifically for the cluster.
+
+# The kind or type of this cluster template.
+kind: heat
+
+# Any of the parameters defined in `heat_template_url` can be hardcoded here.
+# If they are hardcoded, the value provided here will be passed to Heat when
+# launching the cluster.  It will not be possible for the user to override this
+# value.
+#
+# For sahara cluster types it might be desirable to hard code the
+# cluster-template, image, plugin and hadoop version, rather than present those
+# questions to the user.
+hardcoded_parameters:
+  # cluster-template: "vanilla-default-cluster"
+  cluster-template: "741102fd-6b59-4a4a-af71-0bbf039f0338"
+  # image: "sahara-vanilla-latest-ubuntu"
+  image: "ab7e7129-9962-413a-9bf1-3e1965424f43"
+  hadoop-version: "2.7.1"
+  plugin-name: "vanilla"
+
+
+# The path to the HOT template to use for this cluster-type.
+#
+# Paths are relative to the `hot` directory in the Flask servers instance path
+# directory.
+#
+# Currently, each cluster type supports running a single HOT template.
+#
+# There is a generic HOT available for sahara clusters to use.  It creates a
+# new network for the cluster and contains parameters to configure the networks
+# creation.
+heat_template_url: sahara/create-network.yaml

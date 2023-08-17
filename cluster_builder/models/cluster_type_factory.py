@@ -52,7 +52,7 @@ SCHEMA = {
             "description": { "type": "string" },
             "kind": {
                 "type": "string",
-                "enum": ["heat", "magnum"]
+                "enum": ["heat", "magnum", "sahara"]
                 }
             },
         "required": ["title", "description", "kind"],
@@ -90,6 +90,19 @@ SCHEMA = {
                         "parameters": {"$ref": "/schemas/parameters"}
                         },
                     "required": ["magnum_cluster_template", "parameters"],
+                    },
+                },
+            {
+                "if": {
+                    "properties": { "kind": { "const": "sahara" } },
+                    "required": ["kind"]
+                    },
+                "then": {
+                    "properties": {
+                        "sahara_cluster_template": { "type": "string" },
+                        "parameters": {"$ref": "/schemas/parameters"}
+                        },
+                    "required": ["sahara_cluster_template", "parameters"],
                     },
                 }
             ]
@@ -198,6 +211,9 @@ class ClusterTypeFactory:
                                 fields["last_modified"] = hot_last_modified
                         elif definition["kind"] == "magnum":
                             fields["upstream_template"] = definition.get("magnum_cluster_template")
+                            fields["parameters"] = definition.get("parameters", {})
+                        elif definition["kind"] == "sahara":
+                            fields["upstream_template"] = definition.get("sahara_cluster_template")
                             fields["parameters"] = definition.get("parameters", {})
                         cluster_type = self.klass(**fields)
                         return cluster_type
