@@ -34,12 +34,7 @@ hardcoded_parameters:
 #
 # Currently, each cluster type supports running a single HOT template.
 #
-# There are two HOTs available for sahara cluster types:
-#
-#   * `sahara/create-network.yaml`: creates a new network for the cluster and
-#     contains parameters to configure its creation.
-#   * `sahara/existing-network.yaml`: uses an existing network for the cluster
-#     and contains parameters to specify which network.
-#
+# There is a generic HOT available for sahara clusters to use.  It creates a
+# new network for the cluster and contains parameters to configure the networks
+# creation.
 heat_template_url: sahara/create-network.yaml
-# heat_template_url: sahara/existing-network.yaml
