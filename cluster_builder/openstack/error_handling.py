@@ -35,6 +35,8 @@ def setup_error_handling(app):
         if inspect.isclass(exc) and issubclass(exc, magnum_exceptions.HttpError):
             if issubclass(exc, magnum_exceptions.BadRequest):
                 _register_error_handler(app, exc, _handle_magnum_http_bad_request)
+            elif issubclass(exc, magnum_exceptions.NotFound):
+                _register_error_handler(app, exc, _handle_magnum_http_not_found_request)
             else:
                 _register_error_handler(app, exc, _handle_magnum_http_exception)
     app.logger.debug("done configuring error handlers")
@@ -116,3 +118,28 @@ def _handle_magnum_http_bad_request(error):
     except:
         pass
     return make_response(jsonify({"errors": errors}), error.http_status)
+
+
+def _handle_magnum_http_not_found_request(error):
+    current_app.logger.debug(f"handling error {error.__class__} with _handle_magnum_http_not_found_request")
+    current_app.logger.info(f"{error.__module__}.{error.__class__.__qualname__}: {error}")
+    title = error.__class__.__name__
+    detail = error.details
+    response_status = error.http_status
+    errors = [{"status": str(response_status), "title": title, "detail": detail}]
+    try:
+        match = MAGNUM_BAD_PARAMETER_REGEXP.match(detail)
+        if match is not None:
+            # Magnum couldn't find some resource that was specified in the
+            # parameters.  This is more accurately reported as a Bad Request
+            # than Not Found.
+            response_status = 400
+            errors[0]["title"] = "Bad Request"
+            errors[0]["status"] = str(response_status)
+            request_params = request.get_json()["cluster"]["parameters"]
+            for param, val in request_params.items():
+                if val == match.group(2):
+                    errors[0]["source"] = {"pointer": f"/cluster/parameters/{param}"}
+    except:
+        pass
+    return make_response(jsonify({"errors": errors}), response_status)
