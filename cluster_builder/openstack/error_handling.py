@@ -7,9 +7,13 @@ import keystoneauth1.exceptions.connection as ks_connection_exceptions
 import keystoneauth1.exceptions.http as ks_http_exceptions
 import heatclient.exc as heat_exceptions
 import magnumclient.exceptions as magnum_exceptions
+import saharaclient.api.base as sahara_exceptions
 
 HEAT_BAD_PARAMETER_REGEXP = re.compile("^Parameter '([^']*)' is invalid: (.*)")
 MAGNUM_BAD_PARAMETER_REGEXP = re.compile("^Unable to find ([^ ]*) (.*).")
+
+SAHARA_NOT_FOUND_REGEXP = re.compile("^([^ ]*) (.*) not found")
+SAHARA_INVALID_FORMAT_REGEXP = re.compile("^([^:]*): '([^']*)' is not a '[^']*'")
 
 def setup_error_handling(app):
     """
@@ -39,6 +43,11 @@ def setup_error_handling(app):
                 _register_error_handler(app, exc, _handle_magnum_http_not_found_request)
             else:
                 _register_error_handler(app, exc, _handle_magnum_http_exception)
+
+    for exc in map(sahara_exceptions.__dict__.get, sahara_exceptions.__dict__):
+        if inspect.isclass(exc) and issubclass(exc, Exception):
+            _register_error_handler(app, exc, _handle_sahara_exception)
+
     app.logger.debug("done configuring error handlers")
 
 
@@ -142,4 +151,31 @@ def _handle_magnum_http_not_found_request(error):
                     errors[0]["source"] = {"pointer": f"/cluster/parameters/{param}"}
     except:
         pass
+    return make_response(jsonify({"errors": errors}), response_status)
+
+
+def _handle_sahara_exception(error):
+    current_app.logger.debug(f"handling error {error.__class__} with _handle_sahara_exception")
+    current_app.logger.info(f"{error.__module__}.{error.__class__.__qualname__}: {error}")
+    title = error.error_name
+    response_status = error.error_code
+    detail = error.error_message
+    errors = [{"status": str(response_status), "title": title, "detail": detail}]
+
+    try:
+        match = SAHARA_NOT_FOUND_REGEXP.match(detail)
+        if match is None:
+            match = SAHARA_INVALID_FORMAT_REGEXP.match(detail)
+        if match is not None:
+            response_status = 400
+            errors[0]["title"] = "Bad Request"
+            errors[0]["detail"] = match.group(0)
+            errors[0]["status"] = str(response_status)
+            request_params = request.get_json()["cluster"]["parameters"]
+            for param, val in request_params.items():
+                if val == match.group(2):
+                    errors[0]["source"] = {"pointer": f"/cluster/parameters/{param}"}
+    except:
+        pass
+
     return make_response(jsonify({"errors": errors}), response_status)
