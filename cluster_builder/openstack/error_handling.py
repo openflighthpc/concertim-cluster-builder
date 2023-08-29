@@ -15,33 +15,34 @@ def setup_error_handling(app):
     """
     Configure the given Flask app with error handling for openstack exceptions.
     """
+    app.logger.info("configuring error handlers")
     for exc in map(ks_http_exceptions.__dict__.get, ks_http_exceptions.__all__):
         if inspect.isclass(exc) and issubclass(exc, Exception):
-            app.logger.debug(f"adding handler for {exc.__module__}.{exc.__qualname__}")
-            app.register_error_handler(exc, _handle_keystone_http_exception)
+            _register_error_handler(app, exc, _handle_keystone_http_exception)
 
     for exc in map(ks_connection_exceptions.__dict__.get, ks_connection_exceptions.__all__):
         if inspect.isclass(exc) and issubclass(exc, Exception):
-            app.logger.debug(f"adding handler for {exc.__module__}.{exc.__qualname__}")
-            app.register_error_handler(exc, _handle_keystone_connection_exception)
+            _register_error_handler(app, exc, _handle_keystone_connection_exception)
 
     for exc in map(heat_exceptions.__dict__.get, heat_exceptions.__dict__):
         if inspect.isclass(exc) and issubclass(exc, heat_exceptions.HTTPException):
             if issubclass(exc, heat_exceptions.HTTPBadRequest):
-                app.logger.debug(f"adding handler for {exc.__module__}.{exc.__qualname__}")
-                app.register_error_handler(exc, _handle_heat_http_bad_request)
+                _register_error_handler(app, exc, _handle_heat_http_bad_request)
             else:
-                app.logger.debug(f"adding handler for {exc.__module__}.{exc.__qualname__}")
-                app.register_error_handler(exc, _handle_heat_http_exception)
+                _register_error_handler(app, exc, _handle_heat_http_exception)
 
     for exc in map(magnum_exceptions.__dict__.get, magnum_exceptions.__dict__):
         if inspect.isclass(exc) and issubclass(exc, magnum_exceptions.HttpError):
             if issubclass(exc, magnum_exceptions.BadRequest):
-                app.logger.debug(f"adding handler for {exc.__module__}.{exc.__qualname__}")
-                app.register_error_handler(exc, _handle_magnum_http_bad_request)
+                _register_error_handler(app, exc, _handle_magnum_http_bad_request)
             else:
-                app.logger.debug(f"adding handler for {exc.__module__}.{exc.__qualname__}")
-                app.register_error_handler(exc, _handle_magnum_http_exception)
+                _register_error_handler(app, exc, _handle_magnum_http_exception)
+    app.logger.debug("done configuring error handlers")
+
+
+def _register_error_handler(app, exc, handler):
+    app.logger.debug(f"{exc.__module__}.{exc.__qualname__} -> {handler.__name__}")
+    app.register_error_handler(exc, handler)
 
 
 def _handle_keystone_http_exception(error):

@@ -30,19 +30,16 @@ class MagnumHandler:
 
     def create_cluster(self, cluster_data, cluster_type):
         self.logger.info(f"Creating cluster {cluster_data['name']} from {cluster_data['cluster_type_id']}")
-        try:
-            cluster_name = cluster_data["name"]
-            self.logger.debug(f"getting cluster template {cluster_type.upstream_template}")
-            magnum_cluster_template = self.client.cluster_templates.get(cluster_type.upstream_template)
-            parameters = ClusterType.merge_parameters(cluster_type, cluster_data.get("parameters"))
-            self.logger.debug(f"parameters: {parameters}")
-            magnum_cluster = self.client.clusters.create(
-                    name=cluster_name,
-                    cluster_template_id=magnum_cluster_template.uuid,
-                    **parameters
-                    )
-        except Exception as e:
-            self.logger.exception(e)
-            raise
-        else:
-            return Cluster(id=magnum_cluster.uuid, name=cluster_name)
+        # Allow errors to be propagated.  They will be caught and handled in
+        # either `openstack.error_handling.py` or `__init__.py`.
+        cluster_name = cluster_data["name"]
+        self.logger.debug(f"getting cluster template {cluster_type.upstream_template}")
+        magnum_cluster_template = self.client.cluster_templates.get(cluster_type.upstream_template)
+        parameters = ClusterType.merge_parameters(cluster_type, cluster_data.get("parameters"))
+        self.logger.debug(f"parameters: {parameters}")
+        magnum_cluster = self.client.clusters.create(
+                name=cluster_name,
+                cluster_template_id=magnum_cluster_template.uuid,
+                **parameters
+                )
+        return Cluster(id=magnum_cluster.uuid, name=cluster_name)
