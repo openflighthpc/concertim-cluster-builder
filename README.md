@@ -42,7 +42,7 @@ request to build a cluster.  More details on the format can be found in the
 
 By default, Concertim cluster builder is configured to expose its service on
 all of the host machine's IP addresses.  If this is not suitable for you, it
-can be configured by editing the `docker-compose-prod.yml` file and changing
+can be configured by editing the `docker-compose.prod.yml` file and changing
 the `ports` entry.
 
 ### Cluster type definitions
@@ -115,7 +115,7 @@ built (see [Cluster type definitions](#cluster-type-definitions) and
 with the following command.
 
 ```bash
-docker compose -f docker-compose-prod.yml up
+docker compose -f docker-compose.prod.yml up
 ```
 
 The container will need to be able to receive HTTP requests from the

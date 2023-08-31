@@ -1,12 +1,12 @@
 # Development
 
-There is a [docker-compose-dev.yml](docker-compose.yml) file that creates a docker
+There is a [docker-compose.dev.yml](docker-compose.yml) file that creates a docker
 container suitable for development. The contents of this repository are shared
 with the docker container using docker volumes, meaning that any changes made
 to the local source code will be automatically picked up by the service running
 inside the container.
 
-Note: this docker-compose-dev.yml file is not intended for a production deployment.
+Note: this docker-compose.dev.yml file is not intended for a production deployment.
 
 To setup for development you will need to:
 
@@ -48,7 +48,7 @@ done
 Start the docker container by running the following.
 
 ```bash
-docker compose -f docker-compose-dev.yml up
+docker compose -f docker-compose.dev.yml up
 ```
 
 ## Test suite
@@ -57,7 +57,7 @@ There is a test suite located in the `tests` directory.  It can be ran in a
 temporary container by using the `pytest` test runner:
 
 ```
-docker compose -f docker-compose-dev.yml run --rm cluster_builder pytest -v
+docker compose -f docker-compose.dev.yml run --rm cluster_builder pytest -v
 ```
 
 Documentation on writting tests can be found at
