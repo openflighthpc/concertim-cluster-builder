@@ -42,7 +42,7 @@ request to build a cluster.  More details on the format can be found in the
 
 By default, Concertim cluster builder is configured to expose its service on
 all of the host machine's IP addresses.  If this is not suitable for you, it
-can be configured by editing the `docker-compose-prod.yml` file and changing
+can be configured by editing the `docker-compose.prod.yml` file and changing
 the `ports` entry.
 
 ### Cluster type definitions
@@ -51,12 +51,8 @@ Concertim cluster builder needs to be configured with the enabled cluster type
 definitions. The enabled definitions are to be created in the docker
 container's `/app/instance/cluster-types-enabled/` directory.
 
-Currently, all cluster types are backed by OpenStack HEAT and need to specify a
-path to a HOT template.  The path should be relative to the docker container's
-`/app/instance/hot/` directory.
-
-The Docker image is built with an example cluster type definition (and its HOT
-template) enabled by default.
+The Docker image is built with some example cluster type definitions enabled by
+default.
 
 If you wish to configure additional cluster type definitions, the docker
 container should be started with a host directory, say,
@@ -82,7 +78,7 @@ for i in examples/hot/* ; do
 done
 ```
 
-Optionally, enable the example definition
+Optionally, enable the example definitions
 
 ```bash
 cd /usr/share/concertim-cluster-builder/cluster-types-enabled/
@@ -91,13 +87,15 @@ for i in ../cluster-types-available/* ; do
 done
 ```
 
-Copy the example
-[docker-compose.override.yml.prod.example](docker-compose.override.yml.prod.example)
-to `docker-compose.override.yml` to enable the mount
-`/usr/share/concertim-cluster-builder/`.
+Edit the [docker-compose.prod.yml](docker-compose.prod.yml) file and uncomment
+the `services.cluster_builder.volumes` section.  It should look like this:
 
-```bash
-cp docker-compose.override.yml.prod.example docker-compose.override.yml
+```
+    # Optionally, mount a volume to `/app/instance` to allow configuration of
+    # the cluster type definitions.  Without this (or some similar mechanism),
+    # the example cluster types will be used.
+    volumes:
+      - /usr/share/concertim-cluster-builder/:/app/instance
 ```
 
 If the container is already running, restart it.
@@ -115,13 +113,8 @@ built (see [Cluster type definitions](#cluster-type-definitions) and
 with the following command.
 
 ```bash
-docker compose -f docker-compose-prod.yml up
+docker compose -f docker-compose.prod.yml up
 ```
-
-The container will need to be able to receive HTTP requests from the
-concertim-visualisation-app container and be able to make HTTP requests to the
-openstack containers, specifically keystone and heat.  You may wish to edit the
-docker compose file to achieve that.
 
 ## HTTP API
 

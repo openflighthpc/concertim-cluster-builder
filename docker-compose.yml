@@ -1,6 +1,6 @@
 # This docker compose file is intended for developing
 # concertim-cluster-builder.  It is *NOT* suitable for production usage.  See
-# the README.md for production installation instructions.
+# README.md for production installation instructions.
 services:
   cluster_builder: 
     build:
@@ -20,3 +20,11 @@ services:
     # Mount `.` to `/app` to allow editing on the local and having flask automatically reload.
     volumes:
       - ./:/app
+
+    # Use the same UID and GID as is used for the local user.  This prevents
+    # issues with permissions for files in the mounted volume.
+    #
+    # If this setting is not suitable for you, use the
+    # `docker-compose.override.yml` file to change it.  See
+    # `docs/DEVELOPMENT.md` for details.
+    user: "1000:1000"

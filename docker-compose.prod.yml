@@ -1,6 +1,6 @@
 # This docker compose file is intended for production deployments of
 # concertim-cluster-builder.  It is *NOT* suitable for development usage.  See
-# the README.md for development installation instructions.
+# README.md and docs/DEVELOPMENT.md for development installation instructions.
 
 services:
   cluster_builder: 
@@ -13,8 +13,8 @@ services:
     ports:
       - '42378:42378'
 
-    # Optionally, mount a volume to `/app/instance` to allow configuration of
-    # the cluster type definitions.  Without this (or some similar mechanism),
-    # the example cluster types will be used.
+    # # Optionally, mount a volume to `/app/instance` to allow configuration of
+    # # the cluster type definitions.  Without this (or some similar mechanism),
+    # # the example cluster types will be used.
     # volumes:
     #   - /usr/share/concertim-cluster-builder/:/app/instance
