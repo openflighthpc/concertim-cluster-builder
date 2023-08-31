@@ -13,8 +13,8 @@ COPY . /app
 #
 # In a production deployment it is expected that a docker volume will be
 # mounted at /app/instance to provide the production cluster types.
-COPY ./examples/cluster-types/* /app/instance/cluster-types-enabled/
-COPY ./examples/hot/* /app/instance/hot/
+COPY ./examples/cluster-types/ /app/instance/cluster-types-enabled/
+COPY ./examples/hot/ /app/instance/hot/
 
 EXPOSE 42378
 
