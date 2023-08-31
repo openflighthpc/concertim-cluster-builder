@@ -120,11 +120,6 @@ with the following command.
 docker compose -f docker-compose.prod.yml up
 ```
 
-The container will need to be able to receive HTTP requests from the
-concertim-visualisation-app container and be able to make HTTP requests to the
-openstack containers, specifically keystone and heat.  You may wish to edit the
-docker compose file to achieve that.
-
 ## HTTP API
 
 The HTTP API is documented in the [API documentation](/docs/api.md).
