@@ -91,13 +91,15 @@ for i in ../cluster-types-available/* ; do
 done
 ```
 
-Copy the example
-[docker-compose.override.yml.prod.example](docker-compose.override.yml.prod.example)
-to `docker-compose.override.yml` to enable the mount
-`/usr/share/concertim-cluster-builder/`.
+Edit the [docker-compose.prod.yml](docker-compose.prod.yml) file and uncomment
+the `services.cluster_builder.volumes` section.  It should look like this:
 
-```bash
-cp docker-compose.override.yml.prod.example docker-compose.override.yml
+```
+    # Optionally, mount a volume to `/app/instance` to allow configuration of
+    # the cluster type definitions.  Without this (or some similar mechanism),
+    # the example cluster types will be used.
+    volumes:
+      - /usr/share/concertim-cluster-builder/:/app/instance
 ```
 
 If the container is already running, restart it.
