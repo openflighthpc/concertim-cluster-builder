@@ -51,12 +51,8 @@ Concertim cluster builder needs to be configured with the enabled cluster type
 definitions. The enabled definitions are to be created in the docker
 container's `/app/instance/cluster-types-enabled/` directory.
 
-Currently, all cluster types are backed by OpenStack HEAT and need to specify a
-path to a HOT template.  The path should be relative to the docker container's
-`/app/instance/hot/` directory.
-
-The Docker image is built with an example cluster type definition (and its HOT
-template) enabled by default.
+The Docker image is built with some example cluster type definitions enabled by
+default.
 
 If you wish to configure additional cluster type definitions, the docker
 container should be started with a host directory, say,
@@ -82,7 +78,7 @@ for i in examples/hot/* ; do
 done
 ```
 
-Optionally, enable the example definition
+Optionally, enable the example definitions
 
 ```bash
 cd /usr/share/concertim-cluster-builder/cluster-types-enabled/
