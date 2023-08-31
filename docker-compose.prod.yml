@@ -1,6 +1,6 @@
 # This docker compose file is intended for production deployments of
 # concertim-cluster-builder.  It is *NOT* suitable for development usage.  See
-# the README.md for development installation instructions.
+# README.md and docs/DEVELOPMENT.md for development installation instructions.
 
 services:
   cluster_builder: 
