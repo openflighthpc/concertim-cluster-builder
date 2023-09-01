@@ -157,8 +157,9 @@ class MagnumHttpNotFoundHandler(MagnumHttpErrorHandler):
         return errors
 
 class SaharaHttpErrorHandler(BaseErrorHandler):
-    NOT_FOUND_REGEXP = re.compile("^([^ ]*) (.*) not found")
-    INVALID_FORMAT_REGEXP = re.compile("^([^:]*): '([^']*)' is not a '[^']*'")
+    QUOTED_NOT_FOUND_REGEXP = re.compile("^[^']*'([^']*)' not found")
+    NOT_FOUND_REGEXP = re.compile("^.* (.*) not found")
+    INVALID_FORMAT_REGEXP = re.compile("^[^:]*: '([^']*)' is not a '[^']*'")
 
     def status(self, error):
         return error.error_code
@@ -171,7 +172,9 @@ class SaharaHttpErrorHandler(BaseErrorHandler):
 
     def errors(self, error):
         errors = super().errors(error)
-        match = self.NOT_FOUND_REGEXP.match(errors[0]["detail"])
+        match = self.QUOTED_NOT_FOUND_REGEXP.match(errors[0]["detail"])
+        if match is None:
+            match = self.NOT_FOUND_REGEXP.match(errors[0]["detail"])
         if match is None:
             match = self.INVALID_FORMAT_REGEXP.match(errors[0]["detail"])
         if match is not None:
@@ -180,6 +183,6 @@ class SaharaHttpErrorHandler(BaseErrorHandler):
             errors[0]["status"] = "400"
             request_params = request.get_json()["cluster"]["parameters"]
             for param, val in request_params.items():
-                if val == match.group(2):
+                if val == match.group(1):
                     errors[0]["source"] = {"pointer": f"/cluster/parameters/{param}"}
         return errors
