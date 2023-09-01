@@ -46,7 +46,15 @@ class SaharaHandler:
         parameters = ClusterType.merge_parameters(cluster_type, cluster_data.get("parameters"))
         sct = utils.get_resource(self.client.cluster_templates, cluster_type.upstream_template)
         self.logger.debug(f"getting image_id for {parameters.get('image', None)}")
-        image_id = utils.get_resource_id(self.client.images, parameters.pop("image"))
+        try:
+            image_name = parameters.pop("image")
+            image_id = utils.get_resource_id(self.client.images, image_name)
+        except Exception as ex:
+            # The error message returned by openstack is "No matches found."
+            # Nothing else is provided to help identify that it is the image
+            # that hasn't been found, so we modify the exception here.
+            ex.error_message = f"image {image_name} not found"
+            raise ex
 
         # XXX Ideally, we would map from a network name to a network id here.
         # Unfortunately, I don't know how to do that right now. The code below
