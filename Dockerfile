@@ -16,6 +16,8 @@ COPY . /app
 COPY ./examples/cluster-types/ /app/instance/cluster-types-enabled/
 COPY ./examples/hot/ /app/instance/hot/
 
+ENV HOST=0.0.0.0
+ENV PORT=42378
 EXPOSE 42378
 
-CMD ["flask", "--app", "cluster_builder", "run", "-h", "0.0.0.0", "-p", "42378"]
+CMD flask --app cluster_builder run -h $HOST -p $PORT
