@@ -1,6 +1,14 @@
 # syntax=docker/dockerfile:1.4
 FROM python:3.8-slim-buster
-LABEL com.alces-flight.concertim.role=cluster_builder com.alces-flight.concertim.version=0.0.1
+
+ARG BUILD_DATE
+ARG BUILD_VERSION
+ARG BUILD_REVISION
+
+LABEL org.opencontainers.image.created=$BUILD_DATE
+LABEL org.opencontainers.image.version=$BUILD_VERSION
+LABEL org.opencontainers.image.revision=$BUILD_REVISION
+LABEL org.opencontainers.image.title="Alces Concertim Cluster Builder"
 
 WORKDIR /app
 
