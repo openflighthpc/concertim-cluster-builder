@@ -13,8 +13,7 @@ when they become available.
 ## Installation
 
 Concertim Cluster Builder is intended to be deployed as a Docker container.
-There is a Dockerfile in this repo that the image can be built from and a
-docker compose file that should be used to start the container.
+There is a Dockerfile in this repo for building the image.
 
 1. Clone the repository
     ```bash
@@ -24,26 +23,29 @@ docker compose file that should be used to start the container.
     ```bash
     docker build --network=host --tag concertim-cluster-builder:latest .
     ```
+3. Start the docker container
+    ```bash
+	docker run -d --name concertim-cluster-builder \
+        --stop-signal SIGINT \
+		--network=host \
+		--publish <Host>:42378:42378 \
+		concertim-cluster-builder
+    ```
+
+The above will start Cluster Builder with the example cluster type definitions
+enabled.  To use alternate cluster type definitions see below.
 
 ## Configuration
 
 Concertim Cluster Builder has three separate elements to its configuration: 1)
-configuring access to the cloud environment; 2) configuring the network the
-service is exposed on; and 3) configuring the enabled cluster type definitions.
-These are detailed below.
+configuring access to the cloud environment; and 2) configuring the enabled
+cluster type definitions. These are detailed below.
 
 ### Cloud environment access
 
 All required configuration to access the cloud environment is sent in the
 request to build a cluster.  More details on the format can be found in the
 [API documentation](/docs/api.md).
-
-### Exposing the service on the desired network
-
-By default, Concertim cluster builder is configured to expose its service on
-all of the host machine's IP addresses.  If this is not suitable for you, it
-can be configured by editing the `docker-compose.prod.yml` file and changing
-the `ports` entry.
 
 ### Cluster type definitions
 
@@ -67,7 +69,7 @@ Create the directory structure.
 mkdir -p /usr/share/concertim-cluster-builder/{cluster-types-available,cluster-types-enabled,hot}
 ```
 
-Copy across the example definition and its HOT template.
+Copy across the example definitions and their HOT templates.
 
 ```bash
 for i in examples/cluster-types/* ; do
@@ -87,18 +89,17 @@ for i in ../cluster-types-available/* ; do
 done
 ```
 
-Edit the [docker-compose.prod.yml](docker-compose.prod.yml) file and uncomment
-the `services.cluster_builder.volumes` section.  It should look like this:
+Mount the directory `/usr/share/concertim-cluster-builder/` to `/app/instance`,
+when starting the docker container.
 
+```bash
+docker run -d --name concertim-cluster-builder \
+    --stop-signal SIGINT \
+    --network=host \
+    --publish <Host>:42378:42378 \
+    --volume /usr/share/concertim-cluster-builder/:/app/instance \
+    concertim-cluster-builder
 ```
-    # Optionally, mount a volume to `/app/instance` to allow configuration of
-    # the cluster type definitions.  Without this (or some similar mechanism),
-    # the example cluster types will be used.
-    volumes:
-      - /usr/share/concertim-cluster-builder/:/app/instance
-```
-
-If the container is already running, restart it.
 
 Currently, there is no documentation on the format for the cluster type
 definition files beyond the [well-documented
@@ -107,13 +108,18 @@ examples](cluster-types-examples/).  They should prove sufficient.
 
 ## Usage
 
-Once the docker image is configured with cluster type definitions and has been
-built (see [Cluster type definitions](#cluster-type-definitions) and
-[Installation](#installation) above) a container can be started from that image
-with the following command.
+Once the docker image has been built and the cluster type definitions have been
+configured (see [Cluster type definitions](#cluster-type-definitions) and
+[Installation](#installation) above), start the container with the following
+command.
 
 ```bash
-docker compose -f docker-compose.prod.yml up
+docker run -d --name concertim-cluster-builder \
+    --stop-signal SIGINT \
+    --network=host \
+    --publish <Host>:42378:42378 \
+    --volume /usr/share/concertim-cluster-builder/:/app/instance \
+    concertim-cluster-builder
 ```
 
 ## HTTP API
