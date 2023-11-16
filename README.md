@@ -10,10 +10,7 @@ Service](https://github.com/alces-flight/concertim-openstack-service) will
 report the existence of those clusters to Concertim Visualisation App as and
 when they become available.
 
-## Installation
-
-Concertim Cluster Builder is intended to be deployed as a Docker container.
-There is a Dockerfile in this repo for building the image.
+## Quick start
 
 1. Clone the repository
     ```bash
@@ -28,12 +25,29 @@ There is a Dockerfile in this repo for building the image.
 	docker run -d --name concertim-cluster-builder \
         --stop-signal SIGINT \
 		--network=host \
-		--publish <Host>:42378:42378 \
+		--publish 42378:42378 \
 		concertim-cluster-builder
     ```
 
-The above will start Cluster Builder with the example cluster type definitions
-enabled.  To use alternate cluster type definitions see below.
+Use [Concertim Visualisation
+App](https://github.com/alces-flight/concertim-ct-visualisation-app) and the
+[Concertim OpenStack
+Service](https://github.com/alces-flight/concertim-openstack-service) as the
+Cluster Builder clients.
+
+## Building the docker image
+
+Concertim Cluster Builder is intended to be deployed as a Docker container.
+There is a Dockerfile in this repo for building the image.
+
+1. Clone the repository
+    ```bash
+    git clone https://github.com/alces-flight/concertim-cluster-builder.git
+    ```
+2. Build the docker image
+    ```bash
+    docker build --network=host --tag concertim-cluster-builder:latest .
+    ```
 
 ## Configuration
 
