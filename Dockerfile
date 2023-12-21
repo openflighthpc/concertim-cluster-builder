@@ -12,8 +12,18 @@ LABEL org.opencontainers.image.title="Alces Concertim Cluster Builder"
 
 WORKDIR /app
 
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends \
+         build-essential \
+    && apt-get clean \
+    && rm -rf /usr/share/doc /usr/share/man /var/lib/apt/lists/*
+
 COPY requirements.txt /app
 RUN pip3 install --no-cache-dir -r requirements.txt
+
+RUN apt-get remove --yes \
+         build-essential
 
 COPY . /app
 
