@@ -6,6 +6,7 @@ from .openstack.auth import OpenStackAuth
 from .openstack.heat_handler import HeatHandler
 from .openstack.magnum_handler import MagnumHandler
 from .openstack.sahara_handler import SaharaHandler
+from .middleware.middleware import MiddlewareService
 
 bp = Blueprint('clusters', __name__, url_prefix="/clusters")
 
@@ -71,7 +72,8 @@ create_schema = {
                 "required": ["name", "cluster_type_id"]
                 }
             },
-        "required": ["cloud_env", "cluster"]
+            "billing_account_id" : {"type": "string"},
+        "required": ["cloud_env", "cluster", "billing_account_id"]
         }
 
 handlers = {
@@ -90,7 +92,18 @@ def create_cluster():
         raise TypeError(f"Unknown cluster type kind '{cluster_type.kind}' for cluster type '{cluster_type.id}'")
     sess = OpenStackAuth(g.data["cloud_env"], current_app.logger).get_session()
     handler = handler_class(sess, current_app.logger)
-    cluster = handler.create_cluster(g.data["cluster"], cluster_type)
-    current_app.logger.debug(f"created cluster {cluster.id}:{cluster.name}")
-    body = {"id": cluster.id, "name": cluster.name}
-    return make_response(body, 201)
+
+    middlewareservice  = MiddlewareService()
+
+    billing_account_credits = middlewareservice.get_credits(g.data['billing_account_id'])
+
+    if billing_account_credits > 0:
+
+        cluster = handler.create_cluster(g.data["cluster"], cluster_type)
+        current_app.logger.debug(f"created cluster {cluster.id}:{cluster.name}")
+        body = {"id": cluster.id, "name": cluster.name}
+        return make_response(body, 201)
+    
+    else:
+        body = {"message" : "Not enough credits to launch a cluster"}
+        return make_response(body, 500)
