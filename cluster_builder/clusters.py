@@ -73,6 +73,7 @@ create_schema = {
                 }
             },
             "billing_account_id" : {"type": "string"},
+            "middleware_url" : {"type" : "string"},
         "required": ["cloud_env", "cluster", "billing_account_id"]
         }
 
@@ -94,7 +95,7 @@ def create_cluster():
     sess = OpenStackAuth(g.data["cloud_env"], current_app.logger).get_session()
     handler = handler_class(sess, current_app.logger)
 
-    current_app.config["middleware"] = {"middleware_url" : MIDDLEWARE_URL}
+    current_app.config["middleware_url"] = g.data['middleware_url']
     middlewareservice  = MiddlewareService(current_app.config, current_app.logger)
 
     billing_account_credits = middlewareservice.get_credits({'billing_account_id' : g.data['billing_account_id']})

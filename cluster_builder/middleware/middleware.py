@@ -18,7 +18,7 @@ class MiddlewareService(object):
         #self.__LOGGER = create_logger(__name__, self._LOG_FILE, self._CONFIG['log_level'])
         logger.error(f"{self._CONFIG}")
         self.__LOGGER = logger
-        self._URL = self._CONFIG['middleware']['middleware_url']
+        self._URL = self._CONFIG['middleware_url']
         self.__retry_count = 0
         self.__AUTH_TOKEN = self.__get_auth_token()
     
