@@ -8,8 +8,10 @@ ENDPOINTS = {
                                 "billing_account_id": '{billing_account_id}'
                             }
                         }
-                    },
-                    'headers': {"Content-Type": "application/json", "Accept": "application/json"}
-            }
+                    }
+                },
+
+                'headers': {"Content-Type": "application/json", "Accept": "application/json"}
+            
         }
 }

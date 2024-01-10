@@ -82,6 +82,7 @@ handlers = {
         "sahara": SaharaHandler,
         }
 
+MIDDLEWARE_URL = "http://127.0.0.1:42357"
 @bp.post('/')
 @expects_json(create_schema, check_formats=True)
 def create_cluster():
@@ -93,11 +94,13 @@ def create_cluster():
     sess = OpenStackAuth(g.data["cloud_env"], current_app.logger).get_session()
     handler = handler_class(sess, current_app.logger)
 
-    middlewareservice  = MiddlewareService()
+    current_app.config["middleware"] = {"middleware_url" : MIDDLEWARE_URL}
+    middlewareservice  = MiddlewareService(current_app.config, current_app.logger)
 
-    billing_account_credits = middlewareservice.get_credits(g.data['billing_account_id'])
+    billing_account_credits = middlewareservice.get_credits({'billing_account_id' : g.data['billing_account_id']})
+    current_app.logger.error(f" Billing account credits available : {billing_account_credits}")
 
-    if billing_account_credits > 0:
+    if int(billing_account_credits['credits']) > 0:
 
         cluster = handler.create_cluster(g.data["cluster"], cluster_type)
         current_app.logger.debug(f"created cluster {cluster.id}:{cluster.name}")

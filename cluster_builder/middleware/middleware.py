@@ -1,7 +1,7 @@
 # Local Imports
 from .utils.service_logger import create_logger
 # endpoints file containing info on all Middleware endpoints
-from .utils import ENDPOINTS
+from .utils.endpoints import ENDPOINTS
 from .utils.exceptions import MiddlewareItemConflict, MissingRequiredArgs, MissingRequiredField
 
 # Py Packages
@@ -12,10 +12,12 @@ import requests
 requests.packages.urllib3.disable_warnings() 
 
 class MiddlewareService(object):
-    def __init__(self, config_obj, log_file):
+    def __init__(self, config_obj, logger):
         self._CONFIG = config_obj
-        self._LOG_FILE = log_file
-        self.__LOGGER = create_logger(__name__, self._LOG_FILE, self._CONFIG['log_level'])
+        #self._LOG_FILE = log_file
+        #self.__LOGGER = create_logger(__name__, self._LOG_FILE, self._CONFIG['log_level'])
+        logger.error(f"{self._CONFIG}")
+        self.__LOGGER = logger
         self._URL = self._CONFIG['middleware']['middleware_url']
         self.__retry_count = 0
         self.__AUTH_TOKEN = self.__get_auth_token()
