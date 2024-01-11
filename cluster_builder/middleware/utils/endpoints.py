@@ -8,7 +8,8 @@ ENDPOINTS = {
                             "credits": {
                                 "billing_account_id": '{billing_account_id}'
                             }
-                        }
+                        },
+                        'headers': {"Content-Type": "application/json", "Accept": "application/json"}
                     },
 
                     'CREATE_ORDER': {
@@ -17,7 +18,8 @@ ENDPOINTS = {
                         'data':{"order": {
                                 "billing_account_id": '{billing_account_id}'
                             }
-                        }
+                        },
+                        'headers': {"Content-Type": "application/json", "Accept": "application/json"}
                     },
                 
                     'ADD_ORDER_TAG': {
@@ -28,10 +30,11 @@ ENDPOINTS = {
                                 "tag_name": '{tag_name}',
                                 "tag_value" : '{tag_value}'
                             }
-                        }
-                    },
+                        },
+                        'headers': {"Content-Type": "application/json", "Accept": "application/json"}
+                    }
                     
-                    'headers': {"Content-Type": "application/json", "Accept": "application/json"}
-                }   
+                },
+                'headers': {"Content-Type": "application/json", "Accept": "application/json"}
             }
 }
