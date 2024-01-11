@@ -4,23 +4,23 @@ ENDPOINTS = {
                     'GET_CREDITS': {
                         'endpoint': '/get_credits',
                         'required_vars': ['billing_account_id'],
-                        'data':{"credits": {
+                        'data':{
+                            "credits": {
                                 "billing_account_id": '{billing_account_id}'
                             }
                         }
-                    }
-                },
-                'CREATE_ORDER': {
+                    },
+
+                    'CREATE_ORDER': {
                         'endpoint': '/create_order',
                         'required_vars': ['billing_account_id'],
                         'data':{"order": {
                                 "billing_account_id": '{billing_account_id}'
                             }
                         }
-                    }
-                },
-
-                'ADD_ORDER_TAG': {
+                    },
+                
+                    'ADD_ORDER_TAG': {
                         'endpoint': '/add_order_tag',
                         'required_vars': ['order_id', 'tag_name', 'tag_value'],
                         'data':{"tag": {
@@ -29,10 +29,9 @@ ENDPOINTS = {
                                 "tag_value" : '{tag_value}'
                             }
                         }
-                    }
-                },
-
-                'headers': {"Content-Type": "application/json", "Accept": "application/json"}
-            
-        }
+                    },
+                    
+                    'headers': {"Content-Type": "application/json", "Accept": "application/json"}
+                }   
+            }
 }
