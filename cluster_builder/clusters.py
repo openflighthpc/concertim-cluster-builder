@@ -83,7 +83,6 @@ handlers = {
         "sahara": SaharaHandler,
         }
 
-MIDDLEWARE_URL = "http://127.0.0.1:42357"
 @bp.post('/')
 @expects_json(create_schema, check_formats=True)
 def create_cluster():
@@ -95,19 +94,26 @@ def create_cluster():
     sess = OpenStackAuth(g.data["cloud_env"], current_app.logger).get_session()
     handler = handler_class(sess, current_app.logger)
 
+    # Creating Middleware Service Object
     current_app.config["middleware_url"] = g.data['middleware_url']
     middlewareservice  = MiddlewareService(current_app.config, current_app.logger)
 
     billing_account_credits = middlewareservice.get_credits({'billing_account_id' : g.data['billing_account_id']})
     current_app.logger.error(f" Billing account credits available : {billing_account_credits}")
 
-    if int(billing_account_credits['credits']) > 0:
-
-        cluster = handler.create_cluster(g.data["cluster"], cluster_type)
-        current_app.logger.debug(f"created cluster {cluster.id}:{cluster.name}")
-        body = {"id": cluster.id, "name": cluster.name}
-        return make_response(body, 201)
-    
-    else:
+    # Checking for enough credits
+    if not int(billing_account_credits['credits']) > 0:
         body = {"message" : "Not enough credits to launch a cluster"}
         return make_response(body, 500)
+    
+    cluster = handler.create_cluster(g.data["cluster"], cluster_type)
+    current_app.logger.debug(f"created cluster {cluster.id}:{cluster.name}")
+
+    # Creating Billing Order/Subscription
+    order = middlewareservice.create_order({'billing_account_id' : g.data['billing_account_id']})
+
+    # Associating Openstack stack ID with Billing order/subscription
+    tag = middlewareservice.add_order_tag({'order_id' : order['order'], 'tag_name' : 'openstack_stack_id', 'tag_value' : cluster.id})
+        
+    body = {"id": cluster.id, "name": cluster.name}
+    return make_response(body, 201)

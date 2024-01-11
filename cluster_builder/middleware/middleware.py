@@ -39,6 +39,14 @@ class MiddlewareService(object):
         response = self._api_call('post', 'GET_CREDITS', variables_dict=variables_dict)
         return response
     
+    def create_order(self, variables_dict):
+        response = self._api_call('post', 'CREATE_ORDER', variables_dict=variables_dict)
+        return response
+    
+    def add_order_tag(self, variables_dict):
+        response = self._api_call('post', 'ADD_ORDER_TAG', variables_dict=variables_dict)
+        return response
+    
    
     # Generic method for handling Concertim API calls.
     def _api_call(self, method, endpoint_name, variables_dict={}, endpoint_var=''):
