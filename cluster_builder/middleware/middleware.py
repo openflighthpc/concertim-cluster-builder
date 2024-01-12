@@ -1,6 +1,4 @@
-# Local Imports
-from .utils.service_logger import create_logger
-# endpoints file containing info on all Middleware endpoints
+# Endpoints file containing info on all Middleware endpoints
 from .utils.endpoints import ENDPOINTS
 from .utils.exceptions import MiddlewareItemConflict, MissingRequiredArgs, MissingRequiredField
 
@@ -12,24 +10,19 @@ import requests
 requests.packages.urllib3.disable_warnings() 
 
 class MiddlewareService(object):
-    def __init__(self, config_obj, logger):
+    def __init__(self, config_obj, logger, middleware_url):
         self._CONFIG = config_obj
-        #self._LOG_FILE = log_file
-        #self.__LOGGER = create_logger(__name__, self._LOG_FILE, self._CONFIG['log_level'])
-        logger.error(f"{self._CONFIG}")
+    
+        logger.info(f"{self._CONFIG}")
+    
         self.__LOGGER = logger
-        self._URL = self._CONFIG['middleware_url']
+        self._URL = middleware_url
         self.__retry_count = 0
         self.__AUTH_TOKEN = self.__get_auth_token()
     
     def __get_auth_token(self):
         
         return "DUMMYTOKEN"
-        """ login = self._CONFIG['concertim']['concertim_username']
-        password = self._CONFIG['concertim']['concertim_password']
-        variables_dict = {'login': login, 'password': password}
-        token = self._api_call('post', 'LOGIN_AUTH', variables_dict)
-        return token """
     
     # Return a dict of available endpoints and the call/data needed
     def list_available_endpoints(self):
@@ -55,7 +48,7 @@ class MiddlewareService(object):
         ACCEPTS:
             method - the REST call to make (get,post,patch,etc)
             endpoint_name - the endpoint name correspoinding to the ENDPOINTS dictionary
-                            (CREATE_DEVICE, DELETE_DEVICE, UPDATE_DEVICE, etc)
+                            (GET_CREDITS, CREATE_ORDER, ADD_ORDER_TAG, etc)
             *variables_dict - the dictionary containing all needed variables to make the API call
             *endpoint_var - this is the ID or NAME of a device/template/rack that needs to be filled in the URL string
         
@@ -104,25 +97,12 @@ class MiddlewareService(object):
                 return response.headers.get("Authorization")
             self.__retry_count = 0
             return response.json()
+        
         elif response.status_code == 422:
-            ''' 
-            +++ TEMP FIX
-            '''
-            for k,v in response.json().items():
-                if "blank" in str(v):
-                    e = MissingRequiredField(f"Required value missing - {response.json()}")
-                    self.__LOGGER.warning(f"{type(e).__name__} - {e}")
-                    raise e
-            ''' 
-            --- TEMP FIX
-            '''
             e = MiddlewareItemConflict(f"The item you are trying to add already exists - {response.json()}")
             self.__LOGGER.warning(f"{type(e).__name__} - {e}")
             raise e
-        #elif response.status_code == NUM:
-        #    e = MissingRequiredField(f"Required value missing - {response.json()}")
-        #    self.__LOGGER.warning(f"{type(e).__name__} - {e}")
-        #    raise e
+        
         elif response.status_code in [401,403,405,407,408]:
             if self.__retry_count == 0:
                 self.__LOGGER.warning(f"API call failed due to one of the following codes '[401,403,405,407,408]' - retrying once")
@@ -148,17 +128,15 @@ class MiddlewareService(object):
                     if key == 'metadata' and not data_dict['metadata']:
                         del data_dict['metadata']
                 else:
-                    if key in casting:
-                        data_dict[key] = casting[key](value.format(**variables_dict))
-                    elif value.replace('{','').replace('}','') not in variables_dict and endpoint_name in ['UPDATE_DEVICE','UPDATE_RACK','UPDATE_TEMPLATE', 'UPDATE_USER']:
-                        continue
-                    else:
-                        data_dict[key] = value.format(**variables_dict)
+                    data_dict[key] = value.format(**variables_dict)
+            
             return data_dict
+        
         except Exception as e:
             self.__LOGGER.error(f"Failed to fill data template from ENDPOINTS {endpoint_name} - template:{data_template} - variables:{variables_dict}")
             self.__LOGGER.error(f"{type(e).__name__} - {e} - {sys.exc_info()[2].tb_frame.f_code.co_filename} - {sys.exc_info()[2].tb_lineno}")
             raise e
+        
     # Return Ture if all necessary vars are present, otherwise raise an err
     def __check_required_vars(self, variables_dict, endpoint):
         missing_vars = [var for var in endpoint['required_vars'] if var not in variables_dict]
