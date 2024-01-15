@@ -15,7 +15,9 @@ def test_launch_non_existent_cluster(client):
                 "name": "test-cluster",
                 "cluster_type_id": "does-not-exist",
                 "parameters": {}
-                }
+                },
+            "billing_account_id" : "fake",
+            "middleware_url" : "fake"
             }
     response = client.post("/clusters/", json=body)
     assert response.status_code == 404
@@ -49,7 +51,9 @@ def test_launch_with_missing_params(client, app):
                 "name": "test-cluster",
                 "cluster_type_id": "test-id",
                 "parameters": {}
-                }
+                },
+            "billing_account_id" : "fake",
+            "middleware_url" : "fake"
             }
     response = client.post("/clusters/", json=body)
     assert response.status_code == 400
@@ -82,7 +86,9 @@ def test_invalid_body(client, app, pointer, detail, body_mutator):
                 "name": "fake",
                 "cluster_type_id": "test-id",
                 "parameters": {}
-                }
+                },
+            "billing_account_id" : "fake",
+            "middleware_url" : "fake"
             }
     body_mutator(body)
     response = client.post("/clusters/", json=body)

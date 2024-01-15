@@ -6,6 +6,7 @@ from .openstack.auth import OpenStackAuth
 from .openstack.heat_handler import HeatHandler
 from .openstack.magnum_handler import MagnumHandler
 from .openstack.sahara_handler import SaharaHandler
+from .middleware.middleware import MiddlewareService
 
 bp = Blueprint('clusters', __name__, url_prefix="/clusters")
 
@@ -71,7 +72,9 @@ create_schema = {
                 "required": ["name", "cluster_type_id"]
                 }
             },
-        "required": ["cloud_env", "cluster"]
+            "billing_account_id" : {"type": "string"},
+            "middleware_url" : {"type" : "string"},
+        "required": ["cloud_env", "cluster", "billing_account_id", "middleware_url"]
         }
 
 handlers = {
@@ -83,14 +86,42 @@ handlers = {
 @bp.post('/')
 @expects_json(create_schema, check_formats=True)
 def create_cluster():
+    
     cluster_type = ClusterType.find(g.data["cluster"]["cluster_type_id"])
     cluster_type.assert_parameters_present(g.data["cluster"]["parameters"])
     handler_class = handlers.get(cluster_type.kind)
     if handler_class is None:
         raise TypeError(f"Unknown cluster type kind '{cluster_type.kind}' for cluster type '{cluster_type.id}'")
+    
+    # Creating Middleware Service Object
+    middlewareservice  = MiddlewareService(current_app.config, current_app.logger, g.data['middleware_url'])
+
+    billing_account_credits = middlewareservice.get_credits({'billing_account_id' : g.data['billing_account_id']})
+    current_app.logger.info(f" Billing account credits available : {billing_account_credits}")
+
+    # Checking for enough credits
+    if not  int(billing_account_credits['credits']) > 0:
+        body = {
+                "errors": [
+                    {
+                    "status": "400",
+                    "title":  "Insufficient credits",
+                    "detail": "Not enough credits to launch a cluster"
+                    }
+                ]
+               }
+        return make_response(body, 400)
+    
     sess = OpenStackAuth(g.data["cloud_env"], current_app.logger).get_session()
     handler = handler_class(sess, current_app.logger)
     cluster = handler.create_cluster(g.data["cluster"], cluster_type)
     current_app.logger.debug(f"created cluster {cluster.id}:{cluster.name}")
+
+    # Creating Billing Order/Subscription
+    order = middlewareservice.create_order({'billing_account_id' : g.data['billing_account_id']})
+
+    # Associating Openstack stack ID with Billing order/subscription
+    middlewareservice.add_order_tag({'order_id' : order['order'], 'tag_name' : 'openstack_stack_id', 'tag_value' : cluster.id})
+        
     body = {"id": cluster.id, "name": cluster.name}
     return make_response(body, 201)
