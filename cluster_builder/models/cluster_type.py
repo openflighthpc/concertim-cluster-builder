@@ -18,6 +18,8 @@ class ClusterType:
     upstream_template: str
     last_modified: str
     hardcoded_parameters: dict = field(default_factory=dict)
+    # XXX Do I need this?
+    required_parameters: list = field(default_factory=list)
 
     @classmethod
     def configure(cls, hot_templates_dir, types_dir, logger):
