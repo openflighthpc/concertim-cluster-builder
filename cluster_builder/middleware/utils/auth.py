@@ -32,7 +32,7 @@ def authenticate_headers(headers, logger):
     try:
         payload = jwt.decode(encoded_message, key=secret_key, algorithms="HS256")
     except Exception as e:
-        logger.info("Message decoding failed")
+        logger.info("JWT decoding failed")
         return False
 
     logger.info(f"Payload : {payload}")

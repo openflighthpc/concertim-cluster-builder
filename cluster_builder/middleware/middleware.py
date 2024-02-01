@@ -5,6 +5,9 @@ from .utils.exceptions import MiddlewareItemConflict, MissingRequiredArgs, Missi
 # Py Packages
 import sys
 import json
+import jwt
+import time
+import os
 # Disable insecure warnings  
 import requests
 requests.packages.urllib3.disable_warnings() 
@@ -21,9 +24,23 @@ class MiddlewareService(object):
         self.__AUTH_TOKEN = self.__get_auth_token()
     
     def __get_auth_token(self):
-        
-        return "DUMMYTOKEN"
+
+        if 'JWT_SECRET' not in os.environ:
+            self.__LOGGER.error("JWT_SECRET env variable not set")
+            return None
     
+        secret_key = os.environ.get('JWT_SECRET', 'NULL')
+
+        # Encoding payload      
+        try:
+            encoded_jwt = jwt.encode({"exp": int(time.time() + 60)}, secret_key , algorithm="HS256")
+            return "Bearer " + encoded_jwt
+        
+        except Exception as e:
+            self.__LOGGER.error("JWT Encoding failed")
+            
+        return None
+
     # Return a dict of available endpoints and the call/data needed
     def list_available_endpoints(self):
         return ENDPOINTS
@@ -64,11 +81,9 @@ class MiddlewareService(object):
             url = self._URL + endpoint['endpoint']
 
         # Handle if it is LOGIN_AUTH
-        if endpoint_name != 'LOGIN_AUTH' and self.__AUTH_TOKEN is not None:
+        if self.__AUTH_TOKEN is not None:
             headers["Authorization"] = self.__AUTH_TOKEN
-        elif endpoint_name == 'LOGIN_AUTH':
-            self.__LOGGER.debug("Getting Concertim Auth Token")
-        elif self.__AUTH_TOKEN is None:
+        else:
             e = MissingRequiredArgs("No Authentication Token provided")
             self.__LOGGER.error(f"{type(e).__name__} - {e}")
             raise e
