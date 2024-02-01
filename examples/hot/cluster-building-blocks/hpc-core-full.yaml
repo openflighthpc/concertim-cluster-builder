@@ -1,4 +1,48 @@
 heat_template_version: 2021-04-16
+
+parameter_groups:
+  - label: "Cluster parameters"
+    description: "Configuration for parameters common across the cluster"
+    parameters:
+      - clustername
+      - solo-image
+      - ssh-key
+
+  - label: "Network settings"
+    description: "Configuration for the external and internal cluster networks"
+    parameters:
+      - external-network
+      - network-cidr-pri
+
+  - label: "Gateway parameters"
+    description: "Parameters for configuring the gateway"
+    parameters:
+      - gateway-pri-ip
+      - gateway-flavour
+
+  - label: "Infra01 parameters"
+    description: "Parameters for configuring infra01 if requested"
+    parameters:
+      - infra01-create
+      - infra01-pri-ip
+      - infra01-flavour
+
+  - label: "Infra02 parameters"
+    description: "Parameters for configuring infra02 if requested"
+    parameters:
+      - infra02-create
+      - infra02-pri-ip
+      - infra02-flavour
+
+  - label: "Storage1 parameters"
+    description: "Parameters for configuring storage1 if requested"
+    parameters:
+      - storage1-create
+      - storage1-pri-ip
+      - storage1-flavour
+      - storage1-mount-disk-size
+
+
 parameters:
   clustername:
     type: string
@@ -29,6 +73,7 @@ parameters:
   ssh-key:
     type: string
     label: SSH Public Key for Access
+    description: This should be a Public Key itself not the name of one
 
   solo-image:
     type: string
@@ -105,8 +150,10 @@ parameters:
       - custom_constraint: nova.flavor
 
   storage1-mount-disk-size:
-    type: string
-    label: Storage1 mounted disk size
+    type: number
+    label: Storage1 mounted disk size in GB
+    constraints:
+      - range: { min: 1 }
 
 conditions:
   create_infra01:

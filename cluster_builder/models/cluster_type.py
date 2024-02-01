@@ -14,6 +14,7 @@ class ClusterType:
     title: str
     description: str
     parameters: dict
+    parameter_groups: list
     kind: str
     upstream_template: str
     last_modified: str

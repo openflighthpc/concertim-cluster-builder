@@ -6,7 +6,7 @@ from dateutil import parser
 from .models import ClusterType
 
 bp = Blueprint('cluster-types', __name__, url_prefix="/cluster-types")
-ATTRIBUTES = ["id", "title", "description", "parameters", "last_modified"]
+ATTRIBUTES = ["id", "title", "description", "parameters", "parameter_groups", "last_modified"]
 
 @bp.route('/')
 def index():
