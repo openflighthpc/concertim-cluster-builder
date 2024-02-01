@@ -78,6 +78,7 @@ parameters:
   solo-image:
     type: string
     label: Flight Solo Image ID
+    description: The Flight Solo Image to use for all nodes in the cluster
     # default: "Flight Solo 2023.2"
     constraints:
       - custom_constraint: glance.image
@@ -98,6 +99,7 @@ parameters:
   infra01-create:
     type: boolean
     label: Create Infra01 Node?
+    description: If creating Infra01 its Primary IP Address and node flavour are both required
     default: True
 
   infra01-pri-ip:
@@ -116,6 +118,7 @@ parameters:
   infra02-create:
     type: boolean
     label: Create Infra02 Node?
+    description: If creating Infra02 its Primary IP Address and node flavour are both required
     default: False
 
   infra02-pri-ip:
@@ -134,6 +137,7 @@ parameters:
   storage1-create:
     type: boolean
     label: Create Storage1 Node?
+    description: If creating Storage1 its Primary IP Address, node flavour and mounted disk size are all required
     default: False
 
   storage1-pri-ip:
