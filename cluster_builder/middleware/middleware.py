@@ -25,11 +25,11 @@ class MiddlewareService(object):
     
     def __get_auth_token(self):
 
-        if 'JWT_SECRET' not in os.environ:
-            self.__LOGGER.error("JWT_SECRET env variable not set")
+        if 'JWT_SECRET' not in self._CONFIG:
+            self.__LOGGER.error("JWT_SECRET not set")
             return None
     
-        secret_key = os.environ.get('JWT_SECRET', 'NULL')
+        secret_key = self._CONFIG['JWT_SECRET']
 
         # Encoding payload      
         try:

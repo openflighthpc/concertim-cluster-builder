@@ -12,37 +12,33 @@ def authenticate_headers(headers, logger):
 
     # Checking for presence of Authorization Header field
     if "Authorization" not in headers:
-        return False
+        return False, "Authorization header not present in request"
     
     # Checking for presence of 'Bearer' keyword
     bearer_token = headers["Authorization"]
     if bearer_token[0:7] != "Bearer ":
         logger.error("Bearer token not present")
-        return False
+        return False, "Bearer token not present in Authorization header"
 
     encoded_message = bearer_token[7:]
 
     if 'JWT_SECRET' not in os.environ:
-        logger.error("JWT_SECRET env variable not set")
-        return False
+        logger.error("JWT_SECRET not set")
+        return False, "JWT_SECRET not set"
     
     secret_key = os.environ.get('JWT_SECRET', 'NULL')
         
     #Decrypting message
     try:
-        payload = jwt.decode(encoded_message, key=secret_key, algorithms="HS256")
+        payload = jwt.decode(encoded_message, key=secret_key, algorithms="HS256", options={"require": ["exp"]})
     except Exception as e:
-        logger.info("JWT decoding failed")
-        return False
+        logger.error(f"Exception : {e}")
+        return False, "JWT decoding failed"
 
     logger.info(f"Payload : {payload}")
-
-    #Checking for token expiry
-    if "exp" not in payload or payload["exp"] < time.time() :
-        return False
-
     logger.info("Authentication Successful")
-    return True
+    
+    return True, "SUCCCESS"
 
 
 

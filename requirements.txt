@@ -63,6 +63,7 @@ python-openstackclient==6.2.0
 python-saharaclient==4.1.0
 python-swiftclient==4.3.0
 pytz==2023.3
+PyJWT==2.8.0
 PyYAML==6.0
 requests==2.31.0
 requestsexceptions==1.4.0
