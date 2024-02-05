@@ -27,26 +27,3 @@ kind: heat
 #
 # Currently, each cluster type supports running a single HOT template.
 heat_template_url: cluster-building-blocks/hpc-core-full.yaml
-
-required_parameters:
-  - clustername
-  - solo-image
-  - ssh-key
-  - external-network
-  - network-cidr-pri
-  - gateway-pri-ip
-  - gateway-flavour
-
-# conditional_parameters:
-#   infra01-flavour:
-#     ask_when:
-#       value: infra01-create
-#       eq: True
-#   infra01-pri-ip:
-#     ask_when:
-#       value: infra01-create
-#       eq: True
-#   infra01-flavour:
-#     ask_when:
-#       value: infra01-create
-#       eq: True

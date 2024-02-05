@@ -64,11 +64,7 @@ SCHEMA = {
             "kind": {
                 "type": "string",
                 "enum": ["heat", "magnum", "sahara"]
-                },
-            "required_parameters": {
-                "type": "array",
-                "items": { "type": "string" }
-                },
+                }
             },
         "required": ["title", "description", "kind"],
         "allOf": [
@@ -219,8 +215,7 @@ class ClusterTypeFactory:
                             # parameters are loaded from the HOT template.
                             hot_template = self._hot_template_contents(fields["upstream_template"])
                             fields["hardcoded_parameters"] = definition.get("hardcoded_parameters", {})
-                            fields["required_parameters"] = definition.get("required_parameters", [])
-                            fields["parameters"] = self._extract_parameters(hot_template, fields["hardcoded_parameters"], fields["required_parameters"])
+                            fields["parameters"] = self._extract_parameters(hot_template, fields["hardcoded_parameters"])
                             fields["parameter_groups"] = hot_template.get("parameter_groups", [])
                             # Update the last_modified date if the HOT has been
                             # modified more recently.
@@ -280,11 +275,11 @@ class ClusterTypeFactory:
         return hot_template
 
 
-    def _extract_parameters(self, hot_template, hardcoded_parameters, required_parameters):
-        params = {}
+    def _extract_parameters(self, hot_template, hardcoded_parameters):
         if hardcoded_parameters is None:
-            params = hot_template.get("parameters", {})
+            return hot_template.get("parameters", {})
         else:
+            params = {}
             hardcoded_names = hardcoded_parameters.keys()
             for key, value in hot_template.get("parameters", {}).items():
                 if key in hardcoded_names:
@@ -294,26 +289,4 @@ class ClusterTypeFactory:
                     pass
                 else:
                     params[key] = value
-        if required_parameters is None:
-            pass
-        else:
-            for param_name in required_parameters:
-                param = params[param_name]
-                # XXX Raise better error than KeyError
-                # param = params.get(param_name)
-                # if param is None:
-                #     pass
-                # else:
-                #     pass
-                self._add_required_constraint(param_name, param)
-        return params
-
-    def _add_required_constraint(self, parameter_name, parameter):
-        constraints = parameter.get("constraints", [])
-        label = parameter.get("label", parameter_name)
-        required_constraint = {
-            "description": f"{label} is required",
-            "custom_constraint": "concertim.required",
-        }
-        constraints.append(required_constraint)
-        parameter['constraints'] = constraints
+            return params
