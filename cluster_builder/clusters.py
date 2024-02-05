@@ -1,4 +1,4 @@
-from flask import (Blueprint, abort, current_app, g, make_response)
+from flask import (Blueprint, abort, current_app, g, request, make_response)
 from flask_expects_json import expects_json
 
 from .models import ClusterType
@@ -7,6 +7,7 @@ from .openstack.heat_handler import HeatHandler
 from .openstack.magnum_handler import MagnumHandler
 from .openstack.sahara_handler import SaharaHandler
 from .middleware.middleware import MiddlewareService
+from .middleware.utils.auth import authenticate_headers
 
 bp = Blueprint('clusters', __name__, url_prefix="/clusters")
 
@@ -86,6 +87,10 @@ handlers = {
 @bp.post('/')
 @expects_json(create_schema, check_formats=True)
 def create_cluster():
+
+    auth_status, message = authenticate_headers(current_app.config, request.headers, current_app.logger)
+    if not auth_status:
+        abort(401, description=message)
     
     cluster_type = ClusterType.find(g.data["cluster"]["cluster_type_id"])
     cluster_type.assert_parameters_present(g.data["cluster"]["parameters"])

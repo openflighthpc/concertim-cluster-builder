@@ -18,6 +18,8 @@ def app():
     app = create_app(instance_path=instance_path)
     app.config.update({
         "TESTING": True,
+        "DEBUG" : True,
+        "JWT_SECRET": "TEST_SECRET"
         })
 
     yield app

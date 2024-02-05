@@ -1,7 +1,38 @@
 import json
 import pytest
+import jwt
+import time
 
 from .utils import (remove_path, set_path, write_cluster_definition, write_hot)
+
+JWT_SECRET = "TEST_SECRET"
+
+def test_launch_cluster_without_authorization(client):
+    body = {
+            "cloud_env": {
+                "auth_url": "fake",
+                "user_id": "fake",
+                "password": "fake",
+                "project_id": "fake"
+                },
+            "cluster": {
+                "name": "test-cluster",
+                "cluster_type_id": "does-not-exist",
+                "parameters": {}
+                },
+            "billing_account_id" : "fake",
+            "middleware_url" : "fake"
+            }
+    
+    response = client.post("/clusters/", json=body)
+    assert response.status_code == 401
+    data = json.loads(response.data)
+    assert "errors" in data.keys()
+    assert len(data["errors"]) == 1
+    error = data["errors"][0]
+    assert error["title"] == "Unauthorized"
+    assert error["status"] == "401"
+
 
 def test_launch_non_existent_cluster(client):
     body = {
@@ -19,7 +50,10 @@ def test_launch_non_existent_cluster(client):
             "billing_account_id" : "fake",
             "middleware_url" : "fake"
             }
-    response = client.post("/clusters/", json=body)
+    
+    bearer_token = "Bearer " + jwt.encode({"exp" : time.time() + 60}, JWT_SECRET, algorithm="HS256")
+    headers = {"Authorization" : bearer_token}
+    response = client.post("/clusters/", json=body, headers=headers)
     assert response.status_code == 404
     data = json.loads(response.data)
     assert "errors" in data.keys()
@@ -55,7 +89,9 @@ def test_launch_with_missing_params(client, app):
             "billing_account_id" : "fake",
             "middleware_url" : "fake"
             }
-    response = client.post("/clusters/", json=body)
+    bearer_token = "Bearer " + jwt.encode({"exp" : time.time() + 60}, JWT_SECRET, algorithm="HS256")
+    headers = {"Authorization" : bearer_token}
+    response = client.post("/clusters/", json=body, headers=headers)
     assert response.status_code == 400
     data = json.loads(response.data)
     assert "errors" in data.keys()
