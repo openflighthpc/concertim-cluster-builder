@@ -31,6 +31,9 @@ def authenticate_headers(config, headers, logger):
     #Decrypting message
     try:
         payload = jwt.decode(encoded_message, key=secret_key, algorithms="HS256", options={"require": ["exp"]})
+    except jwt.ExpiredSignatureError:
+        logger.error("JWT Signature expired")
+        return False, "JWT Signature expired"
     except Exception as e:
         logger.error(f"Exception : {e}")
         return False, "JWT decoding failed"
