@@ -88,9 +88,9 @@ handlers = {
 @expects_json(create_schema, check_formats=True)
 def create_cluster():
 
-    auth_status, message = authenticate_headers(request.headers, current_app.logger)
+    auth_status, message = authenticate_headers(current_app.config, request.headers, current_app.logger)
     if not auth_status:
-        abort(401,description=message)
+        abort(401, description=message)
     
     cluster_type = ClusterType.find(g.data["cluster"]["cluster_type_id"])
     cluster_type.assert_parameters_present(g.data["cluster"]["parameters"])

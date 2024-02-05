@@ -33,10 +33,10 @@ def create_app(instance_path=None, test_config=None):
         app.config.from_mapping(test_config)
 
     if 'JWT_SECRET' not in app.config:
-        if 'JWT_SECRET' not in os.environ:
-            app.logger.error("JWT_SECRET not set")
-        else:
+        if 'JWT_SECRET' in os.environ:
             app.config['JWT_SECRET'] = os.environ['JWT_SECRET']
+        else:
+            app.logger.error("JWT_SECRET not set")
 
     os.makedirs(app.instance_path, exist_ok=True)
     os.makedirs(os.path.join(app.instance_path, "cluster-types-enabled"), exist_ok=True)

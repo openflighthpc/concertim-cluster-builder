@@ -5,7 +5,7 @@ import json
 import time
 
 
-def authenticate_headers(headers, logger):
+def authenticate_headers(config, headers, logger):
 
     headers = dict(headers)
     logger.info(f"Headers : {headers}")
@@ -22,12 +22,12 @@ def authenticate_headers(headers, logger):
 
     encoded_message = bearer_token[7:]
 
-    if 'JWT_SECRET' not in os.environ:
+    if 'JWT_SECRET' in config:
+        secret_key = config['JWT_SECRET']
+    else:
         logger.error("JWT_SECRET not set")
         return False, "JWT_SECRET not set"
-    
-    secret_key = os.environ.get('JWT_SECRET', 'NULL')
-        
+
     #Decrypting message
     try:
         payload = jwt.decode(encoded_message, key=secret_key, algorithms="HS256", options={"require": ["exp"]})
