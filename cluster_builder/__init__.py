@@ -56,6 +56,9 @@ def create_app(instance_path=None, test_config=None):
     from . import clusters
     app.register_blueprint(clusters.bp)
 
+    from . import cloud_assets
+    app.register_blueprint(cloud_assets.bp)
+
     from .openstack.error_handling import setup_error_handling
     setup_error_handling(app)
 
