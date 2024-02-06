@@ -5,7 +5,6 @@ import urllib
 import yaml
 
 from flask import (abort)
-from flask import (abort)
 from heatclient.common import template_utils
 from jsonschema.exceptions import (best_match)
 import jsonschema
@@ -45,7 +44,19 @@ SCHEMA = {
                     },
                 "additionalProperties": False
                 },
-            },
+        "parameter_groups": {
+            "$id": "/schemas/parameter_groups",
+            "type": "object",
+            "properties": {
+                "label": { "type": "string" },
+                "description": { "type": "string" },
+                "parameters": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                    }
+                }
+            }
+        },
         "type": "object",
         "properties": {
             "title": { "type": "string" },
@@ -87,7 +98,8 @@ SCHEMA = {
                 "then": {
                     "properties": {
                         "magnum_cluster_template": { "type": "string" },
-                        "parameters": {"$ref": "/schemas/parameters"}
+                        "parameters": {"$ref": "/schemas/parameters"},
+                        "parameter_groups": {"$ref": "/schemas/parameter_groups"}
                         },
                     "required": ["magnum_cluster_template", "parameters"],
                     },
@@ -100,7 +112,8 @@ SCHEMA = {
                 "then": {
                     "properties": {
                         "sahara_cluster_template": { "type": "string" },
-                        "parameters": {"$ref": "/schemas/parameters"}
+                        "parameters": {"$ref": "/schemas/parameters"},
+                        "parameter_groups": {"$ref": "/schemas/parameter_groups"}
                         },
                     "required": ["sahara_cluster_template", "parameters"],
                     },
@@ -203,6 +216,7 @@ class ClusterTypeFactory:
                             hot_template = self._hot_template_contents(fields["upstream_template"])
                             fields["hardcoded_parameters"] = definition.get("hardcoded_parameters", {})
                             fields["parameters"] = self._extract_parameters(hot_template, fields["hardcoded_parameters"])
+                            fields["parameter_groups"] = hot_template.get("parameter_groups", [])
                             # Update the last_modified date if the HOT has been
                             # modified more recently.
                             hot_template_path = self.hot_template_path(definition.get("heat_template_url"))
@@ -212,9 +226,11 @@ class ClusterTypeFactory:
                         elif definition["kind"] == "magnum":
                             fields["upstream_template"] = definition.get("magnum_cluster_template")
                             fields["parameters"] = definition.get("parameters", {})
+                            fields["parameter_groups"] = definition.get("parameter_groups", {})
                         elif definition["kind"] == "sahara":
                             fields["upstream_template"] = definition.get("sahara_cluster_template")
                             fields["parameters"] = definition.get("parameters", {})
+                            fields["parameter_groups"] = definition.get("parameter_groups", {})
                         cluster_type = self.klass(**fields)
                         return cluster_type
         except FileNotFoundError as exc:
