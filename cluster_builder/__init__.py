@@ -116,4 +116,5 @@ def create_app(instance_path=None, test_config=None):
             body[0]["meta"] = meta
         return make_response(jsonify({"errors": body}), 500)
 
+    app.logger.debug(f"App config : \n{app.config}")
     return app

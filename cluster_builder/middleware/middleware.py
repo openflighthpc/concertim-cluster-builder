@@ -107,28 +107,28 @@ class MiddlewareService(object):
 
         # Handle response status codes
         if response.status_code in [200, 201]:
-            # Send the token if it is the login endpoint, else return the response.json
-            if endpoint_name == 'LOGIN_AUTH':
-                return response.headers.get("Authorization")
             self.__retry_count = 0
             return response.json()
         
         elif response.status_code == 422:
-            e = MiddlewareItemConflict(f"The item you are trying to add already exists - {response.json()}")
+            e = MiddlewareItemConflict(f"The item you are trying to add already exists - {response}")
             self.__LOGGER.warning(f"{type(e).__name__} - {e}")
-            raise e
-        
+            #raise e
+            return None
+
         elif response.status_code in [401,403,405,407,408]:
             if self.__retry_count == 0:
                 self.__LOGGER.warning(f"API call failed due to one of the following codes '[401,403,405,407,408]' - retrying once")
                 self.__retry(method, endpoint_name, variables_dict=variables_dict, endpoint_var=endpoint_var)
             else:
-                self.__LOGGER.error('Unhandled REST request error.')
+                self.__LOGGER.error(f"REST request failed : {response.__dict__}")
                 self.__retry_count = 0
-                response.raise_for_status()
+                #response.raise_for_status()
+                return None
         else:
-            self.__LOGGER.error('Unhandled REST request error.')
-            response.raise_for_status()
+            self.__LOGGER.error(f"REST request failed : {response.__dict__}")
+            #response.raise_for_status()
+            return None
 
     # Return the given data template from ENDPOINTS with all var filled in from variables_dict
     # Uses recursion to traverse through the dict
