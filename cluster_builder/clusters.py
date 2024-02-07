@@ -88,11 +88,12 @@ handlers = {
 @expects_json(create_schema, check_formats=True)
 def create_cluster():
 
+    # Authenticating JWT headers
     auth_status, message = authenticate_headers(current_app.config, request.headers, current_app.logger)
     if not auth_status:
         abort(401, description=message)
     
-
+    # Creating Cluster handler
     cluster_type = ClusterType.find(g.data["cluster"]["cluster_type_id"])
     cluster_type.assert_parameters_present(g.data["cluster"]["parameters"])
     handler_class = handlers.get(cluster_type.kind)
@@ -100,12 +101,11 @@ def create_cluster():
         raise TypeError(f"Unknown cluster type kind '{cluster_type.kind}' for cluster type '{cluster_type.id}'")
     
 
-
     # Creating Middleware Service Object
     middlewareservice  = MiddlewareService(current_app.config, current_app.logger, g.data['middleware_url'])
 
 
-    # Obtain Billing account credits
+    # Obtaining Billing account credits
     billing_account_credits = middlewareservice.get_credits({'billing_account_id' : g.data['billing_account_id']})
     
     if billing_account_credits is None or 'credits' not in billing_account_credits:
@@ -118,7 +118,6 @@ def create_cluster():
        abort(400, "Insufficient credits to launch a cluster")
     
 
-
     # Creating Billing Order/Subscription
     order = middlewareservice.create_order({'billing_account_id' : g.data['billing_account_id']})
     if order is None or 'order_id' not in order:
@@ -128,10 +127,22 @@ def create_cluster():
     # Creating Openstack Cluster
     sess = OpenStackAuth(g.data["cloud_env"], current_app.logger).get_session()
     handler = handler_class(sess, current_app.logger)
-    cluster = handler.create_cluster(g.data["cluster"], cluster_type)
+
+    try:
+        cluster = handler.create_cluster(g.data["cluster"], cluster_type)
+    except Exception as e:
+        # Deleting Billing order if cluster creation fails
+        current_app.logger.error("Cluster creation failed")
+        middlewareservice.delete_order({'order_id' : order['order_id']})
+        abort(424, description = "Cluster creation failed")
+
     current_app.logger.debug(f"created cluster {cluster.id}:{cluster.name}")
 
-    
+    # Checking if cluster has created successfully
+    if not handler.check_cluster_running(cluster.id):
+        current_app.logger.error(f"Cluster {cluster.id} not running")
+        middlewareservice.delete_order({'order_id' : order['order_id']})
+        abort(424, description = "Cluster creation not completed successfully")
 
     # Associating Openstack stack ID with Billing order/subscription
     order_tag_status = middlewareservice.add_order_tag({'order_id' : order['order'], 'tag_name' : 'openstack_stack_id', 'tag_value' : cluster.id})
@@ -139,6 +150,5 @@ def create_cluster():
         description = "openstack_stack_id tag with value " + cluster.id + " is not created for billing order " + order['order']
         abort(207, description=description)
             
-
     body = {"id": cluster.id, "name": cluster.name}
     return make_response(body, 201)

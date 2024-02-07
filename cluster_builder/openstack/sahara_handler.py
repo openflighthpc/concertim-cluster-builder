@@ -40,6 +40,19 @@ class SaharaHandler:
         sahara_cluster = self.client.clusters.create(**args)
         return Cluster(id=sahara_cluster.id, name=sahara_cluster.name)
 
+    def get_cluster(self, cluster_id):
+        self.logger.info(f"Getting cluster info for {cluster_id}")
+
+        response = self.client.clusters.get(cluster_id)
+        return response
+    
+    def check_cluster_running(self, cluster_id):
+        cluster = self.get_cluster(cluster_id)
+
+        if cluster.status == 'CREATE_COMPLETE':
+            return True
+        
+        return False
 
     def _build_args(self, cluster_data, cluster_type, cluster_name):
         self.logger.debug(f"getting sahara cluster template {cluster_type.upstream_template}")

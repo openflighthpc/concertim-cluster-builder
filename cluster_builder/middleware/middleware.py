@@ -46,11 +46,18 @@ class MiddlewareService(object):
         return ENDPOINTS
 
     def get_credits(self, variables_dict):
+        self.__LOGGER.info(" *** Calling get_credits Middleware API ***")
         response = self._api_call('post', 'GET_CREDITS', variables_dict=variables_dict)
+        self.__LOGGER.info("*** Response for get)credits Middleware API ***")
+        self.__LOGGER.info(f"{response}")
         return response
     
     def create_order(self, variables_dict):
         response = self._api_call('post', 'CREATE_ORDER', variables_dict=variables_dict)
+        return response
+    
+    def delete_order(self, variables_dict):
+        response = self._api_call('post', 'DELETE_ORDER', variables_dict=variables_dict)
         return response
     
     def add_order_tag(self, variables_dict):
@@ -65,7 +72,7 @@ class MiddlewareService(object):
         ACCEPTS:
             method - the REST call to make (get,post,patch,etc)
             endpoint_name - the endpoint name correspoinding to the ENDPOINTS dictionary
-                            (GET_CREDITS, CREATE_ORDER, ADD_ORDER_TAG, etc)
+                            (GET_CREDITS, CREATE_ORDER, DELETE_ORDER, ADD_ORDER_TAG, etc)
             *variables_dict - the dictionary containing all needed variables to make the API call
             *endpoint_var - this is the ID or NAME of a device/template/rack that needs to be filled in the URL string
         
