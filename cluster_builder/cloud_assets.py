@@ -1,5 +1,4 @@
-from flask import (Blueprint, abort, current_app, g, request, make_response)
-from flask_expects_json import expects_json
+from flask import (Blueprint, current_app, request, make_response)
 
 from .openstack.auth import OpenStackAuth
 from .openstack.nova_handler import NovaHandler
@@ -8,65 +7,9 @@ from .openstack.neutron_handler import NeutronHandler
 
 bp = Blueprint('cloud_assets', __name__, url_prefix="/cloud_assets")
 
-auth_schema = {
-    "$defs": {
-        "user_id_and_project_id": {
-            "$id": "/schemas/user_id_and_project_id",
-
-            "type": "object",
-            "properties": {
-                "auth_url": { "type": "string", "format": "uri" },
-                "user_id": { "type": "string" },
-                "password": { "type": "string" },
-                "project_id": { "type": "string" },
-            },
-            "required": ["auth_url", "user_id", "password", "project_id"]
-        },
-
-        "project_id": {
-            "$id": "/schemas/project_id",
-
-            "type": "object",
-            "properties": {
-                "auth_url": { "type": "string", "format": "uri" },
-                "username": { "type": "string" },
-                "password": { "type": "string" },
-                "project_id": { "type": "string" },
-                "user_domain_name": { "type": "string" }
-            },
-            "required": ["auth_url", "username", "password", "project_id", "user_domain_name"]
-        },
-
-        "project_name": {
-            "$id": "/schemas/project_name",
-
-            "type": "object",
-            "properties": {
-                "auth_url": { "type": "string", "format": "uri" },
-                "username": { "type": "string" },
-                "password": { "type": "string" },
-                "project_name": { "type": "string" },
-                "project_domain_name": { "type": "string" },
-                "user_domain_name": { "type": "string" }
-            },
-            "required": ["auth_url", "username", "password", "project_name", "project_domain_name", "user_domain_name"]
-        }
-    },
-
-    "type": "object",
-    "properties": {
-        "cloud_env": {
-            "type": "object",
-            "oneOf": [{"$ref": "/schemas/user_id_and_project_id"}, {"$ref": "/schemas/project_id"}, {"$ref": "/schemas/project_name"}]
-        },
-    },
-    "required": ["cloud_env"],
-}
-
-@bp.post('/')
-@expects_json(auth_schema, check_formats=True)
+@bp.get('/')
 def cloud_assets():
-    sess = OpenStackAuth(g.data["cloud_env"], current_app.logger).get_session()
+    sess = OpenStackAuth(request.args, current_app.logger).get_session()
     nova = NovaHandler(sess, current_app.logger)
     glance = GlanceHandler(sess, current_app.logger)
     neutron = NeutronHandler(sess, current_app.logger)
