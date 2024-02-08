@@ -7,12 +7,9 @@ from .openstack.heat_handler import HeatHandler
 from .openstack.magnum_handler import MagnumHandler
 from .openstack.sahara_handler import SaharaHandler
 from .middleware.middleware import MiddlewareService
-from .middleware.utils.auth import authenticate_headers
+from .middleware.utils.auth import assert_authenticated
 
-from .middleware.utils.exceptions import MiddlewareAuthenticationError
-from werkzeug.exceptions import HTTPException
-
-from magnumclient.common.apiclient.exceptions import HttpVersionNotSupported
+from .middleware.utils.exceptions import MiddlewareInsufficientCredits
 
 bp = Blueprint('clusters', __name__, url_prefix="/clusters")
 
@@ -94,7 +91,7 @@ handlers = {
 def create_cluster():
 
     # Authenticating JWT headers
-    authenticate_headers(current_app.config, request.headers, current_app.logger)
+    assert_authenticated(current_app.config, request.headers, current_app.logger)
 
     # Creating Cluster handler
     cluster_type = ClusterType.find(g.data["cluster"]["cluster_type_id"])
@@ -114,7 +111,7 @@ def create_cluster():
 
     # Checking for enough credits
     if not int(billing_account_credits) > 0:
-       abort(400, description = "Insufficient credits to launch a cluster")
+       raise MiddlewareInsufficientCredits("Insufficient credits to launch a cluster")
     
 
     # Creating Billing Order/Subscription

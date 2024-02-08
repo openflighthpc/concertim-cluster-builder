@@ -5,7 +5,7 @@ import json
 import time
 from .exceptions import MiddlewareAuthenticationError
 
-def authenticate_headers(config, headers, logger):
+def assert_authenticated(config, headers, logger):
 
     headers = dict(headers)
     logger.info(f"Headers : {headers}")

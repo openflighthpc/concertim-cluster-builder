@@ -122,9 +122,9 @@ def create_app(instance_path=None, test_config=None):
         return make_response(jsonify({"errors": body}), 500)
     
     # Filtering sensitive JWT_SECRET info
-    filtered_config = app.config
+    filtered_config = app.config.copy()
     if 'JWT_SECRET' in filtered_config:
-        filtered_config['1JWT_SECRET'] = '[FILTERED]'
+        filtered_config['JWT_SECRET'] = '[FILTERED]'
     app.logger.debug(f"App config : \n{filtered_config}")
 
     return app

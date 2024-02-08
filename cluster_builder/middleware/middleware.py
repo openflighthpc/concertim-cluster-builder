@@ -14,10 +14,7 @@ requests.packages.urllib3.disable_warnings()
 
 class MiddlewareService(object):
     def __init__(self, config_obj, logger, middleware_url):
-        self._CONFIG = config_obj
-    
-        logger.info(f"{self._CONFIG}")
-    
+        self._CONFIG = config_obj    
         self.__LOGGER = logger
         self._URL = middleware_url
         self.__retry_count = 0
@@ -51,7 +48,7 @@ class MiddlewareService(object):
         
         try:
             response = self._api_call('post', 'GET_CREDITS', variables_dict=variables_dict)        
-            self.__LOGGER.info("*** Response for get_credits Middleware API ***")
+            self.__LOGGER.info("*** Finished get_credits Middleware API ***")
             self.__LOGGER.debug(f"{response}")
             return response['credits']
         
@@ -66,10 +63,10 @@ class MiddlewareService(object):
 
         try:
             response = self._api_call('post', 'CREATE_ORDER', variables_dict=variables_dict)
-            self.__LOGGER.info("*** Response for create_order Middleware API ***")
+            self.__LOGGER.info("*** Finished create_order Middleware API ***")
             self.__LOGGER.debug(f"{response}")
 
-            return response['order_id']
+            return response['order']
         
         except Exception as e:
             self.__LOGGER.error("*** create_order Middleware API failed ***")
@@ -80,11 +77,9 @@ class MiddlewareService(object):
         self.__LOGGER.info(" *** Calling delete_order Middleware API ***")
 
         try:
-            response = self._api_call('post', 'DELETE_ORDER', variables_dict=variables_dict)
-            self.__LOGGER.info("*** Response for delete_order Middleware API ***")
-            self.__LOGGER.debug(f"{response}")
-            return response
-
+            self._api_call('post', 'DELETE_ORDER', variables_dict=variables_dict)
+            self.__LOGGER.info("*** Finished delete_order Middleware API ***")
+            
         except Exception as e:
             self.__LOGGER.error("*** delete_order Middleware API failed ***")
             raise MiddlewareServiceError(str(e))
@@ -95,7 +90,7 @@ class MiddlewareService(object):
 
         try:
             response = self._api_call('post', 'ADD_ORDER_TAG', variables_dict=variables_dict)
-            self.__LOGGER.info("*** Response for add_order_tag Middleware API ***")
+            self.__LOGGER.info("*** Finished add_order_tag Middleware API ***")
             self.__LOGGER.debug(f"{response}")
             return response
     
@@ -151,10 +146,16 @@ class MiddlewareService(object):
             self.__LOGGER.debug(f"API CALL ({method}) - {url}")
             response = getattr(requests, method.lower())(url, headers=headers, verify=False)
 
+        self.__LOGGER.debug(f"API Response : {response.__dict__}")
+
         # Handle response status codes
-        if response.status_code in [200, 201, 204]:
+        if response.status_code in [200, 201]:
             self.__retry_count = 0
             return response.json()
+        
+        elif response.status_code == 204:
+            self.__retry_count = 0
+            return 
         
         elif response.status_code == 422:
             e = MiddlewareItemConflict(f"The item you are trying to add already exists - {response}")
