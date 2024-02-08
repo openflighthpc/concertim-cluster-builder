@@ -127,7 +127,9 @@ def create_cluster():
         # Deleting Billing order if cluster creation fails
         current_app.logger.error(f"Cluster creation failed : {e}")
         middlewareservice.delete_order({'order_id' : order_id})
-        abort(400, description = str(e))
+        # Re-raise error so that it is processed by the error handling defined
+        # in the .openstack.error_handling module.
+        raise e
 
     current_app.logger.debug(f"created cluster {cluster.id}:{cluster.name}")
 
