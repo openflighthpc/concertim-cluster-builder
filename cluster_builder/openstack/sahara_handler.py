@@ -40,7 +40,6 @@ class SaharaHandler:
         sahara_cluster = self.client.clusters.create(**args)
         return Cluster(id=sahara_cluster.id, name=sahara_cluster.name)
 
-
     def _build_args(self, cluster_data, cluster_type, cluster_name):
         self.logger.debug(f"getting sahara cluster template {cluster_type.upstream_template}")
         parameters = ClusterType.merge_parameters(cluster_type, cluster_data.get("parameters"))

@@ -47,7 +47,6 @@ class HeatHandler:
                 )
         return Cluster(id=response["stack"]["id"], name=stack_name)
 
-
     def _template_stream(self, cluster_type):
         _files, template = template_utils.get_template_contents(cluster_type.hot_template_path())
         return yaml.safe_dump(template)

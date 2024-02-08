@@ -30,7 +30,7 @@ def test_launch_cluster_without_authorization(client):
     assert "errors" in data.keys()
     assert len(data["errors"]) == 1
     error = data["errors"][0]
-    assert error["title"] == "Unauthorized"
+    assert error["title"] == "MiddlewareAuthenticationError"
     assert error["status"] == "401"
 
 

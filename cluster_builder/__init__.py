@@ -7,6 +7,7 @@ from flask import (Flask, make_response, jsonify)
 from jsonschema import ValidationError
 from jsonschema.exceptions import (best_match)
 from werkzeug.exceptions import HTTPException
+from .middleware.utils.exceptions import MiddlewareAuthenticationError
 
 def create_app(instance_path=None, test_config=None):
     # dictConfig({
@@ -62,6 +63,9 @@ def create_app(instance_path=None, test_config=None):
     from .openstack.error_handling import setup_error_handling
     setup_error_handling(app)
 
+    from .middleware.utils.error_handling import setup_middleware_error_handling
+    setup_middleware_error_handling(app)
+    
     @app.errorhandler(400)
     def bad_request(error):
         if isinstance(error.description, ValidationError):
@@ -95,7 +99,7 @@ def create_app(instance_path=None, test_config=None):
 
     @app.errorhandler(HTTPException)
     def handle_http_exception(error):
-        """Return JSON instead of HTML for HTTP errors."""
+        #Return JSON instead of HTML for HTTP errors.
         response = error.get_response()
         response.data = json.dumps({
             "errors": [{
@@ -107,6 +111,7 @@ def create_app(instance_path=None, test_config=None):
         response.content_type = "application/json"
         return response
 
+        
     @app.errorhandler(Exception)
     def handle_exception(error):
         """Return JSON instead of HTML for all errors."""
@@ -118,5 +123,11 @@ def create_app(instance_path=None, test_config=None):
             meta = {"traceback": traceback.format_tb(error.__traceback__)}
             body[0]["meta"] = meta
         return make_response(jsonify({"errors": body}), 500)
+    
+    # Filtering sensitive JWT_SECRET info
+    filtered_config = app.config.copy()
+    if 'JWT_SECRET' in filtered_config:
+        filtered_config['JWT_SECRET'] = '[FILTERED]'
+    app.logger.debug(f"App config : \n{filtered_config}")
 
     return app

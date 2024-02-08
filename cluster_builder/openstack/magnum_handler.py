@@ -43,3 +43,4 @@ class MagnumHandler:
                 **parameters
                 )
         return Cluster(id=magnum_cluster.uuid, name=cluster_name)
+    

@@ -21,6 +21,16 @@ ENDPOINTS = {
                         },
                         'headers': {"Content-Type": "application/json", "Accept": "application/json"}
                     },
+
+                    'DELETE_ORDER': {
+                        'endpoint': '/delete_order',
+                        'required_vars': ['order_id'],
+                        'data':{"order": {
+                                "order_id": '{order_id}'
+                            }
+                        },
+                        'headers': {"Content-Type": "application/json", "Accept": "application/json"}
+                    },
                 
                     'ADD_ORDER_TAG': {
                         'endpoint': '/add_order_tag',
