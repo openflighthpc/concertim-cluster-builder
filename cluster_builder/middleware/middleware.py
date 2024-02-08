@@ -1,6 +1,6 @@
 # Endpoints file containing info on all Middleware endpoints
 from .utils.endpoints import ENDPOINTS
-from .utils.exceptions import MiddlewareItemConflict, MissingRequiredArgs, MissingRequiredField
+from .utils.exceptions import MiddlewareItemConflict, MiddlewareMissingRequiredArgs, MiddlewareServiceError
 
 # Py Packages
 import sys
@@ -46,24 +46,63 @@ class MiddlewareService(object):
         return ENDPOINTS
 
     def get_credits(self, variables_dict):
-        self.__LOGGER.info(" *** Calling get_credits Middleware API ***")
-        response = self._api_call('post', 'GET_CREDITS', variables_dict=variables_dict)
-        self.__LOGGER.info("*** Response for get)credits Middleware API ***")
-        self.__LOGGER.info(f"{response}")
-        return response
+
+        self.__LOGGER.info("*** Calling get_credits Middleware API ***")
+        
+        try:
+            response = self._api_call('post', 'GET_CREDITS', variables_dict=variables_dict)        
+            self.__LOGGER.info("*** Response for get_credits Middleware API ***")
+            self.__LOGGER.debug(f"{response}")
+            return response['credits']
+        
+        except Exception as e:
+            self.__LOGGER.error("*** get_credits Middleware API failed ***")
+            raise MiddlewareServiceError(str(e))
+        
     
     def create_order(self, variables_dict):
-        response = self._api_call('post', 'CREATE_ORDER', variables_dict=variables_dict)
-        return response
+
+        self.__LOGGER.info(" *** Calling create_order Middleware API ***")
+
+        try:
+            response = self._api_call('post', 'CREATE_ORDER', variables_dict=variables_dict)
+            self.__LOGGER.info("*** Response for create_order Middleware API ***")
+            self.__LOGGER.debug(f"{response}")
+
+            return response['order_id']
+        
+        except Exception as e:
+            self.__LOGGER.error("*** create_order Middleware API failed ***")
+            raise MiddlewareServiceError(str(e))
     
     def delete_order(self, variables_dict):
-        response = self._api_call('post', 'DELETE_ORDER', variables_dict=variables_dict)
-        return response
-    
+
+        self.__LOGGER.info(" *** Calling delete_order Middleware API ***")
+
+        try:
+            response = self._api_call('post', 'DELETE_ORDER', variables_dict=variables_dict)
+            self.__LOGGER.info("*** Response for delete_order Middleware API ***")
+            self.__LOGGER.debug(f"{response}")
+            return response
+
+        except Exception as e:
+            self.__LOGGER.error("*** delete_order Middleware API failed ***")
+            raise MiddlewareServiceError(str(e))
+
     def add_order_tag(self, variables_dict):
-        response = self._api_call('post', 'ADD_ORDER_TAG', variables_dict=variables_dict)
-        return response
+
+        self.__LOGGER.info(" *** Calling add_order_tag Middleware API ***")
+
+        try:
+            response = self._api_call('post', 'ADD_ORDER_TAG', variables_dict=variables_dict)
+            self.__LOGGER.info("*** Response for add_order_tag Middleware API ***")
+            self.__LOGGER.debug(f"{response}")
+            return response
     
+        except Exception as e:
+            self.__LOGGER.error("*** add_order_tag Middleware API failed ***")
+            raise MiddlewareServiceError(str(e))
+
    
     # Generic method for handling Concertim API calls.
     def _api_call(self, method, endpoint_name, variables_dict={}, endpoint_var=''):
@@ -91,7 +130,7 @@ class MiddlewareService(object):
         if self.__AUTH_TOKEN is not None:
             headers["Authorization"] = self.__AUTH_TOKEN
         else:
-            e = MissingRequiredArgs("No Authentication Token provided")
+            e = MiddlewareMissingRequiredArgs("No Authentication Token provided")
             self.__LOGGER.error(f"{type(e).__name__} - {e}")
             raise e
 
@@ -113,15 +152,14 @@ class MiddlewareService(object):
             response = getattr(requests, method.lower())(url, headers=headers, verify=False)
 
         # Handle response status codes
-        if response.status_code in [200, 201]:
+        if response.status_code in [200, 201, 204]:
             self.__retry_count = 0
             return response.json()
         
         elif response.status_code == 422:
             e = MiddlewareItemConflict(f"The item you are trying to add already exists - {response}")
             self.__LOGGER.warning(f"{type(e).__name__} - {e}")
-            #raise e
-            return None
+            raise e
 
         elif response.status_code in [401,403,405,407,408]:
             if self.__retry_count == 0:
@@ -130,12 +168,12 @@ class MiddlewareService(object):
             else:
                 self.__LOGGER.error(f"REST request failed : {response.__dict__}")
                 self.__retry_count = 0
-                #response.raise_for_status()
-                return None
+                response.raise_for_status()
+
         else:
             self.__LOGGER.error(f"REST request failed : {response.__dict__}")
-            #response.raise_for_status()
-            return None
+            response.raise_for_status()
+            
 
     # Return the given data template from ENDPOINTS with all var filled in from variables_dict
     # Uses recursion to traverse through the dict
@@ -163,7 +201,7 @@ class MiddlewareService(object):
     def __check_required_vars(self, variables_dict, endpoint):
         missing_vars = [var for var in endpoint['required_vars'] if var not in variables_dict]
         if missing_vars:
-            e = MissingRequiredArgs(missing_vars)
+            e = MiddlewareMissingRequiredArgs(missing_vars)
             self.__LOGGER.error(f"{type(e).__name__} - {e}")
             raise e
         return True

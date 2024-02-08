@@ -9,6 +9,11 @@ from .openstack.sahara_handler import SaharaHandler
 from .middleware.middleware import MiddlewareService
 from .middleware.utils.auth import authenticate_headers
 
+from .middleware.utils.exceptions import MiddlewareAuthenticationError
+from werkzeug.exceptions import HTTPException
+
+from magnumclient.common.apiclient.exceptions import HttpVersionNotSupported
+
 bp = Blueprint('clusters', __name__, url_prefix="/clusters")
 
 # XXX Consider if we want to support all of these different ways of specifying a user/project.
@@ -89,10 +94,8 @@ handlers = {
 def create_cluster():
 
     # Authenticating JWT headers
-    auth_status, message = authenticate_headers(current_app.config, request.headers, current_app.logger)
-    if not auth_status:
-        abort(401, description=message)
-    
+    authenticate_headers(current_app.config, request.headers, current_app.logger)
+
     # Creating Cluster handler
     cluster_type = ClusterType.find(g.data["cluster"]["cluster_type_id"])
     cluster_type.assert_parameters_present(g.data["cluster"]["parameters"])
@@ -107,22 +110,15 @@ def create_cluster():
 
     # Obtaining Billing account credits
     billing_account_credits = middlewareservice.get_credits({'billing_account_id' : g.data['billing_account_id']})
-    
-    if billing_account_credits is None or 'credits' not in billing_account_credits:
-        abort(424, description = "Unable to obtain billing account credits")
-    
     current_app.logger.info(f"Billing account credits available : {billing_account_credits}")
 
     # Checking for enough credits
-    if not int(billing_account_credits['credits']) > 0:
-       abort(400, "Insufficient credits to launch a cluster")
+    if not int(billing_account_credits) > 0:
+       abort(400, description = "Insufficient credits to launch a cluster")
     
 
     # Creating Billing Order/Subscription
-    order = middlewareservice.create_order({'billing_account_id' : g.data['billing_account_id']})
-    if order is None or 'order_id' not in order:
-        abort(424, description = "Billing Order not created")
-
+    order_id = middlewareservice.create_order({'billing_account_id' : g.data['billing_account_id']})
 
     # Creating Openstack Cluster
     sess = OpenStackAuth(g.data["cloud_env"], current_app.logger).get_session()
@@ -133,22 +129,13 @@ def create_cluster():
     except Exception as e:
         # Deleting Billing order if cluster creation fails
         current_app.logger.error("Cluster creation failed")
-        middlewareservice.delete_order({'order_id' : order['order_id']})
-        abort(424, description = "Cluster creation failed")
+        middlewareservice.delete_order({'order_id' : order_id})
+        raise
 
     current_app.logger.debug(f"created cluster {cluster.id}:{cluster.name}")
 
-    # Checking if cluster has created successfully
-    if not handler.check_cluster_running(cluster.id):
-        current_app.logger.error(f"Cluster {cluster.id} not running")
-        middlewareservice.delete_order({'order_id' : order['order_id']})
-        abort(424, description = "Cluster creation not completed successfully")
-
     # Associating Openstack stack ID with Billing order/subscription
-    order_tag_status = middlewareservice.add_order_tag({'order_id' : order['order'], 'tag_name' : 'openstack_stack_id', 'tag_value' : cluster.id})
-    if order_tag_status is None:
-        description = "openstack_stack_id tag with value " + cluster.id + " is not created for billing order " + order['order']
-        abort(207, description=description)
-            
+    middlewareservice.add_order_tag({'order_id' : order_id, 'tag_name' : 'openstack_stack_id', 'tag_value' : cluster.id})
+      
     body = {"id": cluster.id, "name": cluster.name}
     return make_response(body, 201)
