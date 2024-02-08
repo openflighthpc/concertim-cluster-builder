@@ -81,12 +81,13 @@ parameters:
     type: string
     label: Flight Solo Image ID
     description: The Flight Solo Image to use for all nodes in the cluster
-    default: "Flight Solo 2023.2"
+    default: "Flight Solo 2024.1"
     constraints:
       - custom_constraint: glance.image
       - allowed_values:
         - 'Flight Solo 2023.2'
         - 'Flight Solo 2023.3'
+        - 'Flight Solo 2024.1'
 
   gateway-pri-ip:
     type: string
