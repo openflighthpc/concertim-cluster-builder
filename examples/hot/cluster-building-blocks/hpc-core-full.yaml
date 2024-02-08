@@ -64,7 +64,7 @@ parameters:
 
   network-cidr-pri:
     type: string
-    label: Primary Nework CIDR
+    label: Primary Network CIDR
     description: Network CIDR to be used for primary network
     default: "10.100.0.0/16"
     constraints:
@@ -79,9 +79,12 @@ parameters:
     type: string
     label: Flight Solo Image ID
     description: The Flight Solo Image to use for all nodes in the cluster
-    # default: "Flight Solo 2023.2"
+    default: "Flight Solo 2023.2"
     constraints:
       - custom_constraint: glance.image
+      - allowed_values:
+        - 'Flight Solo 2023.2'
+        - 'Flight Solo 2023.3'
 
   gateway-pri-ip:
     type: string
@@ -156,6 +159,7 @@ parameters:
   storage1-mount-disk-size:
     type: number
     label: Storage1 mounted disk size in GB
+    default: 10
     constraints:
       - range: { min: 1 }
 
