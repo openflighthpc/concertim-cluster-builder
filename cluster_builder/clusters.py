@@ -125,9 +125,9 @@ def create_cluster():
         cluster = handler.create_cluster(g.data["cluster"], cluster_type)
     except Exception as e:
         # Deleting Billing order if cluster creation fails
-        current_app.logger.error("Cluster creation failed")
+        current_app.logger.error(f"Cluster creation failed : {e}")
         middlewareservice.delete_order({'order_id' : order_id})
-        raise
+        abort(400, description = str(e))
 
     current_app.logger.debug(f"created cluster {cluster.id}:{cluster.name}")
 
