@@ -18,6 +18,8 @@ kind: heat
 # launching the cluster.  It will not be possible for the user to override this
 # value.
 # hardcoded_parameters:
+#   external-network: public1
+#   network-cidr-pri: 10.100.0.0/16
 #   solo-image: "Flight Solo 2023.2"
 
 # The path to the HOT template to use for this cluster-type.
