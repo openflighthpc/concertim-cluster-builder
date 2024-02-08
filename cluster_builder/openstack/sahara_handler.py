@@ -86,3 +86,15 @@ class SaharaHandler:
         else:
             args["hadoop_version"] = sct.hadoop_version
         return {**args, **parameters}
+
+
+    def list_plugins(self):
+        return self.client.plugins.list()
+
+
+    def list_images(self):
+        return self.client.images.list()
+
+
+    def list_cluster_templates(self):
+        return self.client.cluster_templates.list()
