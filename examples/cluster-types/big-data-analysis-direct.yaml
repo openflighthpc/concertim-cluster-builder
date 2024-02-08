@@ -7,6 +7,14 @@ description: |
   distributed computing environment.  The Sahara cluster is launched directly
   (not via a Heat template).  A network is not created.
 
+parameter_groups:
+  - label: "Cluster parameters"
+    description: ""
+    parameters:
+      - user_keypair
+      - network_id
+      - image
+
 # The parameters to expose through Concertim.  There could be a parameter for
 # each of the command line arguments accepted by `openstack dataprocessing cluster create`
 # or a subset. It is a template author error to have parameters here that do
@@ -16,18 +24,32 @@ parameters:
     type: string
     label: "SSH keypair to use"
     description: "The name or ID of the keypair to use."
+    constraints:
+      - custom_constraint: nova.keypair
 
   # Unfortunately, this does need to be the ID and not the name at the moment.
   network_id:
     type: string
     label: Network
     description:  The ID of the network to launch the cluster on.
+    # This constraint doesn't work at the moment.  There is a conflict between
+    # whether the value for the network is its name or its UUID.  Sahara
+    # requires it to be the UUID, but HEAT templates require it to be the name
+    # (or at least they require that if we are to have easy-to-implement
+    # defaults).  This can be fixed by having the sahara handler retrieve the
+    # network id from the network name.  See the comment in the sahara handler
+    # for the issue with doing that.
+    #  constraints:
+    #    - custom_constraint: neutron.network
 
   image:
     type: string
     label: "Sahara image"
     description: "The name or ID of the sahara image to use"
-    default: "sahara-vanilla-latest-ubuntu"
+    # If a default is set for the image it must be the ID and not the name.
+    #  default: "ab7e7129-9962-413a-9bf1-3e1965424f43"
+    constraints:
+      - custom_constraint: sahara.image
 
 # The kind or type of this cluster template.
 kind: sahara

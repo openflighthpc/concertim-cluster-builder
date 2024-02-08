@@ -6,6 +6,24 @@ description: |
   Launch a cluster of web servers with Kubernetes to provide high availability and fault
   tolerance.
 
+parameter_groups:
+  - label: "Cluster parameters"
+    description: "Configuration for parameters common across the cluster"
+    parameters:
+      - keypair
+
+  - label: "Master node configuration"
+    description: "Configuration for the master node"
+    parameters:
+      - master_flavor_id
+      - master_count
+
+  - label: "Worker node configuration"
+    description: "Configuration for the worker nodes"
+    parameters:
+      - flavor_id
+      - node_count
+
 # The parameters to expose through Concertim.  There could be a parameter for
 # each of the command line arguments accepted by `openstack coe cluster create`
 # or a subset. It is a template author error to have parameters here that do
@@ -15,6 +33,9 @@ parameters:
     type: string
     label: "SSH keypair to use"
     description: "The UUID or name of the keypair to use."
+    constraints:
+      - custom_constraint: nova.keypair
+
   master_count:
     type: number
     label: "The number of master nodes for the cluster."
@@ -22,15 +43,14 @@ parameters:
     constraints:
       - range: { min: 0 }
         description: There must be 0 or more master nodes.
+
   master_flavor_id:
     type: string
     label: "The flavour to use for the master node."
     default: m1.small
     constraints:
-      - allowed_values:
-        - m1.small
-        - m1.medium
-        - m1.large
+      - custom_constraint: nova.flavor
+
   node_count:
     type: number
     label: "The number of nodes for the cluster."
@@ -38,15 +58,13 @@ parameters:
     constraints:
       - range: { min: 0 }
         description: There must be 0 or more nodes.
+
   flavor_id:
     type: string
     label: "The flavour to use for the nodes."
-    default: m1.small
+    default: m1.medium
     constraints:
-      - allowed_values:
-        - m1.small
-        - m1.medium
-        - m1.large
+      - custom_constraint: nova.flavor
 
 
 # The kind or type of this cluster template.

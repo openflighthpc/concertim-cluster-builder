@@ -1,5 +1,26 @@
 heat_template_version: 2021-04-16
 
+parameter_groups:
+  - label: "Cluster parameters"
+    description: "Configuration for parameters common across the cluster"
+    parameters:
+      - clustername
+      - keypair
+
+  - label: "Network settings"
+    description: "Configuration for the external and internal cluster networks"
+    parameters:
+      - external-network
+      - network-cidr-pri
+
+  - label: "Hadoop configuration"
+    description: "Configuration for the Hadoop cluster"
+    parameters:
+      - cluster-template
+      - image
+      - hadoop-version
+      - plugin-name
+
 parameters:
   clustername:
     type: string
@@ -38,6 +59,8 @@ parameters:
     type: string
     label: Cluster template
     description:  The ID of the cluster template to use.
+    # If a default is set for the cluster template it must be the ID and not the name.
+    #  default: "741102fd-6b59-4a4a-af71-0bbf039f0338"
     constraints:
       - custom_constraint: sahara.cluster_template
 
@@ -45,6 +68,8 @@ parameters:
     type: string
     label: Image
     description:  The ID of the image that will be used for cluster deployment.
+    # If a default is set for the image it must be the ID and not the name.
+    #  default: "ab7e7129-9962-413a-9bf1-3e1965424f43"
     constraints:
       - custom_constraint: sahara.image
 
@@ -52,11 +77,16 @@ parameters:
     type: string
     label: Hadoop version
     description: The version of hadoop running on instances
+    default: "2.7.1"
+    constraints:
+      - allowed_values:
+        - "2.7.1"
 
   plugin-name:
     type: string
     label: Plugin name
     description: The name of the hadoop plugin
+    default: "vanilla"
     constraints:
       - custom_constraint: sahara.plugin
 
