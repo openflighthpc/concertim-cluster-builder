@@ -6,7 +6,7 @@ parameter_groups:
     parameters:
       - clustername
       - solo-image
-      - ssh-key
+      - key_name
 
   - label: "Network settings"
     description: "Configuration for the external and internal cluster networks"
@@ -70,25 +70,29 @@ parameters:
     constraints:
       - custom_constraint: net_cidr
 
-  ssh-key:
+  key_name:
     type: string
-    label: SSH Public Key for Access
-    description: This should be a Public Key itself not the name of one
+    label: SSH KeyPair name
+    description: Name of a KeyPair to enable SSH access to the cluster
+    constraints:
+      - custom_constraint: nova.keypair
 
   solo-image:
     type: string
     label: Flight Solo Image ID
     description: The Flight Solo Image to use for all nodes in the cluster
-    default: "Flight Solo 2023.2"
+    default: "Flight Solo 2024.1"
     constraints:
       - custom_constraint: glance.image
       - allowed_values:
         - 'Flight Solo 2023.2'
         - 'Flight Solo 2023.3'
+        - 'Flight Solo 2024.1'
 
   gateway-pri-ip:
     type: string
     label: Gateway Primary IP Address
+    default: 10.100.0.101
     constraints:
       - custom_constraint: ip_addr
 
@@ -108,6 +112,7 @@ parameters:
   infra01-pri-ip:
     type: string
     label: Infra01 Primary IP Address
+    default: 10.100.0.102
     constraints:
       - custom_constraint: ip_addr
 
@@ -127,6 +132,7 @@ parameters:
   infra02-pri-ip:
     type: string
     label: Infra02 Primary IP Address
+    default: 10.100.0.103
     constraints:
       - custom_constraint: ip_addr
 
@@ -146,6 +152,7 @@ parameters:
   storage1-pri-ip:
     type: string
     label: Storage1 Primary IP Address
+    default: 10.100.0.104
     constraints:
       - custom_constraint: ip_addr
 
@@ -260,6 +267,7 @@ resources:
     properties:
       name: { list_join: ['.', ['gateway1', { get_param: clustername }, 'alces.network']] }
       flavor: { get_param: gateway-flavour } 
+      key_name: { get_param: key_name }
       admin_user: flight
       networks:
           - port: { get_resource: gateway-pri-port } 
@@ -276,8 +284,6 @@ resources:
               - default
               - name: flight
                 sudo: ALL=(ALL) NOPASSWD:ALL
-                ssh-authorized-keys:
-                  - $key
             write_files:
               - content: |
                   SHAREPUBKEY=true
@@ -286,7 +292,6 @@ resources:
                 permissions: '0644'
                 owner: root:root
           params:
-            $key: { get_param: ssh-key }
             $clustername: { get_param: clustername }
 
   gateway-vol:
@@ -321,6 +326,7 @@ resources:
     properties:
       name: { list_join: ['.', ['infra01', { get_param: clustername }, 'alces.network']] }
       flavor: { get_param: infra01-flavour } 
+      key_name: { get_param: key_name }
       admin_user: flight
       networks:
           - port: { get_resource: infra01-pri-port }
@@ -337,8 +343,6 @@ resources:
               - default
               - name: flight
                 sudo: ALL=(ALL) NOPASSWD:ALL
-                ssh-authorized-keys:
-                  - $key
             write_files:
               - content: |
                   SERVER=$gateway-pri-ip
@@ -346,7 +350,6 @@ resources:
                 permissions: '0644'
                 owner: root:root
           params:
-            $key: { get_param: ssh-key }
             $clustername: { get_param: clustername }
             $gateway-pri-ip: { get_param: gateway-pri-ip }
 
@@ -376,6 +379,7 @@ resources:
     properties:
       name: { list_join: ['.', ['infra02', { get_param: clustername }, 'alces.network']] }
       flavor: { get_param: infra02-flavour } 
+      key_name: { get_param: key_name }
       admin_user: flight
       networks:
           - port: { get_resource: infra02-pri-port }
@@ -392,8 +396,6 @@ resources:
               - default
               - name: flight
                 sudo: ALL=(ALL) NOPASSWD:ALL
-                ssh-authorized-keys:
-                  - $key
             write_files:
               - content: |
                   SERVER=$gateway-pri-ip
@@ -401,7 +403,6 @@ resources:
                 permissions: '0644'
                 owner: root:root
           params:
-            $key: { get_param: ssh-key }
             $clustername: { get_param: clustername }
             $gateway-pri-ip: { get_param: gateway-pri-ip }
 
@@ -431,6 +432,7 @@ resources:
     properties:
       name: { list_join: ['.', ['storage1', { get_param: clustername }, 'alces.network']] }
       flavor: { get_param: storage1-flavour } 
+      key_name: { get_param: key_name }
       admin_user: flight
       networks:
           - port: { get_resource: storage1-pri-port }
@@ -447,8 +449,6 @@ resources:
               - default
               - name: flight
                 sudo: ALL=(ALL) NOPASSWD:ALL
-                ssh-authorized-keys:
-                  - $key
             write_files:
               - content: |
                   SERVER=$gateway-pri-ip
@@ -456,7 +456,6 @@ resources:
                 permissions: '0644'
                 owner: root:root
           params:
-            $key: { get_param: ssh-key }
             $clustername: { get_param: clustername }
             $gateway-pri-ip: { get_param: gateway-pri-ip }
 

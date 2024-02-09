@@ -17,14 +17,15 @@ kind: heat
 #
 # For sahara cluster types it might be desirable to hard code the
 # cluster-template, image, plugin and hadoop version, rather than present those
-# questions to the user.
+# questions to the user.  The cluster-template and image values need to be the
+# ID and not the name.
 hardcoded_parameters:
-  # cluster-template: "vanilla-default-cluster"
-  cluster-template: "741102fd-6b59-4a4a-af71-0bbf039f0338"
-  # image: "sahara-vanilla-latest-ubuntu"
-  image: "ab7e7129-9962-413a-9bf1-3e1965424f43"
-  hadoop-version: "2.7.1"
-  plugin-name: "vanilla"
+  external-network: public1
+  network-cidr-pri: 10.100.0.0/16
+  # hadoop-version: "2.7.1"
+  # cluster-template: "741102fd-6b59-4a4a-af71-0bbf039f0338"
+  # image: "ab7e7129-9962-413a-9bf1-3e1965424f43"
+  # plugin-name: "vanilla"
 
 
 # The path to the HOT template to use for this cluster-type.

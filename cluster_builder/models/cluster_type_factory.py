@@ -11,115 +11,118 @@ import jsonschema
 
 # JSON Schema definition for cluster type definitions.
 SCHEMA = {
-        "$defs": {
-            "parameters": {
-                "$id": "/schemas/parameters",
-                "type": "object",
-                "patternProperties": {
-                    "^.*$": {
-                        "type": "object",
-                        "properties": {
-                            "type": {
-                                "type": "string",
-                                "enum": ["string", "number", "json", "comma_delimited_list", "boolean"]
-                                },
-                            "label": { "type": "string" },
-                            "description": { "type": "string" },
-                            "default": {},
-                            "hidden": { "type": "boolean" },
-                            "constraints": {
-                                "type": "array",
-                                # "items": {
-                                #     "type": "object",
-                                #     "properties": {},
-                                #     "additionalProperties": false
-                                #     }
-                                },
-                            "immutable": { "type": "boolean" },
-                            "tags": {}
-                            },
-                        "additionalProperties": False,
-                        "required": ["type"]
-                        }
+    "$defs": {
+        "parameters": {
+            "$id": "/schemas/parameters",
+            "type": "object",
+            "patternProperties": {
+                "^.*$": {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "type": "string",
+                            "enum": ["string", "number", "json", "comma_delimited_list", "boolean"]
+                        },
+                        "label": { "type": "string" },
+                        "description": { "type": "string" },
+                        "default": {},
+                        "hidden": { "type": "boolean" },
+                        "constraints": {
+                            "type": "array",
+                            # "items": {
+                            #     "type": "object",
+                            #     "properties": {},
+                            #     "additionalProperties": false
+                            #     }
+                        },
+                        "immutable": { "type": "boolean" },
+                        "tags": {}
                     },
-                "additionalProperties": False
-                },
+                    "additionalProperties": False,
+                    "required": ["type"]
+                }
+            },
+            "additionalProperties": False
+        },
         "parameter_groups": {
             "$id": "/schemas/parameter_groups",
-            "type": "object",
-            "properties": {
-                "label": { "type": "string" },
-                "description": { "type": "string" },
-                "parameters": {
-                    "type": "array",
-                    "items": { "type": "string" }
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "label": { "type": "string" },
+                    "description": { "type": "string" },
+                    "parameters": {
+                        "type": "array",
+                        "items": { "type": "string" }
                     }
                 }
             }
-        },
-        "type": "object",
-        "properties": {
-            "title": { "type": "string" },
-            "description": { "type": "string" },
-            "kind": {
-                "type": "string",
-                "enum": ["heat", "magnum", "sahara"]
-                }
-            },
-        "required": ["title", "description", "kind"],
-        "allOf": [
-            {
-                "if": {
-                    "properties": { "kind": { "const": "heat" } },
-                    "required": ["kind"]
-                    },
-                "then": {
-                    "properties": {
-                        "hardcoded_parameters": {
-                            "type": "object",
-                            "patternProperties": {
-                                "^.*$": {
-                                    "type": "string",
-                                    }
-                                },
-                            "additionalProperties": False
-                            },
-                        "heat_template_url": { "type": "string" },
-                        "parameters": False
-                        },
-                    "required": ["heat_template_url"],
-                    },
-                },
-            {
-                "if": {
-                    "properties": { "kind": { "const": "magnum" } },
-                    "required": ["kind"]
-                    },
-                "then": {
-                    "properties": {
-                        "magnum_cluster_template": { "type": "string" },
-                        "parameters": {"$ref": "/schemas/parameters"},
-                        "parameter_groups": {"$ref": "/schemas/parameter_groups"}
-                        },
-                    "required": ["magnum_cluster_template", "parameters"],
-                    },
-                },
-            {
-                "if": {
-                    "properties": { "kind": { "const": "sahara" } },
-                    "required": ["kind"]
-                    },
-                "then": {
-                    "properties": {
-                        "sahara_cluster_template": { "type": "string" },
-                        "parameters": {"$ref": "/schemas/parameters"},
-                        "parameter_groups": {"$ref": "/schemas/parameter_groups"}
-                        },
-                    "required": ["sahara_cluster_template", "parameters"],
-                    },
-                }
-            ]
         }
+    },
+    "type": "object",
+    "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "kind": {
+            "type": "string",
+            "enum": ["heat", "magnum", "sahara"]
+        }
+    },
+    "required": ["title", "description", "kind"],
+    "allOf": [
+        {
+            "if": {
+                "properties": { "kind": { "const": "heat" } },
+                "required": ["kind"]
+            },
+            "then": {
+                "properties": {
+                    "hardcoded_parameters": {
+                        "type": "object",
+                        "patternProperties": {
+                            "^.*$": {
+                                "type": "string",
+                            }
+                        },
+                        "additionalProperties": False
+                    },
+                    "heat_template_url": { "type": "string" },
+                    "parameters": False
+                },
+                "required": ["heat_template_url"],
+            },
+        },
+        {
+            "if": {
+                "properties": { "kind": { "const": "magnum" } },
+                "required": ["kind"]
+            },
+            "then": {
+                "properties": {
+                    "magnum_cluster_template": { "type": "string" },
+                    "parameters": {"$ref": "/schemas/parameters"},
+                    "parameter_groups": {"$ref": "/schemas/parameter_groups"}
+                },
+                "required": ["magnum_cluster_template", "parameters"],
+            },
+        },
+        {
+            "if": {
+                "properties": { "kind": { "const": "sahara" } },
+                "required": ["kind"]
+            },
+            "then": {
+                "properties": {
+                    "sahara_cluster_template": { "type": "string" },
+                    "parameters": {"$ref": "/schemas/parameters"},
+                    "parameter_groups": {"$ref": "/schemas/parameter_groups"}
+                },
+                "required": ["sahara_cluster_template", "parameters"],
+            },
+        }
+    ]
+}
 
 
 class NetworkNotFoundError(RuntimeError):
@@ -203,12 +206,12 @@ class ClusterTypeFactory:
                         return None
                     else:
                         fields = {
-                                "id": id,
-                                "title": definition["title"],
-                                "description": definition["description"],
-                                "kind": definition["kind"],
-                                "last_modified": datetime.datetime.fromtimestamp(os.path.getmtime(file))
-                                }
+                            "id": id,
+                            "title": definition["title"],
+                            "description": definition["description"],
+                            "kind": definition["kind"],
+                            "last_modified": datetime.datetime.fromtimestamp(os.path.getmtime(file))
+                        }
                         if definition["kind"] == "heat":
                             fields["upstream_template"] = definition["heat_template_url"]
                             # For heat-based cluster definitions, the
