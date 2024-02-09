@@ -46,13 +46,16 @@ SCHEMA = {
                 },
         "parameter_groups": {
             "$id": "/schemas/parameter_groups",
-            "type": "object",
-            "properties": {
-                "label": { "type": "string" },
-                "description": { "type": "string" },
-                "parameters": {
-                    "type": "array",
-                    "items": { "type": "string" }
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "label": { "type": "string" },
+                    "description": { "type": "string" },
+                    "parameters": {
+                        "type": "array",
+                        "items": { "type": "string" }
+                        }
                     }
                 }
             }
