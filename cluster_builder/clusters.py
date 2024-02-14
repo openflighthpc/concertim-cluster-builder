@@ -1,7 +1,7 @@
-from flask import (Blueprint, abort, current_app, g, request, make_response)
+from flask import (Blueprint, current_app, g, request, make_response)
 from flask_expects_json import expects_json
 
-from .models import ClusterType
+from .models import (ClusterTypeRepo, utils as model_utils)
 from .openstack.auth import OpenStackAuth
 from .openstack.heat_handler import HeatHandler
 from .openstack.magnum_handler import MagnumHandler
@@ -70,7 +70,8 @@ create_schema = {
                 "properties": {
                     "name": { "type": "string" },
                     "cluster_type_id": { "type": "string" },
-                    "parameters": { "type": "object" }
+                    "parameters": { "type": "object" },
+                    "selections": { "type": "object" }
                     },
                 "required": ["name", "cluster_type_id"]
                 }
@@ -94,8 +95,8 @@ def create_cluster():
     assert_authenticated(current_app.config, request.headers, current_app.logger)
 
     # Creating Cluster handler
-    cluster_type = ClusterType.find(g.data["cluster"]["cluster_type_id"])
-    cluster_type.assert_parameters_present(g.data["cluster"]["parameters"])
+    cluster_type = ClusterTypeRepo.find(g.data["cluster"]["cluster_type_id"])
+    model_utils.assert_parameters_present(cluster_type, g.data["cluster"]["parameters"])
     handler_class = handlers.get(cluster_type.kind)
     if handler_class is None:
         raise TypeError(f"Unknown cluster type kind '{cluster_type.kind}' for cluster type '{cluster_type.id}'")

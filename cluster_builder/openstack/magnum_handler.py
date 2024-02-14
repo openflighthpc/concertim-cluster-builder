@@ -2,7 +2,7 @@ import time
 
 from magnumclient.client import Client
 
-from ..models import ClusterType
+from ..models import utils as model_utils
 
 class Cluster:
     def __init__(self, id, name):
@@ -35,7 +35,7 @@ class MagnumHandler:
         cluster_name = cluster_data["name"]
         self.logger.debug(f"getting cluster template {cluster_type.upstream_template}")
         magnum_cluster_template = self.client.cluster_templates.get(cluster_type.upstream_template)
-        parameters = ClusterType.merge_parameters(cluster_type, cluster_data.get("parameters"))
+        parameters = model_utils.merge_parameters(cluster_type, cluster_data.get("parameters"))
         self.logger.debug(f"parameters: {parameters}")
         magnum_cluster = self.client.clusters.create(
                 name=cluster_name,

@@ -1,93 +1,119 @@
 from dataclasses import asdict, dataclass, field
+import datetime
 
-from flask import (abort)
 
-from .cluster_type_factory import ClusterTypeFactory
+@dataclass(kw_only=True)
+class BaseClusterType:
+    """
+    BaseClusterType is a base class for the different cluster type kinds.
 
-@dataclass
-class ClusterType:
-    # Class variables configured in configure method.
-    logger = None
-
+    Derived classes are expected to provide a parameters and parameter_groups
+    properties in some manner, along with any additional properties they
+    require themselves.
+    """
     # Instance variables used by dataclass decorator.
     id: str
     title: str
     description: str
-    parameters: dict
-    parameter_groups: list
     kind: str
-    upstream_template: str
     last_modified: str
     hardcoded_parameters: dict = field(default_factory=dict)
-
-    @classmethod
-    def configure(cls, hot_templates_dir, types_dir, logger):
-        cls.factory = ClusterTypeFactory(cls, hot_templates_dir, types_dir, logger)
-        cls.logger = logger
-
-
-    @classmethod
-    def all(cls):
-        """
-        Return list of cluster types.
-        """
-        return cls.factory.all()
-
-
-    @classmethod
-    def find(cls, id):
-        """
-        Return the specified cluster type or abort with a 404.
-        """
-        return cls.factory.find(id)
-
-
-    @staticmethod
-    def merge_parameters(cluster_type, given_answers):
-        """
-        Return the parameters to be sent to the cloud service.
-
-        The value for each parameter can come from (in order of precedence):
-
-        1. Hardcoded parameters in the cluster type definition.
-        2. User given answer.
-        3. Default set in either the cluster type definition or the HOT
-        template.
-        """
-        merged_parameters = {}
-        for name, parameter in cluster_type.parameters.items():
-            given_answer = given_answers is not None and given_answers.get(name)
-            if given_answer is not None:
-                merged_parameters[name] = given_answer
-            else:
-                merged_parameters[name] = parameter.get("default")
-        for name, value in cluster_type.hardcoded_parameters.items():
-            merged_parameters[name] = value
-        return merged_parameters
-
-
-    def assert_parameters_present(self, answers):
-        """
-        Asserts that all parameters defined in the cluster type either have a
-        default or are present in answers.
-        """
-        missing = []
-        for name, parameter in self.parameters.items():
-            if parameter.get("default") is not None:
-                continue
-            if answers is not None and answers.get(name) is not None:
-                continue
-            missing.append(name)
-        if len(missing) > 0:
-            abort(400, "Missing parameters: {}".format(", ".join(missing)))
-
-
-    def hot_template_path(self):
-        return self.factory.hot_template_path(self.upstream_template)
 
 
     def asdict(self, attributes=None):
         if attributes is None:
-            return asdict(self)
+            return self._serializable_attributes()
         else:
-            return {k: v for k, v in asdict(self).items() if k in attributes}
+            return {k: v for k, v in self._serializable_attributes().items() if k in attributes}
+
+
+    def _serializable_attributes(self):
+        """Return a dict of serializable attributes"""
+        return asdict(self)
+
+
+@dataclass(kw_only=True)
+class SaharaClusterType(BaseClusterType):
+    """
+    SaharaClusterType represents a sahara based cluster type.  It uses sahara
+    directly to launch the cluster.
+    """
+    parameters: dict
+    parameter_groups: list
+    upstream_template: str
+
+
+@dataclass(kw_only=True)
+class MagnumClusterType(BaseClusterType):
+    """
+    MagnumClusterType represents a magnum based cluster type.  It uses magnum
+    directly to launch the cluster.
+    """
+    parameters: dict
+    parameter_groups: list
+    upstream_template: str
+
+
+@dataclass()
+class ParametersFile:
+    """
+    ParametersFile represents the parameters.yaml file for a heat based cluster type.
+    """
+    path: str
+    parameters: dict
+    parameter_groups: list
+    last_modified: datetime.datetime
+
+
+@dataclass(kw_only=True)
+class Component:
+    """
+    Component represents a single components/*.yaml file for a heat based cluster type.
+    """
+    path: str
+    heat_template_version: str
+    resources: dict = field(default_factory=dict)
+    conditions: dict = field(default_factory=dict)
+    outputs: dict = field(default_factory=dict)
+    last_modified: datetime.datetime
+    is_optional: bool
+    name: str
+
+
+@dataclass(kw_only=True)
+class HeatClusterType(BaseClusterType):
+    """
+    HeatClusterType represents a heat based cluster type.
+    """
+    parameters_file: ParametersFile
+    components: list[Component]
+
+
+    @property
+    def parameters(self):
+        if self.hardcoded_parameters is None:
+            return self.parameters_file.parameters
+        else:
+            params = {}
+            hardcoded_names = self.hardcoded_parameters.keys()
+            for key, value in self.parameters_file.parameters.items():
+                if key in hardcoded_names:
+                    # Hardcoded params are not displayed to the user.  The
+                    # hardcoded value will be provided to OpenStack exactly as
+                    # provided in the cluster definition.
+                    pass
+                else:
+                    params[key] = value
+            return params
+
+
+    @property
+    def parameter_groups(self):
+        return self.parameters_file.parameter_groups
+
+
+    def _serializable_attributes(self):
+        """Return a dict of serializable attributes"""
+        attrs = {"parameters": self.parameters, "parameter_groups": self.parameter_groups}
+        attrs.update(asdict(self))
+        return attrs

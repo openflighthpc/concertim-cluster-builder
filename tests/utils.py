@@ -2,7 +2,7 @@ from datetime import datetime
 import json
 import os
 
-def write_cluster_definition(app, definition, name="test", last_modified=None):
+def write_legacy_cluster_definition(app, definition, name="test", last_modified=None):
     enabled_dir = os.path.join(app.instance_path, "cluster-types-enabled")
     path = os.path.join(enabled_dir, f"{name}.yaml")
     with open(path, "w") as test_file:
@@ -18,10 +18,28 @@ def write_cluster_definition(app, definition, name="test", last_modified=None):
         last_accessed = last_modified
         os.utime(path, (last_accessed, last_modified))
 
+def write_cluster_definition(app, definition, name="test", last_modified=None):
+    enabled_dir = os.path.join(app.instance_path, "cluster-types-enabled")
+    path = os.path.join(enabled_dir, name, "cluster-type.yaml")
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w") as test_file:
+        if isinstance(definition, dict):
+            test_file.write(json.dumps(definition))
+        elif isinstance(definition, str):
+            test_file.write(definition)
+        else:
+            raise TypeError(f"expected definition to be dict or str, got {type(definition)}")
+    if last_modified:
+        if type(last_modified) is str:
+            last_modified = datetime.timestamp(datetime.fromisoformat(last_modified))
+        last_accessed = last_modified
+        os.utime(path, (last_accessed, last_modified))
 
-def write_hot(app, hot, name="test", last_modified=None):
-    enabled_dir = os.path.join(app.instance_path, "hot")
-    path = os.path.join(enabled_dir, name)
+
+def write_hot_component(app, hot, parent_dir, name="test", last_modified=None):
+    enabled_dir = os.path.join(app.instance_path, "cluster-types-enabled")
+    path = os.path.join(enabled_dir, parent_dir, 'components', f"{name}.yaml")
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w") as test_file:
         if isinstance(hot, dict):
             test_file.write(json.dumps(hot))
@@ -29,6 +47,24 @@ def write_hot(app, hot, name="test", last_modified=None):
             test_file.write(hot)
         else:
             raise TypeError(f"expected hot to be dict or str, got {type(hot)}")
+    if last_modified:
+        if type(last_modified) is str:
+            last_modified = datetime.timestamp(datetime.fromisoformat(last_modified))
+        last_accessed = last_modified
+        os.utime(path, (last_accessed, last_modified))
+
+
+def write_parameters(app, parameters, parent_dir, last_modified=None):
+    enabled_dir = os.path.join(app.instance_path, "cluster-types-enabled")
+    path = os.path.join(enabled_dir, parent_dir, "parameters.yaml")
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w") as test_file:
+        if isinstance(parameters, dict):
+            test_file.write(json.dumps(parameters))
+        elif isinstance(parameters, str):
+            test_file.write(parameters)
+        else:
+            raise TypeError(f"expected parameters to be dict or str, got {type(parameters)}")
     if last_modified:
         if type(last_modified) is str:
             last_modified = datetime.timestamp(datetime.fromisoformat(last_modified))

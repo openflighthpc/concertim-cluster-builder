@@ -3,7 +3,7 @@ import pytest
 import jwt
 import time
 
-from .utils import (remove_path, set_path, write_cluster_definition, write_hot)
+from .utils import (remove_path, set_path, write_legacy_cluster_definition)
 
 JWT_SECRET = "TEST_SECRET"
 
@@ -72,8 +72,9 @@ def test_launch_with_missing_params(client, app):
                 },
             "kind": "magnum",
             "magnum_cluster_template": "test-template",
+            "components": [{"file": "test-hot"}],
             }
-    write_cluster_definition(app, definition, "test-id")
+    write_legacy_cluster_definition(app, definition, "test-id")
     body = {
             "cloud_env": {
                 "auth_url": "fake",
