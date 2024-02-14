@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
+        python-version: ["3.10", "3.11"]
 
     steps:
     - uses: actions/checkout@v3
@@ -40,3 +40,17 @@ jobs:
       run: |
         pytest
 
+  checks:
+    name: Check Dockerfile
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      fail-fast: true
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Check Dockerfile
+        run: docker build .
