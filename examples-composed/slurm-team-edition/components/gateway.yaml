@@ -1,0 +1,109 @@
+heat_template_version: 2021-04-16
+
+resources:
+  gateway-pri-port:
+    type: OS::Neutron::Port
+    depends_on: cluster-network-pri
+    properties:
+      name: { list_join: ['-', ['gateway1', 'pri', { get_param: clustername }]] }
+      network: { get_resource: cluster-network }
+      security_groups:
+        - { get_resource: cluster-sg }
+      fixed_ips:
+        - subnet: { get_resource: cluster-network-pri }
+          ip_address: { get_param: gateway-pri-ip }
+
+  gw:
+    type: OS::Nova::Server
+    properties:
+      name: { list_join: ['.', ['gateway1', { get_param: clustername }, 'alces.network']] }
+      flavor: { get_param: gateway-flavour }
+      admin_user: flight
+      networks:
+          - port: { get_resource: gateway-pri-port }
+      block_device_mapping_v2:
+        - volume_id: { get_resource: gateway-vol }
+          boot_index: 0
+      user_data_format: RAW
+      user_data:
+        str_replace:
+          template: |
+            #cloud-config
+            fqdn: gateway1.$clustername.alces.network
+            users:
+              - default
+              - name: flight
+                sudo: ALL=(ALL) NOPASSWD:ALL
+                ssh-authorized-keys:
+                  - $key
+            write_files:
+              - content: |
+                  SHAREPUBKEY=true
+                  AUTOPARSEMATCH=$clustername
+                  PROFILE_ANSWERS='{ "cluster_type": "openflight-slurm-multinode", "cluster_name": "$clustername", "ipa_use": true, "ipa_domain": "$clustername.alces.network" }'
+                  AUTOAPPLY="infra: ipa, gateway: login, node: compute"
+                path: /opt/flight/cloudinit.in
+                permissions: '0600'
+                owner: root:root
+              - content: | 
+                  DISKID="$sharedstorageid"
+                  DEVICE="/dev/disk/by-id/virtio-$(echo $DISKID |cut -c -20)"
+                  mkfs.xfs $DEVICE
+                  mkdir -p /export
+                  echo "$DEVICE  /export  xfs  defaults  0 0" >> /etc/fstab
+                  mount /export
+                path: /var/lib/firstrun/scripts/00-sharedstoragemount.bash
+                permissions: '0600'
+                owner: root:root
+              - content: |
+                  # Generate password for flight user
+                  FLIGHTPASS=$(cat /dev/urandom |tr -dc _A-Z-a-z-0-9 |head -c 8)
+                  echo "$FLIGHTPASS" > /root/flight_user_pass.txt
+                  # Generate secure password for IPA
+                  IPAPASS=$(cat /dev/urandom |tr -dc _A-Z-a-z-0-9 |head -c 8)
+                  echo "$IPAPASS" > /root/ipa_admin_pass.txt
+                  # Ensure Flight Profile uses generated passwords
+                  /opt/flight/bin/flight profile configure --answers "{ \"cluster_type\": \"openflight-slurm-multinode\", \"default_password\": \"$FLIGHTPASS\", \"ipa_use\": true, \"secure_admin_password\": \"$IPAPASS\"}" --accept-defaults
+                path: /var/lib/firstrun/scripts/00-generate-passwords.bash
+                permissions: '0600'
+                owner: root:root
+              - content: | 
+                  until /opt/flight/bin/flight profile list |grep gateway1 |grep -q 'complete' ; do
+                    echo "Waiting for gateway1 to complete before running..." 
+                    sleep 30
+                  done
+                  # Ensure write access to user NFS mounts for cluster users
+                  chgrp cluster-users /opt/{apps,data}
+                  chmod 775 /opt/{apps,data}
+                  # Make Flight Silo use /opt/apps/
+                  /opt/flight/opt/pdsh/bin/pdsh -g all "sed -i 's,^software_dir:.*,software_dir: /opt/apps,g' /opt/flight/opt/silo/etc/config.yml"
+                path: /var/lib/firstrun/scripts/99-post-apply-tweaks.bash
+                permissions: '0600'
+                owner: root:root
+          params:
+            $key: { get_param: ssh-key }
+            $clustername: { get_param: clustername }
+            $sharedstorageid: { get_resource: gateway-vol-shared-storage }
+
+  gateway-vol:
+    type: OS::Cinder::Volume
+    properties:
+      image: { get_param: solo-image }
+      size: 16
+
+  gateway-vol-shared-storage: 
+    type: OS::Cinder::Volume
+    properties: 
+      size: { get_param: storage-size }
+
+  gateway-vol-shared-storage-attach: 
+    type: OS::Cinder::VolumeAttachment
+    properties: 
+      instance_uuid: { get_resource: gw }
+      volume_id: { get_resource: gateway-vol-shared-storage }
+
+  gateway-ip:
+     type: "OS::Neutron::FloatingIP"
+     properties:
+        floating_network_id: {get_param: external-network}
+        port_id: {get_resource: gateway-pri-port}

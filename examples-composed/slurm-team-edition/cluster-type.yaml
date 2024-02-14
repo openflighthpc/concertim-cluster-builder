@@ -1,0 +1,29 @@
+# Brief description of the purpose of the cluster.
+title: "SLURM: Team Edition"
+
+# Fuller description of the purpose of the cluster and how to use it.  You can
+# use markdown here.
+description: |
+  A small collaborative environment, great for teams running short projects.
+
+# The kind or type of this cluster template.
+kind: heat
+
+# Any of the parameters defined in `parameters.yaml` can be hardcoded here. If
+# they are hardcoded, the value provided here will be passed to Heat when
+# launching the cluster.  It will not be possible for the user to override
+# these values.
+# hardcoded_parameters:
+#   external-network: public1
+#   network-cidr-pri: 10.100.0.0/16
+#   solo-image: "Flight Solo 2023.2"
+
+# The components that compose this cluster type definition.  These are looked
+# up in the `components` directory.
+components:
+  - file: network
+  - file: gateway
+  - file: infra
+    optional: true
+  - file: nodes
+    optional: true
