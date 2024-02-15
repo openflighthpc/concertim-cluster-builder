@@ -12,7 +12,7 @@ class ClusterTypeRepo:
     """
     Loads minimal cluster type definitions from disk; minimally validates them
     and delegates to a *ClusterTypeFactory class to continue creation of a
-    ClusterType objects.
+    *ClusterType object.
     """
 
     # JSON Schema definition for attributes common to all cluster type definition kinds.
@@ -52,8 +52,15 @@ class ClusterTypeRepo:
         cls.logger.info(f"Retrieving all cluster types")
         types = []
 
-        # for file in glob.glob(os.path.join(self.types_dir, "*.yaml")):
-        #     id = os.path.splitext(os.path.basename(file))[0]
+        # Old-style definitions.  Currently only used for sahara and magnum
+        # based cluster types.
+        for file in glob.glob(os.path.join(cls.types_dir, "*.yaml")):
+            id = os.path.splitext(os.path.basename(file))[0]
+            cluster_type = cls._load(id, file)
+            if cluster_type is not None:
+                types.append(cluster_type)
+
+        # New-style definition.  Used for heat based cluster types.
         for file in glob.glob(os.path.join(cls.types_dir, "*", "cluster-type.yaml")):
             id = os.path.basename(os.path.dirname(file))
             cluster_type = cls._load(id, file)
@@ -68,10 +75,15 @@ class ClusterTypeRepo:
         """
         Return the specified cluster type or abort with a 404.
         """
-        # file = os.path.join(self.types_dir, f"{id}.yaml")
-        file = os.path.join(cls.types_dir, id, "cluster-type.yaml")
-        cls.logger.info(f"Finding cluster type: {id}:{file}")
-        cluster_type = cls._load(id, file)
+        # Old-style file path.  Only used for sahara and magnum based cluster
+        # types.
+        old_file = os.path.join(cls.types_dir, f"{id}.yaml")
+
+        # New-style definition.  Used for heat based cluster types.
+        new_file = os.path.join(cls.types_dir, id, "cluster-type.yaml")
+
+        cls.logger.info(f"Finding cluster type: {id}:{new_file}:{old_file}")
+        cluster_type = cls._load(id, new_file) or cls._load(id, old_file)
         if cluster_type is None:
             abort(404, f"Unknown cluster type: {id}")
         else:
