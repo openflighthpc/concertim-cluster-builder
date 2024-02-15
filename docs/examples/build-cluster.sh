@@ -16,6 +16,8 @@ PROJECT_ID=${3}
 CLUSTER_NAME=${4}
 GATEWAY_IP=${5}
 SSH_KEY=${6}
+BILLING_ACCOUNT_ID=${7}
+MIDDLEWARE_URL=${8}
 
 BODY=$(jq --null-input \
     --arg username "${USERNAME}" \
@@ -24,6 +26,8 @@ BODY=$(jq --null-input \
     --arg cluster_name "${CLUSTER_NAME}" \
     --arg gateway_pri_ip "${GATEWAY_IP}" \
     --arg ssh_key "${SSH_KEY}" \
+    --arg billing_account_id "${BILLING_ACCOUNT_ID}" \
+    --arg middleware_url "${MIDDLEWARE_URL}" \
     '
 {
     "cloud_env": {
@@ -36,13 +40,19 @@ BODY=$(jq --null-input \
     },
     "cluster": {
         "name": $cluster_name,
-        "cluster_type_id": "hpc-cluster-building-blocks",
+        "cluster_type_id": "slurm-team-edition",
         "parameters": {
           "clustername": $cluster_name,
           "ssh-key": $ssh_key,
           "gateway-pri-ip": $gateway_pri_ip
+        },
+        "selections": {
+          "infra": true,
+          "nodes": false
         }
-    }
+    },
+    "billing_account_id": $billing_account_id,
+    "middleware_url": $middleware_url
 }
 '
 )
