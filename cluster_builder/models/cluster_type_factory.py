@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 import datetime
 import os
 import urllib
@@ -247,7 +246,9 @@ class HeatClusterTypeFactory(BaseClusterTypeFactory):
         components_dir = os.path.join(base_dir, "components")
         components = []
         for c in component_defs:
-            path = os.path.join(self.components_dir, f'{c["file"]}.yaml')
+            path = c["file"]
+            if not os.path.isabs(path):
+                path = os.path.join(components_dir, f'{path}.yaml')
             component = ComponentLoader(self.logger).load(path, optional=c.get("optional", False))
             if component is None:
                 # If any component fails to load, the entire cluster type is
