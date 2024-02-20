@@ -26,25 +26,11 @@ resources:
       user_data_format: RAW
       user_data:
         str_replace:
-          template: |
-            #cloud-config
-            fqdn: infra01.$clustername.alces.network
-            users:
-              - default
-              - name: flight
-                sudo: ALL=(ALL) NOPASSWD:ALL
-                ssh-authorized-keys:
-                  - $key
-            write_files:
-              - content: |
-                  SERVER=$gateway-pri-ip
-                  LABEL=infra01
-                path: /opt/flight/cloudinit.in
-                permissions: '0600'
-                owner: root:root
+          template: { get_file: ../user_data/infra.yaml }
           params:
             $key: { get_param: ssh-key }
             $clustername: { get_param: clustername }
+            $nodename: infra01
             $gateway-pri-ip: { get_param: gateway-pri-ip }
 
   infra01-vol:

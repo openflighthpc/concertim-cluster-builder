@@ -102,6 +102,7 @@ class BaseClusterTypeFactory:
     def _extract_fields(self, id, path, definition):
         fields = {
             "id": id,
+            "path": path,
             "title": definition["title"],
             "description": definition["description"],
             "kind": definition["kind"],
@@ -268,7 +269,7 @@ class HeatClusterTypeFactory(BaseClusterTypeFactory):
         found_router = False
         found_network = False
         for component in components:
-            _, hot_template = template_utils.get_template_contents(component.path)
+            _, hot_template = template_utils.get_template_contents(component.path, fetch_child=True)
             for resource in hot_template.get("resources", {}).values():
                 if resource["type"] == "OS::Neutron::Router":
                     found_router = True
@@ -358,7 +359,7 @@ class ComponentLoader:
 
     def load(self, path, optional=False):
         try:
-            _, hot_template = template_utils.get_template_contents(path)
+            _, hot_template = template_utils.get_template_contents(path, fetch_child=True)
             jsonschema.validate(instance=hot_template, schema=self.SCHEMA)
         except heatclientExceptions.CommandError as exc:
             self.logger.error(f'Loading {path} failed: {exc}')

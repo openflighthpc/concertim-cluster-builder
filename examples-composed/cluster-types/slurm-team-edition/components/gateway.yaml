@@ -1,0 +1,58 @@
+heat_template_version: 2021-04-16
+
+resources:
+  gateway-pri-port:
+    type: OS::Neutron::Port
+    depends_on: cluster-network-pri
+    properties:
+      name: { list_join: ['-', ['gateway1', 'pri', { get_param: clustername }]] }
+      network: { get_resource: cluster-network }
+      security_groups:
+        - { get_resource: cluster-sg }
+      fixed_ips:
+        - subnet: { get_resource: cluster-network-pri }
+          ip_address: { get_param: gateway-pri-ip }
+
+  gw:
+    type: OS::Nova::Server
+    properties:
+      name: { list_join: ['.', ['gateway1', { get_param: clustername }, 'alces.network']] }
+      flavor: { get_param: gateway-flavour }
+      admin_user: flight
+      networks:
+          - port: { get_resource: gateway-pri-port }
+      block_device_mapping_v2:
+        - volume_id: { get_resource: gateway-vol }
+          boot_index: 0
+      user_data_format: RAW
+      user_data:
+        str_replace:
+          template: { get_file: ../user_data/gateway.yaml }
+          params:
+            $key: { get_param: ssh-key }
+            $clustername: { get_param: clustername }
+            $nodename: gateway1
+            $sharedstorageid: { get_resource: gateway-vol-shared-storage }
+
+  gateway-vol:
+    type: OS::Cinder::Volume
+    properties:
+      image: { get_param: solo-image }
+      size: 16
+
+  gateway-vol-shared-storage:
+    type: OS::Cinder::Volume
+    properties:
+      size: { get_param: storage-size }
+
+  gateway-vol-shared-storage-attach:
+    type: OS::Cinder::VolumeAttachment
+    properties:
+      instance_uuid: { get_resource: gw }
+      volume_id: { get_resource: gateway-vol-shared-storage }
+
+  gateway-ip:
+     type: "OS::Neutron::FloatingIP"
+     properties:
+        floating_network_id: {get_param: external-network}
+        port_id: {get_resource: gateway-pri-port}

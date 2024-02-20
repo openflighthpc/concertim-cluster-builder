@@ -1,8 +1,11 @@
+import os
+import secrets
+import tempfile
 import time
 import yaml
-import secrets
 
 from heatclient.client import Client as HeatClient
+from heatclient.common import template_utils
 
 from ..models import utils as model_utils
 
@@ -39,15 +42,17 @@ class HeatHandler:
         parameters = model_utils.merge_parameters(cluster_type, cluster_data.get("parameters"))
         self.logger.debug(f"parameters: {parameters}")
         stack_name = "{}--{}".format(cluster_data["name"], secrets.token_urlsafe(16))
+        files, template = self._get_template_contents(cluster_type, cluster_data.get("selections"))
         response = self.client.stacks.create(
                 stack_name=stack_name,
-                template=self._template_stream(cluster_type, cluster_data.get("selections")),
+                template=yaml.safe_dump(template, sort_keys=False),
+                files=files,
                 parameters=parameters
                 )
         return Cluster(id=response["stack"]["id"], name=stack_name)
 
 
-    def _template_stream(self, cluster_type, selections):
+    def _build_template(self, cluster_type, selections):
         merged_resources = {}
         merged_outputs = {}
         merged_conditions = {}
@@ -88,4 +93,16 @@ class HeatHandler:
             "outputs": merged_outputs,
         }
 
-        return yaml.safe_dump(template)
+        return template
+
+
+    def _get_template_contents(self, cluster_type, selections):
+        template = self._build_template(cluster_type, selections)
+        tmpdir = os.path.join(os.path.dirname(cluster_type.path), 'tmp')
+        os.makedirs(tmpdir, exist_ok=True)
+        with tempfile.NamedTemporaryFile(dir=tmpdir, mode="w", delete=False) as tf:
+            yaml.safe_dump(template, tf.file)
+            tf.close()
+            files, hot_template = template_utils.get_template_contents(tf.name, fetch_child=True)
+            os.unlink(tf.name)
+            return files, hot_template

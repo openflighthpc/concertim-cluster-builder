@@ -13,6 +13,7 @@ class BaseClusterType:
     """
     # Instance variables used by dataclass decorator.
     id: str
+    path: str
     title: str
     description: str
     kind: str

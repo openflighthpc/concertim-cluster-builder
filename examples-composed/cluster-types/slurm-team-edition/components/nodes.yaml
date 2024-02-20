@@ -26,24 +26,11 @@ resources:
       user_data_format: RAW
       user_data:
         str_replace:
-          template: |
-            #cloud-config
-            fqdn: node01.$clustername.alces.network
-            users:
-              - default
-              - name: flight
-                sudo: ALL=(ALL) NOPASSWD:ALL
-                ssh-authorized-keys:
-                  - $key
-            write_files:
-              - content: |
-                  SERVER=$gateway-pri-ip
-                path: /opt/flight/cloudinit.in
-                permissions: '0600'
-                owner: root:root
+          template: { get_file: ../user_data/node.yaml }
           params:
             $key: { get_param: ssh-key }
             $clustername: { get_param: clustername }
+            $nodename: node01
             $gateway-pri-ip: { get_param: gateway-pri-ip }
 
   node01-vol:
@@ -77,24 +64,11 @@ resources:
       user_data_format: RAW
       user_data:
         str_replace:
-          template: |
-            #cloud-config
-            fqdn: node02.$clustername.alces.network
-            users:
-              - default
-              - name: flight
-                sudo: ALL=(ALL) NOPASSWD:ALL
-                ssh-authorized-keys:
-                  - $key
-            write_files:
-              - content: |
-                  SERVER=$gateway-pri-ip
-                path: /opt/flight/cloudinit.in
-                permissions: '0600'
-                owner: root:root
+          template: { get_file: ../user_data/node.yaml }
           params:
             $key: { get_param: ssh-key }
             $clustername: { get_param: clustername }
+            $nodename: node02
             $gateway-pri-ip: { get_param: gateway-pri-ip }
 
   node02-vol:
@@ -128,24 +102,11 @@ resources:
       user_data_format: RAW
       user_data:
         str_replace:
-          template: |
-            #cloud-config
-            fqdn: node03.$clustername.alces.network
-            users:
-              - default
-              - name: flight
-                sudo: ALL=(ALL) NOPASSWD:ALL
-                ssh-authorized-keys:
-                  - $key
-            write_files:
-              - content: |
-                  SERVER=$gateway-pri-ip
-                path: /opt/flight/cloudinit.in
-                permissions: '0600'
-                owner: root:root
+          template: { get_file: ../user_data/node.yaml }
           params:
             $key: { get_param: ssh-key }
             $clustername: { get_param: clustername }
+            $nodename: node03
             $gateway-pri-ip: { get_param: gateway-pri-ip }
 
   node03-vol:
@@ -179,24 +140,11 @@ resources:
       user_data_format: RAW
       user_data:
         str_replace:
-          template: |
-            #cloud-config
-            fqdn: node04.$clustername.alces.network
-            users:
-              - default
-              - name: flight
-                sudo: ALL=(ALL) NOPASSWD:ALL
-                ssh-authorized-keys:
-                  - $key
-            write_files:
-              - content: |
-                  SERVER=$gateway-pri-ip
-                path: /opt/flight/cloudinit.in
-                permissions: '0600'
-                owner: root:root
+          template: { get_file: ../user_data/node.yaml }
           params:
             $key: { get_param: ssh-key }
             $clustername: { get_param: clustername }
+            $nodename: node04
             $gateway-pri-ip: { get_param: gateway-pri-ip }
 
   node04-vol:
@@ -230,24 +178,11 @@ resources:
       user_data_format: RAW
       user_data:
         str_replace:
-          template: |
-            #cloud-config
-            fqdn: node05.$clustername.alces.network
-            users:
-              - default
-              - name: flight
-                sudo: ALL=(ALL) NOPASSWD:ALL
-                ssh-authorized-keys:
-                  - $key
-            write_files:
-              - content: |
-                  SERVER=$gateway-pri-ip
-                path: /opt/flight/cloudinit.in
-                permissions: '0600'
-                owner: root:root
+          template: { get_file: ../user_data/node.yaml }
           params:
             $key: { get_param: ssh-key }
             $clustername: { get_param: clustername }
+            $nodename: node05
             $gateway-pri-ip: { get_param: gateway-pri-ip }
 
   node05-vol:
