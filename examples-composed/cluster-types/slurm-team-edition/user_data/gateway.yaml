@@ -4,8 +4,6 @@ users:
   - default
   - name: flight
     sudo: ALL=(ALL) NOPASSWD:ALL
-    ssh-authorized-keys:
-      - $key
 write_files:
   - content: |
       SHAREPUBKEY=true

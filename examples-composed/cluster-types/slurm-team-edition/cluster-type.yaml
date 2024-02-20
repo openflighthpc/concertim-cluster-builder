@@ -13,10 +13,11 @@ kind: heat
 # they are hardcoded, the value provided here will be passed to Heat when
 # launching the cluster.  It will not be possible for the user to override
 # these values.
-# hardcoded_parameters:
-#   external-network: public1
-#   network-cidr-pri: 10.100.0.0/16
-#   solo-image: "Flight Solo 2023.2"
+hardcoded_parameters:
+  external-network: public1
+  network-cidr-pri: '10.100.0.0/16'
+  gateway-pri-ip: '10.100.0.101'
+  solo-image: "Flight Solo 2024.1"
 
 # The components that compose this cluster type definition.
 #

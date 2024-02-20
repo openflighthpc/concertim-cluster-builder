@@ -18,6 +18,7 @@ resources:
     properties:
       name: { list_join: ['.', ['gateway1', { get_param: clustername }, 'alces.network']] }
       flavor: { get_param: gateway-flavour }
+      key_name: { get_param: key_name }
       admin_user: flight
       networks:
           - port: { get_resource: gateway-pri-port }
@@ -29,7 +30,6 @@ resources:
         str_replace:
           template: { get_file: ../user_data/gateway.yaml }
           params:
-            $key: { get_param: ssh-key }
             $clustername: { get_param: clustername }
             $nodename: gateway1
             $sharedstorageid: { get_resource: gateway-vol-shared-storage }
@@ -56,3 +56,8 @@ resources:
      properties:
         floating_network_id: {get_param: external-network}
         port_id: {get_resource: gateway-pri-port}
+
+outputs:
+  gateway_ext_ip:
+    description: Gateway External IP
+    value:  { get_attr: [gateway-ip, floating_ip_address] }

@@ -17,6 +17,7 @@ resources:
     properties:
       name: { list_join: ['.', [ 'node01', { get_param: clustername }, 'alces.network']] }
       flavor: { get_param: node-flavour }
+      key_name: { get_param: key_name }
       admin_user: flight
       networks:
           - port: { get_resource: node01-pri-port }
@@ -28,7 +29,6 @@ resources:
         str_replace:
           template: { get_file: ../user_data/node.yaml }
           params:
-            $key: { get_param: ssh-key }
             $clustername: { get_param: clustername }
             $nodename: node01
             $gateway-pri-ip: { get_param: gateway-pri-ip }
@@ -55,6 +55,7 @@ resources:
     properties:
       name: { list_join: ['.', [ 'node02', { get_param: clustername }, 'alces.network']] }
       flavor: { get_param: node-flavour }
+      key_name: { get_param: key_name }
       admin_user: flight
       networks:
           - port: { get_resource: node02-pri-port }
@@ -66,7 +67,6 @@ resources:
         str_replace:
           template: { get_file: ../user_data/node.yaml }
           params:
-            $key: { get_param: ssh-key }
             $clustername: { get_param: clustername }
             $nodename: node02
             $gateway-pri-ip: { get_param: gateway-pri-ip }
@@ -93,6 +93,7 @@ resources:
     properties:
       name: { list_join: ['.', [ 'node03', { get_param: clustername }, 'alces.network']] }
       flavor: { get_param: node-flavour }
+      key_name: { get_param: key_name }
       admin_user: flight
       networks:
           - port: { get_resource: node03-pri-port }
@@ -104,7 +105,6 @@ resources:
         str_replace:
           template: { get_file: ../user_data/node.yaml }
           params:
-            $key: { get_param: ssh-key }
             $clustername: { get_param: clustername }
             $nodename: node03
             $gateway-pri-ip: { get_param: gateway-pri-ip }
@@ -131,6 +131,7 @@ resources:
     properties:
       name: { list_join: ['.', [ 'node04', { get_param: clustername }, 'alces.network']] }
       flavor: { get_param: node-flavour }
+      key_name: { get_param: key_name }
       admin_user: flight
       networks:
           - port: { get_resource: node04-pri-port }
@@ -142,7 +143,6 @@ resources:
         str_replace:
           template: { get_file: ../user_data/node.yaml }
           params:
-            $key: { get_param: ssh-key }
             $clustername: { get_param: clustername }
             $nodename: node04
             $gateway-pri-ip: { get_param: gateway-pri-ip }
@@ -169,6 +169,7 @@ resources:
     properties:
       name: { list_join: ['.', [ 'node05', { get_param: clustername }, 'alces.network']] }
       flavor: { get_param: node-flavour }
+      key_name: { get_param: key_name }
       admin_user: flight
       networks:
           - port: { get_resource: node05-pri-port }
@@ -180,7 +181,6 @@ resources:
         str_replace:
           template: { get_file: ../user_data/node.yaml }
           params:
-            $key: { get_param: ssh-key }
             $clustername: { get_param: clustername }
             $nodename: node05
             $gateway-pri-ip: { get_param: gateway-pri-ip }

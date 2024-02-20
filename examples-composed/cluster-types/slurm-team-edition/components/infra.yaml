@@ -17,6 +17,7 @@ resources:
     properties:
       name: { list_join: ['.', ['infra01', { get_param: clustername }, 'alces.network']] }
       flavor: { get_param: infra-flavour }
+      key_name: { get_param: key_name }
       admin_user: flight
       networks:
           - port: { get_resource: infra01-pri-port }
@@ -28,7 +29,6 @@ resources:
         str_replace:
           template: { get_file: ../user_data/infra.yaml }
           params:
-            $key: { get_param: ssh-key }
             $clustername: { get_param: clustername }
             $nodename: infra01
             $gateway-pri-ip: { get_param: gateway-pri-ip }
