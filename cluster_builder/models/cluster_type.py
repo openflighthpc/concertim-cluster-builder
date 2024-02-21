@@ -7,9 +7,8 @@ class BaseClusterType:
     """
     BaseClusterType is a base class for the different cluster type kinds.
 
-    Derived classes are expected to provide a parameters and parameter_groups
-    properties in some manner, along with any additional properties they
-    require themselves.
+    Derived classes are expected to provide a parameters property in some
+    manner, along with any additional properties they require themselves.
     """
     # Instance variables used by dataclass decorator.
     id: str
@@ -18,6 +17,7 @@ class BaseClusterType:
     description: str
     kind: str
     last_modified: str
+    parameter_groups: list
     hardcoded_parameters: dict = field(default_factory=dict)
 
 
@@ -40,7 +40,6 @@ class SaharaClusterType(BaseClusterType):
     directly to launch the cluster.
     """
     parameters: dict
-    parameter_groups: list
     upstream_template: str
 
 
@@ -51,19 +50,7 @@ class MagnumClusterType(BaseClusterType):
     directly to launch the cluster.
     """
     parameters: dict
-    parameter_groups: list
     upstream_template: str
-
-
-@dataclass()
-class ParametersFile:
-    """
-    ParametersFile represents the parameters.yaml file for a heat based cluster type.
-    """
-    path: str
-    parameters: dict
-    parameter_groups: list
-    last_modified: datetime.datetime
 
 
 @dataclass(kw_only=True)
@@ -73,6 +60,7 @@ class Component:
     """
     path: str
     heat_template_version: str
+    parameters: dict = field(default_factory=dict)
     resources: dict = field(default_factory=dict)
     conditions: dict = field(default_factory=dict)
     outputs: dict = field(default_factory=dict)
@@ -86,18 +74,25 @@ class HeatClusterType(BaseClusterType):
     """
     HeatClusterType represents a heat based cluster type.
     """
-    parameters_file: ParametersFile
     components: list[Component]
 
 
     @property
     def parameters(self):
+        # Load parameters from all components giving precendence to parameters
+        # defined in earlier components where there is an id clash.
+        parameters = {}
+        for component in self.components:
+            for id, parameter in component.parameters.items():
+                if id not in parameters:
+                    parameters[id] = parameter
+
         if self.hardcoded_parameters is None:
-            return self.parameters_file.parameters
+            return parameters
         else:
             params = {}
             hardcoded_names = self.hardcoded_parameters.keys()
-            for key, value in self.parameters_file.parameters.items():
+            for key, value in parameters.items():
                 if key in hardcoded_names:
                     # Hardcoded params are not displayed to the user.  The
                     # hardcoded value will be provided to OpenStack exactly as
@@ -108,13 +103,8 @@ class HeatClusterType(BaseClusterType):
             return params
 
 
-    @property
-    def parameter_groups(self):
-        return self.parameters_file.parameter_groups
-
-
     def _serializable_attributes(self):
         """Return a dict of serializable attributes"""
-        attrs = {"parameters": self.parameters, "parameter_groups": self.parameter_groups}
+        attrs = {"parameters": self.parameters}
         attrs.update(asdict(self))
         return attrs

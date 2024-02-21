@@ -54,24 +54,6 @@ def write_hot_component(app, hot, parent_dir, name="test", last_modified=None):
         os.utime(path, (last_accessed, last_modified))
 
 
-def write_parameters(app, parameters, parent_dir, last_modified=None):
-    enabled_dir = os.path.join(app.instance_path, "cluster-types-enabled")
-    path = os.path.join(enabled_dir, parent_dir, "parameters.yaml")
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "w") as test_file:
-        if isinstance(parameters, dict):
-            test_file.write(json.dumps(parameters))
-        elif isinstance(parameters, str):
-            test_file.write(parameters)
-        else:
-            raise TypeError(f"expected parameters to be dict or str, got {type(parameters)}")
-    if last_modified:
-        if type(last_modified) is str:
-            last_modified = datetime.timestamp(datetime.fromisoformat(last_modified))
-        last_accessed = last_modified
-        os.utime(path, (last_accessed, last_modified))
-
-
 def remove_path(path):
     """
     Return a function that takes a dict and removes the given path from it.

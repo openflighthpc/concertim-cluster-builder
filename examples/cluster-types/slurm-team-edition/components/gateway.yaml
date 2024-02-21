@@ -1,5 +1,58 @@
 heat_template_version: 2021-04-16
 
+parameters:
+  clustername:
+    type: string
+    label: Cluster Name
+    description: The name to give the cluster
+    constraints:
+      - length: { min: 6, max: 255 }
+        description: Cluster name must be between 6 and 255 characters
+      - allowed_pattern: "^[a-zA-Z][a-zA-Z0-9\\-_]*$"
+        description: Cluster name can contain only alphanumeric characters, hyphens and underscores
+
+  external-network:
+    type: string
+    label: External Network Name
+    description: The name of the external network to bridge network to
+    default: public1
+    constraints:
+      - custom_constraint: neutron.network
+
+  gateway-pri-ip:
+    type: string
+    label: Gateway Primary IP Address
+    default: '10.100.0.101'
+    constraints:
+      - custom_constraint: ip_addr
+
+  gateway-flavour:
+    type: string
+    label: Gateway node flavour
+    default: m1.medium
+    constraints:
+      - custom_constraint: nova.flavor
+
+  key_name:
+    type: string
+    label: SSH KeyPair name
+    description: Name of a KeyPair to enable SSH access to the cluster
+    constraints:
+      - custom_constraint: nova.keypair
+
+  solo-image:
+    type: string
+    label: Flight Solo Image ID
+    constraints:
+      - custom_constraint: glance.image
+
+  storage-size:
+    type: number
+    label: Size of the shared storage disk for NFS in GB
+    default: 1024
+    constraints:
+      - range: { min: 1 }
+
 resources:
   gateway-pri-port:
     type: OS::Neutron::Port

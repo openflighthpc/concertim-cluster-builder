@@ -1,5 +1,43 @@
 heat_template_version: 2021-04-16
 
+parameters:
+  clustername:
+    type: string
+    label: Cluster Name
+    description: The name to give the cluster
+    constraints:
+      - length: { min: 6, max: 255 }
+        description: Cluster name must be between 6 and 255 characters
+      - allowed_pattern: "^[a-zA-Z][a-zA-Z0-9\\-_]*$"
+        description: Cluster name can contain only alphanumeric characters, hyphens and underscores
+
+  gateway-pri-ip:
+    type: string
+    label: Gateway Primary IP Address
+    default: '10.100.0.101'
+    constraints:
+      - custom_constraint: ip_addr
+
+  key_name:
+    type: string
+    label: SSH KeyPair name
+    description: Name of a KeyPair to enable SSH access to the cluster
+    constraints:
+      - custom_constraint: nova.keypair
+
+  solo-image:
+    type: string
+    label: Flight Solo Image ID
+    constraints:
+      - custom_constraint: glance.image
+
+  node-flavour:
+    type: string
+    label: Compute node flavour
+    default: m1.medium
+    constraints:
+      - custom_constraint: nova.flavor
+
 resources:
   node01-pri-port:
     type: OS::Neutron::Port

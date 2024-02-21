@@ -53,6 +53,7 @@ class HeatHandler:
 
 
     def _build_template(self, cluster_type, selections):
+        merged_parameters = {}
         merged_resources = {}
         merged_outputs = {}
         merged_conditions = {}
@@ -66,6 +67,10 @@ class HeatHandler:
                 continue
             self.logger.info(f"including {'selected optional' if component.is_optional else 'mandatory'} component {component.name}")
             heat_template_versions.append(component.heat_template_version)
+
+            for id, parameter in component.parameters.items():
+                if id not in merged_parameters:
+                    merged_parameters[id] = parameter
 
             for resource in component.resources:
                 if resource in merged_resources:
@@ -87,7 +92,7 @@ class HeatHandler:
 
         template = {
             "heat_template_version": heat_template_versions[0],
-            "parameters": cluster_type.parameters_file.parameters,
+            "parameters": merged_parameters,
             "resources": merged_resources,
             "conditions": merged_conditions,
             "outputs": merged_outputs,

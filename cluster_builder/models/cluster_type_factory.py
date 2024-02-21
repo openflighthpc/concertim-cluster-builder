@@ -8,7 +8,7 @@ from heatclient import exc as heatclientExceptions
 from jsonschema.exceptions import (best_match)
 import jsonschema
 
-from .cluster_type import (BaseClusterType, SaharaClusterType, MagnumClusterType, HeatClusterType, ParametersFile, Component)
+from .cluster_type import (BaseClusterType, SaharaClusterType, MagnumClusterType, HeatClusterType, Component)
 
 SCHEMA_DEFS = {
     "$defs": {
@@ -106,6 +106,7 @@ class BaseClusterTypeFactory:
             "title": definition["title"],
             "description": definition["description"],
             "kind": definition["kind"],
+            "parameter_groups": definition.get("parameter_groups", []),
             "last_modified": datetime.datetime.fromtimestamp(os.path.getmtime(path))
         }
         return fields
@@ -140,7 +141,6 @@ class MagnumClusterTypeFactory(BaseClusterTypeFactory):
         fields = super()._extract_fields(id, path, definition)
         fields["upstream_template"] = definition.get("magnum_cluster_template")
         fields["parameters"] = definition.get("parameters", {})
-        fields["parameter_groups"] = definition.get("parameter_groups", {})
         return fields
 
 
@@ -173,7 +173,6 @@ class SaharaClusterTypeFactory(BaseClusterTypeFactory):
         fields = super()._extract_fields(id, path, definition)
         fields["upstream_template"] = definition.get("sahara_cluster_template")
         fields["parameters"] = definition.get("parameters", {})
-        fields["parameter_groups"] = definition.get("parameter_groups", {})
         return fields
 
 
@@ -186,6 +185,7 @@ class HeatClusterTypeFactory(BaseClusterTypeFactory):
     klass = HeatClusterType
 
     SCHEMA = {
+        "$defs": SCHEMA_DEFS,
         "type": "object",
         "properties": {
             "title": { "type": "string" },
@@ -203,6 +203,7 @@ class HeatClusterTypeFactory(BaseClusterTypeFactory):
                 },
                 "additionalProperties": False
             },
+            "parameter_groups": {"$ref": "/schemas/parameter_groups"},
             "components": {
                 "type": "array",
                 "items": {
@@ -223,24 +224,15 @@ class HeatClusterTypeFactory(BaseClusterTypeFactory):
         if not self._validate(id, path, definition):
             return None
         base_dir = os.path.dirname(path)
-        params_file = self._load_params_file(base_dir)
-        if params_file is None:
-            return None
         components = self._load_components(base_dir, definition.get("components"))
         if components is None:
             return None
         if not self._validate_network_present(components):
             return None
 
-        fields = self._extract_fields(id, path, definition, params_file, components)
+        fields = self._extract_fields(id, path, definition, components)
         cluster_type = self.klass(**fields)
         return cluster_type
-
-
-    def _load_params_file(self, base_dir):
-        params_file_path =  os.path.join(base_dir, "parameters.yaml")
-        params_file = ParametersFileLoader(self.logger).load(params_file_path)
-        return params_file
 
 
     def _load_components(self, base_dir, component_defs):
@@ -286,14 +278,10 @@ class HeatClusterTypeFactory(BaseClusterTypeFactory):
         return True
 
 
-    def _extract_fields(self, id, path, definition, params_file, components):
+    def _extract_fields(self, id, path, definition, components):
         fields = super()._extract_fields(id, path, definition)
         fields["hardcoded_parameters"] = definition.get("hardcoded_parameters", {})
-        fields["parameters_file"] = params_file
         fields["components"] = components
-
-        if params_file.last_modified > fields["last_modified"]:
-            fields["last_modified"] = params_file.last_modified
 
         for component in components:
             if component.last_modified > fields["last_modified"]:
@@ -302,53 +290,16 @@ class HeatClusterTypeFactory(BaseClusterTypeFactory):
         return fields
 
 
-class ParametersFileLoader:
+class ComponentLoader:
     SCHEMA = {
         "$defs": SCHEMA_DEFS,
         "type": "object",
         "properties": {
-            "parameters": {"$ref": "/schemas/parameters"},
-            "parameter_groups": {"$ref": "/schemas/parameter_groups"}
-        },
-    }
-
-    def __init__(self, logger):
-        self.logger = logger
-
-    def load(self, path):
-        try:
-            content = self._parse_file(path)
-        except yaml.YAMLError as exc:
-            self.logger.error(f'Loading parameters from {path} failed: {exc}')
-            return None
-        except jsonschema.ValidationError as exc:
-            error_message = best_match([exc]).message
-            self.logger.error(f'Loading parameters from {path} failed: {error_message}')
-            self.logger.debug(f'Loading parameters from {path} failed: {exc}')
-            return None
-
-        parameters = content.get("parameters", {})
-        parameter_groups = content.get("parameter_groups", [])
-        last_modified = datetime.datetime.fromtimestamp(os.path.getmtime(path))
-        return ParametersFile(path, parameters, parameter_groups, last_modified)
-
-
-    def _parse_file(self, path):
-        content = None
-        with open(path, 'r') as stream:
-            content = yaml.safe_load(stream)
-        jsonschema.validate(instance=content, schema=self.SCHEMA)
-        return content
-
-
-class ComponentLoader:
-    SCHEMA = {
-        "type": "object",
-        "properties": {
             "heat_template_version": {"type": "string"},
+            "parameters": {"$ref": "/schemas/parameters"},
             "resources": {"type": "object"},
-            "outputs": {"type": "object"},
             "conditions": {"type": "object"},
+            "outputs": {"type": "object"},
         },
         "additionalProperties": False,
     }
@@ -376,6 +327,7 @@ class ComponentLoader:
         return Component(
             path=path,
             heat_template_version=hot_template.get("heat_template_version"),
+            parameters=hot_template.get("parameters", {}),
             resources=hot_template.get("resources", {}),
             conditions=hot_template.get("conditions", {}),
             outputs=hot_template.get("outputs", {}),

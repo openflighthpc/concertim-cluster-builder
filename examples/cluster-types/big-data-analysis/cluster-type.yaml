@@ -10,6 +10,15 @@ description: |
 # The kind or type of this cluster template.
 kind: heat
 
+# The components that compose this cluster type definition.
+#
+# `file`: either the name of a file in the `components` subdirectory without
+# the `.yaml` extension; or the absolute path to a file including extension.
+#
+# `optional`: whether this component is optional.
+components:
+  - file: create-network
+
 # Any of the parameters defined in `heat_template_url` can be hardcoded here.
 # If they are hardcoded, the value provided here will be passed to Heat when
 # launching the cluster.  It will not be possible for the user to override this
@@ -27,11 +36,37 @@ hardcoded_parameters:
   # image: "ab7e7129-9962-413a-9bf1-3e1965424f43"
   # plugin-name: "vanilla"
 
-# The components that compose this cluster type definition.
+# parameter_groups defines the parameter groups for this cluster type.
 #
-# `file`: either the name of a file in the `components` subdirectory without
-# the `.yaml` extension; or the absolute path to a file including extension.
+# It is similar to the `parameter_groups` attribute used in HOT with a single
+# additional attribute `optional`.
 #
-# `optional`: whether this component is optional.
-components:
-  - file: create-network
+# The `optional` attribute specifies that a check box or similar should be
+# rendered for that parameter group. The parameters contained in the parameter
+# group should only be displayed to the user if that check box is selected.
+# Cluster builder will use the value of that checkbox to determine which
+# optional components to include.
+#
+# `optional.label`   - the label to display for an optional parameter group.
+# `optional.default` - whether the group is selected or not by default.
+# `optional.name`    - the name of the component that will be included only if this group is selected.
+parameter_groups:
+  - label: "Cluster parameters"
+    description: "Configuration for parameters common across the cluster"
+    parameters:
+      - clustername
+      - keypair
+
+  - label: "Network settings"
+    description: "Configuration for the external and internal cluster networks"
+    parameters:
+      - external-network
+      - network-cidr-pri
+
+  - label: "Hadoop configuration"
+    description: "Configuration for the Hadoop cluster"
+    parameters:
+      - cluster-template
+      - image
+      - hadoop-version
+      - plugin-name
