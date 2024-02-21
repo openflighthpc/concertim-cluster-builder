@@ -51,16 +51,6 @@ class ClusterTypeRepo:
         """
         cls.logger.info(f"Retrieving all cluster types")
         types = []
-
-        # Old-style definitions.  Currently only used for sahara and magnum
-        # based cluster types.
-        for file in glob.glob(os.path.join(cls.types_dir, "*.yaml")):
-            id = os.path.splitext(os.path.basename(file))[0]
-            cluster_type = cls._load(id, file)
-            if cluster_type is not None:
-                types.append(cluster_type)
-
-        # New-style definition.  Used for heat based cluster types.
         for file in glob.glob(os.path.join(cls.types_dir, "*", "cluster-type.yaml")):
             id = os.path.basename(os.path.dirname(file))
             cluster_type = cls._load(id, file)

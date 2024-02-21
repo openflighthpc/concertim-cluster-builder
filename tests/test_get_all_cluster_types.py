@@ -1,6 +1,6 @@
 import json
 
-from .utils import (write_cluster_definition, write_legacy_cluster_definition, write_hot_component)
+from .utils import (write_cluster_definition, write_hot_component)
 
 def test_cluster_types_when_empty(client):
     """
@@ -19,7 +19,7 @@ def test_valid_magnum_definition(client, app):
         "kind": "magnum",
         "magnum_cluster_template": "test-template",
     }
-    write_legacy_cluster_definition(app, definition, "test-id")
+    write_cluster_definition(app, definition, "test-id")
     response = client.get("/cluster-types/")
     data = json.loads(response.data)
     assert len(data) == 1
