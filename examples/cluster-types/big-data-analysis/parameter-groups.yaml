@@ -1,0 +1,33 @@
+# This file contains the definitions of the parameter groups for this cluster
+# type.
+#
+# It contains a `parameter_groups` attribute which is similar to the
+# `parameter_groups` attribute used in HOT with a single additional attribute
+# `optional`.
+#
+# The `optional` attribute specifies that a check box or similar should be
+# rendered for that parameter group. The parameters contained in the parameter
+# group should only be displayed to the user if that check box is selected.
+# Cluster builder will use the value of that checkbox to determine which
+# optional components to include.
+
+parameter_groups:
+  - label: "Cluster parameters"
+    description: "Configuration for parameters common across the cluster"
+    parameters:
+      - clustername
+      - keypair
+
+  - label: "Network settings"
+    description: "Configuration for the external and internal cluster networks"
+    parameters:
+      - external-network
+      - network-cidr-pri
+
+  - label: "Hadoop configuration"
+    description: "Configuration for the Hadoop cluster"
+    parameters:
+      - cluster-template
+      - image
+      - hadoop-version
+      - plugin-name
