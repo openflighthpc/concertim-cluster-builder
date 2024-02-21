@@ -27,12 +27,19 @@ RUN apt-get remove --yes \
 
 COPY . /app
 
-# Copy across the example cluster types and HOT templates.
+# Copy across the example cluster types and enable them all.
 #
 # In a production deployment it is expected that a docker volume will be
 # mounted at /app/instance to provide the production cluster types.
-COPY ./examples/cluster-types/ /app/instance/cluster-types-enabled/
-COPY ./examples/hot/ /app/instance/hot/
+RUN rm -f /app/instance/cluster-types-enabled/* \
+          /app/instance/cluster-types-available/*
+COPY ./examples/cluster-types/ /app/instance/cluster-types-available/
+RUN <<EOT
+    cd /app/instance/cluster-types-enabled/
+    for i in ../cluster-types-available/* ; do
+        ln -s ${i} .
+    done
+EOT
 
 ENV HOST=0.0.0.0
 ENV PORT=42378
