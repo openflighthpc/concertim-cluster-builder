@@ -18,10 +18,25 @@ kind: heat
 components:
   - file: network
   - file: gateway
+    user_data:
+      name: gateway
+      write_files:
+        - cloudinit.slurm-multinode
+        - shared-storage-mount
+        - passwords.slurm-multinode
+        - post-apply-tweaks.slurm-multinode
   - file: infra
     optional: true
+    user_data:
+      name: infra
+      write_files:
+        - cloudinit.infra-multinode
   - file: nodes
     optional: true
+    user_data:
+      name: node
+      write_files:
+        - cloudinit.compute-multinode
 
 # Any of the parameters defined in `parameters.yaml` can be hardcoded here. If
 # they are hardcoded, the value provided here will be passed to Heat when
