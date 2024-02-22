@@ -23,6 +23,26 @@ def merge_parameters(cluster_type, given_answers):
     return merged_parameters
 
 
+def remove_unwanted_answers(cluster_type, selections, answers):
+    """
+    Filter answers to remove any that are for a parameter only defined in a
+    de-selected optional component.
+    """
+    filtered_answers = {}
+    filtered_parameter_ids = []
+    for component in cluster_type.components:
+        is_selected = selections.get(component.name, False)
+        if component.is_optional and not is_selected:
+            continue
+        for id in component.parameters:
+            if id not in filtered_parameter_ids:
+                filtered_parameter_ids.append(id)
+    for id, answer in answers.items():
+        if id in filtered_parameter_ids:
+            filtered_answers[id] = answer
+    return filtered_answers
+
+
 def assert_parameters_present(cluster_type, answers):
     """
     Asserts that all parameters defined in the cluster type either have a

@@ -40,6 +40,7 @@ class HeatHandler:
         # Allow errors to be propagated.  They will be caught and handled in
         # either `openstack.error_handling.py` or `__init__.py`.
         parameters = model_utils.merge_parameters(cluster_type, cluster_data.get("parameters"))
+        parameters = model_utils.remove_unwanted_answers(cluster_type, cluster_data.get("selections"), parameters)
         self.logger.debug(f"parameters: {parameters}")
         stack_name = "{}--{}".format(cluster_data["name"], secrets.token_urlsafe(16))
         files, template = self._get_template_contents(cluster_type, cluster_data.get("selections"))
