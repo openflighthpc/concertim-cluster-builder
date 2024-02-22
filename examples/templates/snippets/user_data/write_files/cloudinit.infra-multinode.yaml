@@ -1,0 +1,6 @@
+content: |
+  SERVER=$gateway-pri-ip
+  LABEL=$nodename
+path: /opt/flight/cloudinit.in
+permissions: '0600'
+owner: root:root

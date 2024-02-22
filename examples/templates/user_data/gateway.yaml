@@ -1,0 +1,7 @@
+# Empty file that exists only for purposes of making the python-heatclient
+# library happy. `heatclient.commmon.template_utils.get_template_contents`
+# resolves any embedded files, e.g., `get_file`.  It complains if it cannot
+# find a file at the given path. This file exists simply to prevent that error.
+#
+# When the cluster types are generated from the templates, this file will be
+# replaced for that cluster type with an appropriatly generated file instead.

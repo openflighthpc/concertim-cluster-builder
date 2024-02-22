@@ -1,0 +1,10 @@
+content: |
+  DISKID="$sharedstorageid"
+  DEVICE="/dev/disk/by-id/virtio-$(echo $DISKID |cut -c -20)"
+  mkfs.xfs $DEVICE
+  mkdir -p /export
+  echo "$DEVICE  /export  xfs  defaults  0 0" >> /etc/fstab
+  mount /export
+path: /var/lib/firstrun/scripts/00-sharedstoragemount.bash
+permissions: '0600'
+owner: root:root

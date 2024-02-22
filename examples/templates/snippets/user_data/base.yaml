@@ -1,0 +1,7 @@
+#cloud-config
+fqdn: $nodename.$clustername.alces.network
+users:
+  - default
+  - name: flight
+    sudo: ALL=(ALL) NOPASSWD:ALL
+write_files: []
