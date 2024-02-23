@@ -65,15 +65,9 @@ class ClusterTypeRepo:
         """
         Return the specified cluster type or abort with a 404.
         """
-        # Old-style file path.  Only used for sahara and magnum based cluster
-        # types.
-        old_file = os.path.join(cls.types_dir, f"{id}.yaml")
-
-        # New-style definition.  Used for heat based cluster types.
-        new_file = os.path.join(cls.types_dir, id, "cluster-type.yaml")
-
-        cls.logger.info(f"Finding cluster type: {id}:{new_file}:{old_file}")
-        cluster_type = cls._load(id, new_file) or cls._load(id, old_file)
+        definition_path = os.path.join(cls.types_dir, id, "cluster-type.yaml")
+        cls.logger.info(f"Finding cluster type: {id}:{definition_path}")
+        cluster_type = cls._load(id, definition_path)
         if cluster_type is None:
             abort(404, f"Unknown cluster type: {id}")
         else:
@@ -94,16 +88,18 @@ class ClusterTypeRepo:
             return None
         else:
             factory = None
-            if definition["kind"] == "heat":
-                factory = HeatClusterTypeFactory(cls.logger)
-            elif definition["kind"] == "magnum":
-                factory = MagnumClusterTypeFactory(cls.logger)
-            elif definition["kind"] == "sahara":
-                factory = SaharaClusterTypeFactory(cls.logger)
+            match definition["kind"]:
+                case "heat":
+                    factory = HeatClusterTypeFactory
+                case "magnum":
+                    factory = MagnumClusterTypeFactory
+                case "sahara":
+                    factory = SaharaClusterTypeFactory
+
             if factory == None:
                 cls.logger.error(f'Unhandled cluster type kind {definition["kind"]}')
             else:
-                return factory.load(id, file, definition)
+                return factory(cls.logger).load(id, file, definition)
 
 
     @classmethod

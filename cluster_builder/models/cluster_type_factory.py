@@ -1,7 +1,6 @@
 import datetime
 import os
 import urllib
-import yaml
 
 from heatclient.common import template_utils
 from heatclient import exc as heatclientExceptions
@@ -68,7 +67,7 @@ class BaseClusterTypeFactory:
     BaseClusterTypeFactory is the base class for cluster type factories.  A
     cluster type factory continues the job of loading a cluster type started by
     ClusterTypeRepo.  Any differences between the different cluster type kinds
-    are handled by the base classes.
+    are handled by the child classes.
     """
 
     # Class variables overridden by subclasses.
