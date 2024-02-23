@@ -7,8 +7,8 @@ description: |
 kind: heat
 
 components:
-  - file: network
-  - file: gateway
+  - name: network
+  - name: gateway
     user_data:
       name: gateway
       write_files:
@@ -17,7 +17,7 @@ components:
         - shared-storage-mount
         - shared-secret
         - passwords.kubernetes-multinode
-  - file: nodes
+  - name: nodes
     user_data:
       name: node
       write_files:

@@ -69,7 +69,7 @@ SCHEMA = {
             "items": {
                 "type": "object",
                 "properties": {
-                    "file": {"type": "string"},
+                    "name": {"type": "string"},
                     "optional": {"type": "boolean"},
                     "user_data": {
                         "type": "object",
@@ -83,7 +83,7 @@ SCHEMA = {
                         "required": ["name", "write_files"],
                     },
                 },
-                "required": ["file"],
+                "required": ["name"],
             }
         },
     },
@@ -116,10 +116,10 @@ def generate_cluster_type(cluster_type_dir, components, templates_dir, verbose) 
 
     for component in components:
         if verbose:
-            click.echo(f"--> Processing component {component['file']}")
+            click.echo(f"--> Processing component {component['name']}")
 
         # Install the component itself.
-        template_path = component_templates_dir.joinpath(f"{component['file']}.yaml")
+        template_path = component_templates_dir.joinpath(f"{component['name']}.yaml")
         if not template_path.exists():
             click.secho(f"    Component {template_path} does not exist", err=True, fg="red")
             return False

@@ -12,12 +12,12 @@ kind: heat
 
 # The components that compose this cluster type definition.
 #
-# `file`: either the name of a file in the `components` subdirectory without
+# `name`: either the name of a name in the `components` subdirectory without
 # the `.yaml` extension; or the absolute path to a file including extension.
 #
 # `optional`: whether this component is optional.
 components:
-  - file: create-network
+  - name: create-network
 
 # Any of the parameters defined in `heat_template_url` can be hardcoded here.
 # If they are hardcoded, the value provided here will be passed to Heat when

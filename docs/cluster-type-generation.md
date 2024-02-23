@@ -118,13 +118,13 @@ kind: heat
 
 components:
   # A component that requires user data generating.
-  - file: <component name>
+  - name: <component name>
     user_data:
       name: <user data name>
       write_files:
         - <user data snippet name>
   # A component that doesn't require user data generating.
-  - file: <component name>
+  - name: <component name>
 ```
 
 For each component named in `components` the build script will (1) copy the
@@ -132,7 +132,7 @@ component from the templates directory; (2) copy any files referenced by that
 component; (3) optionally generate the user data for that component.  These are
 explained in more detail below.
 
-The build script will look for a file name `<component name>.yaml` in the
+The build script will look for a file named `<component name>.yaml` in the
 [component templates directory](../examples/templates/components). If one
 cannot be found, processing the cluster type is aborted with an error. If it is
 found it is copied to the cluster type's `component` directory.

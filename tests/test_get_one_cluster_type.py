@@ -58,7 +58,7 @@ def test_last_modified_for_heat_template(client, app, definition_last_modified, 
         "title": "test-heat",
         "description": "test-description",
         "kind": "heat",
-        "components": [{"file": "test-hot"}],
+        "components": [{"name": "test-hot"}],
         "parameter_groups": [],
     }
     hot = {

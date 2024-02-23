@@ -11,13 +11,13 @@ kind: heat
 
 # The components that compose this cluster type definition.
 #
-# `file`: either the name of a file in the `components` subdirectory without
-# the `.yaml` extension; or the absolute path to a file including extension.
+# `name`: either the name of a name in the `components` subdirectory without
+# the `.yaml` extension; or the absolute path to a name including extension.
 #
 # `optional`: whether this component is optional.
 components:
-  - file: network
-  - file: gateway
+  - name: network
+  - name: gateway
     user_data:
       name: gateway
       write_files:
@@ -25,13 +25,13 @@ components:
         - shared-storage-mount
         - passwords.slurm-multinode
         - post-apply-tweaks.slurm-multinode
-  - file: infra
+  - name: infra
     optional: true
     user_data:
       name: infra
       write_files:
         - cloudinit.infra-multinode
-  - file: nodes
+  - name: nodes
     optional: true
     user_data:
       name: node
