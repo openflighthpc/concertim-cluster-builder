@@ -4,7 +4,8 @@ import os
 
 def write_cluster_definition(app, definition, name="test", last_modified=None):
     enabled_dir = os.path.join(app.instance_path, "cluster-types-enabled")
-    path = os.path.join(enabled_dir, f"{name}.yaml")
+    path = os.path.join(enabled_dir, name, "cluster-type.yaml")
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w") as test_file:
         if isinstance(definition, dict):
             test_file.write(json.dumps(definition))
@@ -19,9 +20,10 @@ def write_cluster_definition(app, definition, name="test", last_modified=None):
         os.utime(path, (last_accessed, last_modified))
 
 
-def write_hot(app, hot, name="test", last_modified=None):
-    enabled_dir = os.path.join(app.instance_path, "hot")
-    path = os.path.join(enabled_dir, name)
+def write_hot_component(app, hot, parent_dir, name="test", last_modified=None):
+    enabled_dir = os.path.join(app.instance_path, "cluster-types-enabled")
+    path = os.path.join(enabled_dir, parent_dir, 'components', f"{name}.yaml")
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w") as test_file:
         if isinstance(hot, dict):
             test_file.write(json.dumps(hot))

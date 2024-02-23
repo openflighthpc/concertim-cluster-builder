@@ -1,4 +1,4 @@
-from logging.config import dictConfig
+# from logging.config import dictConfig
 import json
 import os
 import traceback
@@ -7,7 +7,6 @@ from flask import (Flask, make_response, jsonify)
 from jsonschema import ValidationError
 from jsonschema.exceptions import (best_match)
 from werkzeug.exceptions import HTTPException
-from .middleware.utils.exceptions import MiddlewareAuthenticationError
 
 def create_app(instance_path=None, test_config=None):
     # dictConfig({
@@ -44,12 +43,11 @@ def create_app(instance_path=None, test_config=None):
     os.makedirs(os.path.join(app.instance_path, "cluster-types-available"), exist_ok=True)
     os.makedirs(os.path.join(app.instance_path, "hot"), exist_ok=True)
 
-    from .models import ClusterType
-    ClusterType.configure(
-            hot_templates_dir=os.path.join(app.instance_path, "hot"),
-            types_dir=os.path.join(app.instance_path, "cluster-types-enabled"),
-            logger=app.logger,
-            )
+    from .models import ClusterTypeRepo
+    ClusterTypeRepo.configure(
+        types_dir=os.path.join(app.instance_path, "cluster-types-enabled"),
+        logger=app.logger,
+    )
 
     from . import cluster_types
     app.register_blueprint(cluster_types.bp)

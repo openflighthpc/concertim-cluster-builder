@@ -1,9 +1,8 @@
 from flask import Blueprint
 from flask import make_response
 from flask import request
-from dateutil import parser
 
-from .models import ClusterType
+from .models import ClusterTypeRepo
 
 bp = Blueprint('cluster-types', __name__, url_prefix="/cluster-types")
 ATTRIBUTES = ["id", "title", "description", "parameters", "parameter_groups", "last_modified"]
@@ -12,7 +11,7 @@ ATTRIBUTES = ["id", "title", "description", "parameters", "parameter_groups", "l
 def index():
     cluster_types = []
     last_modified = None
-    for ct in ClusterType.all():
+    for ct in ClusterTypeRepo.all():
         if last_modified == None or ct.last_modified > last_modified: last_modified = ct.last_modified
         cluster_types.append(ct.asdict(ATTRIBUTES))
     if (request.if_modified_since and last_modified != None and
@@ -25,7 +24,7 @@ def index():
 
 @bp.route('/<string:id>')
 def show_cluster_type(id):
-    type = ClusterType.find(id)
+    type = ClusterTypeRepo.find(id)
     last_modified = type.last_modified
     if (request.if_modified_since and int(request.if_modified_since.timestamp()) == int(last_modified.timestamp())):
         return '', 304

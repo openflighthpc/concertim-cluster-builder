@@ -49,7 +49,7 @@ There is a test suite located in the `tests` directory.  It can be ran in a
 temporary container by using the `pytest` test runner:
 
 ```bash
-docker run -d \
+docker run \
     --stop-signal SIGINT \
     --network=host \
     --publish 42378:42378 \

@@ -4,7 +4,7 @@ import secrets
 from saharaclient.client import Client
 from saharaclient.osc import utils
 
-from ..models import ClusterType
+from ..models import utils as model_utils
 
 class Cluster:
     def __init__(self, id, name):
@@ -42,7 +42,7 @@ class SaharaHandler:
 
     def _build_args(self, cluster_data, cluster_type, cluster_name):
         self.logger.debug(f"getting sahara cluster template {cluster_type.upstream_template}")
-        parameters = ClusterType.merge_parameters(cluster_type, cluster_data.get("parameters"))
+        parameters = model_utils.merge_parameters(cluster_type, cluster_data.get("parameters"))
         sct = utils.get_resource(self.client.cluster_templates, cluster_type.upstream_template)
         self.logger.debug(f"getting image_id for {parameters.get('image', None)}")
         try:

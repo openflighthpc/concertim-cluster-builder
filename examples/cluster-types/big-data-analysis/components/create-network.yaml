@@ -1,26 +1,5 @@
 heat_template_version: 2021-04-16
 
-parameter_groups:
-  - label: "Cluster parameters"
-    description: "Configuration for parameters common across the cluster"
-    parameters:
-      - clustername
-      - keypair
-
-  - label: "Network settings"
-    description: "Configuration for the external and internal cluster networks"
-    parameters:
-      - external-network
-      - network-cidr-pri
-
-  - label: "Hadoop configuration"
-    description: "Configuration for the Hadoop cluster"
-    parameters:
-      - cluster-template
-      - image
-      - hadoop-version
-      - plugin-name
-
 parameters:
   clustername:
     type: string

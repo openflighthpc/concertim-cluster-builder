@@ -3,27 +3,27 @@ import pytest
 import jwt
 import time
 
-from .utils import (remove_path, set_path, write_cluster_definition, write_hot)
+from .utils import (remove_path, set_path, write_cluster_definition)
 
 JWT_SECRET = "TEST_SECRET"
 
 def test_launch_cluster_without_authorization(client):
     body = {
-            "cloud_env": {
-                "auth_url": "fake",
-                "user_id": "fake",
-                "password": "fake",
-                "project_id": "fake"
-                },
-            "cluster": {
-                "name": "test-cluster",
-                "cluster_type_id": "does-not-exist",
-                "parameters": {}
-                },
-            "billing_account_id" : "fake",
-            "middleware_url" : "fake"
-            }
-    
+        "cloud_env": {
+            "auth_url": "fake",
+            "user_id": "fake",
+            "password": "fake",
+            "project_id": "fake"
+        },
+        "cluster": {
+            "name": "test-cluster",
+            "cluster_type_id": "does-not-exist",
+            "parameters": {}
+        },
+        "billing_account_id" : "fake",
+        "middleware_url" : "fake"
+    }
+
     response = client.post("/clusters/", json=body)
     assert response.status_code == 401
     data = json.loads(response.data)
@@ -36,20 +36,20 @@ def test_launch_cluster_without_authorization(client):
 
 def test_launch_non_existent_cluster(client):
     body = {
-            "cloud_env": {
-                "auth_url": "fake",
-                "user_id": "fake",
-                "password": "fake",
-                "project_id": "fake"
-                },
-            "cluster": {
-                "name": "test-cluster",
-                "cluster_type_id": "does-not-exist",
-                "parameters": {}
-                },
-            "billing_account_id" : "fake",
-            "middleware_url" : "fake"
-            }
+        "cloud_env": {
+            "auth_url": "fake",
+            "user_id": "fake",
+            "password": "fake",
+            "project_id": "fake"
+        },
+        "cluster": {
+            "name": "test-cluster",
+            "cluster_type_id": "does-not-exist",
+            "parameters": {}
+        },
+        "billing_account_id" : "fake",
+        "middleware_url" : "fake"
+    }
     
     bearer_token = "Bearer " + jwt.encode({"exp" : time.time() + 60}, JWT_SECRET, algorithm="HS256")
     headers = {"Authorization" : bearer_token}
@@ -65,30 +65,31 @@ def test_launch_non_existent_cluster(client):
 
 def test_launch_with_missing_params(client, app):
     definition = {
-            "title": "test-title",
-            "description": "test-description",
-            "parameters": {
-                "master_count": {"type": "number"}
-                },
-            "kind": "magnum",
-            "magnum_cluster_template": "test-template",
-            }
+        "title": "test-title",
+        "description": "test-description",
+        "parameters": {
+            "master_count": {"type": "number"}
+        },
+        "kind": "magnum",
+        "magnum_cluster_template": "test-template",
+        "components": [{"file": "test-hot"}],
+    }
     write_cluster_definition(app, definition, "test-id")
     body = {
-            "cloud_env": {
-                "auth_url": "fake",
-                "user_id": "fake",
-                "password": "fake",
-                "project_id": "fake"
-                },
-            "cluster": {
-                "name": "test-cluster",
-                "cluster_type_id": "test-id",
-                "parameters": {}
-                },
-            "billing_account_id" : "fake",
-            "middleware_url" : "fake"
-            }
+        "cloud_env": {
+            "auth_url": "fake",
+            "user_id": "fake",
+            "password": "fake",
+            "project_id": "fake"
+        },
+        "cluster": {
+            "name": "test-cluster",
+            "cluster_type_id": "test-id",
+            "parameters": {}
+        },
+        "billing_account_id" : "fake",
+        "middleware_url" : "fake"
+    }
     bearer_token = "Bearer " + jwt.encode({"exp" : time.time() + 60}, JWT_SECRET, algorithm="HS256")
     headers = {"Authorization" : bearer_token}
     response = client.post("/clusters/", json=body, headers=headers)
@@ -112,20 +113,20 @@ def test_launch_with_missing_params(client, app):
     ])
 def test_invalid_body(client, app, pointer, detail, body_mutator):
     body = {
-            "cloud_env": {
-                "auth_url": "fake",
-                "user_id": "fake",
-                "password": "fake",
-                "project_id": "fake"
-                },
-            "cluster": {
-                "name": "fake",
-                "cluster_type_id": "test-id",
-                "parameters": {}
-                },
-            "billing_account_id" : "fake",
-            "middleware_url" : "fake"
-            }
+        "cloud_env": {
+            "auth_url": "fake",
+            "user_id": "fake",
+            "password": "fake",
+            "project_id": "fake"
+        },
+        "cluster": {
+            "name": "fake",
+            "cluster_type_id": "test-id",
+            "parameters": {}
+        },
+        "billing_account_id" : "fake",
+        "middleware_url" : "fake"
+    }
     body_mutator(body)
     response = client.post("/clusters/", json=body)
     assert response.status_code == 400
