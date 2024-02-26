@@ -1,0 +1,57 @@
+title: "CFD Jumpstart"
+
+description: |
+  A multinode, single-user SLURM environment with OpenFOAM 22.12, Paraview &
+  OpenMPI ready to go
+
+kind: heat
+
+components:
+  - name: network
+  - name: gateway
+    user_data:
+      name: gateway
+      write_files:
+        - cloudinit.cfd-multinode
+        - shared-storage-mount
+        - passwords.cfd-multinode
+        - install-openfoam
+  - name: nodes
+    user_data:
+      name: node
+      write_files:
+        - cloudinit.compute-multinode
+
+hardcoded_parameters:
+  external-network: public1
+  network-cidr-pri: '10.100.0.0/16'
+  gateway-pri-ip: '10.100.0.101'
+  solo-image: "Flight Solo 2024.1"
+  node-count: 5
+
+parameter_groups:
+  - label: "Cluster parameters"
+    description: "Configuration for parameters common across the cluster"
+    parameters:
+      - clustername
+      - solo-image
+      - key_name
+
+  - label: "Network settings"
+    description: "Configuration for the external and internal cluster networks"
+    parameters:
+      - external-network
+      - network-cidr-pri
+
+  - label: "Gateway parameters"
+    description: "Parameters for configuring the gateway"
+    parameters:
+      - gateway-pri-ip
+      - gateway-flavour
+      - storage-size
+
+  - label: "Compute node parameters"
+    description: "Parameters for configuring compute nodes if requested"
+    parameters:
+      - node-flavour
+      - node-count

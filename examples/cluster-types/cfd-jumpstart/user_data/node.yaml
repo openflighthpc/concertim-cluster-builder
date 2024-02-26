@@ -1,0 +1,12 @@
+#cloud-config
+fqdn: $nodename.$clustername.alces.network
+users:
+  - default
+  - name: flight
+    sudo: ALL=(ALL) NOPASSWD:ALL
+write_files:
+  - content: |
+      SERVER=$gateway-pri-ip
+    path: /opt/flight/cloudinit.in
+    permissions: '0600'
+    owner: root:root

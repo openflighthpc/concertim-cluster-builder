@@ -1,0 +1,8 @@
+content: |
+  SHAREPUBKEY=true
+  AUTOPARSEMATCH=$clustername
+  PROFILE_ANSWERS='{ "cluster_type": "openflight-slurm-multinode", "cluster_name": "$clustername", "ipa_use": false }'
+  AUTOAPPLY="gateway: login, node: compute"
+path: /opt/flight/cloudinit.in
+permissions: '0600'
+owner: root:root
