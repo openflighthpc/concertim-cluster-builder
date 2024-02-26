@@ -1,0 +1,117 @@
+heat_template_version: 2021-04-16
+
+parameters:
+  clustername:
+    type: string
+    label: Cluster Name
+    description: The name to give the cluster
+    constraints:
+      - length: { min: 6, max: 255 }
+        description: Cluster name must be between 6 and 255 characters
+      - allowed_pattern: "^[a-zA-Z][a-zA-Z0-9\\-_]*$"
+        description: Cluster name can contain only alphanumeric characters, hyphens and underscores
+
+  cluster-network:
+    type: string
+    label: Cluster network resource ID
+
+  cluster-network-pri:
+    type: string
+    label: Cluster network pri ID
+
+  cluster-sg:
+    type: string
+    label: Cluster network security group ID
+
+  gateway-pri-ip:
+    type: string
+    label: Gateway Primary IP Address
+    default: '10.100.0.101'
+    constraints:
+      - custom_constraint: ip_addr
+
+  key_name:
+    type: string
+    label: SSH KeyPair name
+    description: Name of a KeyPair to enable SSH access to the cluster
+    constraints:
+      - custom_constraint: nova.keypair
+
+  solo-image:
+    type: string
+    label: Flight Solo Image ID
+    constraints:
+      - custom_constraint: glance.image
+
+  node-flavour:
+    type: string
+    label: Compute node flavour
+    default: m1.medium
+    constraints:
+      - custom_constraint: nova.flavor
+
+  index:
+    type: number
+    label: Index for naming
+
+resources:
+  node-number:
+    type: OS::Heat::Value
+    properties:
+      type: string
+      value:
+        yaql:
+          expression: str(int($.data.index) + int($.data.bump))
+          data:
+            index: { get_param: index }
+            bump: 1
+
+  node-pad:
+    type: OS::Heat::Value
+    properties:
+      type: string
+      value:
+        yaql:
+          expression: concat(str(int(int($.data.padding) - int(len(str($.data.num)))) * "0"), str($.data.num))
+          data:
+            num: { get_attr: [node-number, value] }
+            padding: 2
+
+  node-pri-port:
+    type: OS::Neutron::Port
+    depends_on: node-number
+    properties:
+      name: { list_join: ['-', ['node', { get_attr: [ node-pad, value ] }, 'pri', { get_param: clustername }]] }
+      network: { get_param: cluster-network }
+      security_groups:
+        - { get_param: cluster-sg }
+      fixed_ips:
+        - subnet: { get_param: cluster-network-pri }
+          ip_address: { list_join: ['.', [ '10.100.1', { get_attr: [ node-number, value ] } ]] }
+
+  node:
+    type: OS::Nova::Server
+    properties:
+      name: { list_join: ['.', [ { list_join: [ '', ['node', {get_attr: [node-pad, value]} ]]}, { get_param: clustername }, 'alces.network']] }
+      flavor: { get_param: node-flavour }
+      key_name: { get_param: key_name }
+      admin_user: flight
+      networks:
+        - port: { get_resource: node-pri-port }
+      block_device_mapping_v2:
+        - volume_id: { get_resource: node-vol }
+          boot_index: 0
+      user_data_format: RAW
+      user_data:
+        str_replace:
+          template: { get_file: ../user_data/node.yaml }
+          params:
+            $clustername: { get_param: clustername }
+            $nodename: { list_join: [ '', ['node', {get_attr: [node-pad, value]} ]]}
+            $gateway-pri-ip: { get_param: gateway-pri-ip }
+
+  node-vol:
+    type: OS::Cinder::Volume
+    properties:
+      image: { get_param: solo-image }
+      size: 16

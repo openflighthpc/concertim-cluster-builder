@@ -1,0 +1,46 @@
+#cloud-config
+fqdn: $nodename.$clustername.alces.network
+users:
+  - default
+  - name: flight
+    sudo: ALL=(ALL) NOPASSWD:ALL
+write_files:
+  - content: |
+      SHAREPUBKEY=true
+      AUTOPARSEMATCH=$clustername
+      PROFILE_ANSWERS='{ "cluster_type": "openflight-kubernetes-multinode", "cluster_name": "$clustername"}'
+      AUTOAPPLY="gateway: master, node: worker"
+    path: /opt/flight/cloudinit.in
+    permissions: '0600'
+    owner: root:root
+  - content: |
+      /opt/flight/bin/flight profile prepare openflight-kubernetes-multinode
+    path: /var/lib/firstrun/scripts/00-prepare-profile.bash
+    permissions: '0600'
+    owner: root:root
+  - content: |
+      DISKID="$sharedstorageid"
+      DEVICE="/dev/disk/by-id/virtio-$(echo $DISKID |cut -c -20)"
+      mkfs.xfs $DEVICE
+      mkdir -p /export
+      echo "$DEVICE  /export  xfs  defaults  0 0" >> /etc/fstab
+      mount /export
+    path: /var/lib/firstrun/scripts/00-sharedstoragemount.bash
+    permissions: '0600'
+    owner: root:root
+  - content: |
+      date +%s.%N | sha256sum | cut -c 1-40 > /opt/flight/etc/shared-secret.conf
+      chmod 0400 /opt/flight/etc/shared-secret.conf
+      /opt/flight/bin/flight service stack restart
+    path: /var/lib/firstrun/scripts/00_flightpatches.bash
+    permissions: '0600'
+    owner: root:root
+  - content: |
+      # Generate password for flight user
+      FLIGHTPASS=$(cat /dev/urandom |tr -dc _A-Z-a-z-0-9 |head -c 8)
+      echo "$FLIGHTPASS" > /root/flight_user_pass.txt
+      # Ensure Flight Profile uses generated passwords
+      /opt/flight/bin/flight profile configure --answers "{ \"cluster_type\": \"openflight-kubernetes-multinode\", \"default_password\": \"$FLIGHTPASS\"}" --accept-defaults
+    path: /var/lib/firstrun/scripts/00-generate-passwords.bash
+    permissions: '0600'
+    owner: root:root

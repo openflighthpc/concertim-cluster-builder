@@ -1,8 +1,8 @@
-title: "Container Cruncher (Medium)"
+title: "Container Cruncher (Small)"
 
 description: |
-  A medium single-user Kubernetes environment, suitable for running workflows
-  and microservices.
+  A small single-user Kubernetes environment, suitable for evaluating workflows
+  and running a few microservices.
 
 kind: heat
 
@@ -29,8 +29,8 @@ hardcoded_parameters:
   network-cidr-pri: 10.100.0.0/16
   gateway-pri-ip: '10.100.0.101'
   solo-image: "Flight Solo 2024.1"
-  node-count: 5
-  storage-size: 500
+  node-count: 2
+  storage-size: 100
 
 parameter_groups:
   - label: "Cluster parameters"
