@@ -1,0 +1,14 @@
+#cloud-config
+fqdn: $nodename.$clustername.alces.network
+users:
+  - default
+  - name: flight
+    sudo: ALL=(ALL) NOPASSWD:ALL
+write_files:
+  - content: |
+      AUTOPARSEMATCH=$clustername
+      PROFILE_ANSWERS='{ "cluster_type": "openflight-jupyter-standalone", "cluster_name": "$clustername", "default_password": "$password" }'
+      AUTOAPPLY="gateway: all-in-one"
+    path: /opt/flight/cloudinit.in
+    permissions: '0600'
+    owner: root:root
