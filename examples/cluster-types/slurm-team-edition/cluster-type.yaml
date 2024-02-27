@@ -11,17 +11,32 @@ kind: heat
 
 # The components that compose this cluster type definition.
 #
-# `file`: either the name of a file in the `components` subdirectory without
+# `name`: either the name of a file in the `components` subdirectory without
 # the `.yaml` extension; or the absolute path to a file including extension.
 #
 # `optional`: whether this component is optional.
 components:
-  - file: network
-  - file: gateway
-  - file: infra
+  - name: network
+  - name: gateway
+    user_data:
+      name: gateway
+      write_files:
+        - cloudinit.slurm-multinode
+        - shared-storage-mount
+        - passwords.slurm-multinode
+        - post-apply-tweaks.slurm-multinode
+  - name: infra
     optional: true
-  - file: nodes
+    user_data:
+      name: infra
+      write_files:
+        - cloudinit.infra-multinode
+  - name: nodes
     optional: true
+    user_data:
+      name: node
+      write_files:
+        - cloudinit.compute-multinode
 
 # Any of the parameters defined in `parameters.yaml` can be hardcoded here. If
 # they are hardcoded, the value provided here will be passed to Heat when

@@ -34,7 +34,7 @@ def test_valid_heat_definition(client, app):
         "title": "test-heat",
         "description": "test-description",
         "kind": "heat",
-        "components": [{"file": "test-hot"}],
+        "components": [{"name": "test-hot"}],
         "parameter_groups": [],
     }
     hot = {
@@ -70,7 +70,7 @@ def test_heat_definitions_load_params_from_hot(client, app):
         "title": "test-heat",
         "description": "test-description",
         "kind": "heat",
-        "components": [{"file": "test-hot"}],
+        "components": [{"name": "test-hot"}],
         "parameter_groups": [],
     }
     hot = {
@@ -101,7 +101,7 @@ def test_hardcoded_params_are_not_included_in_output(client, app):
         "title": "test-heat",
         "description": "test-description",
         "kind": "heat",
-        "components": [{"file": "test-hot"}],
+        "components": [{"name": "test-hot"}],
         "hardcoded_parameters": {
             "foo": "foo value"
         },
@@ -142,7 +142,7 @@ def test_invalid_definitions_are_ignored(client, app):
         "title": "good-heat",
         "description": "fake",
         "kind": "heat",
-        "components": [{"file": "test-hot"}],
+        "components": [{"name": "test-hot"}],
         "parameter_groups": [],
     }
     hot = {

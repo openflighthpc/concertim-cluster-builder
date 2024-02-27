@@ -1,0 +1,17 @@
+#cloud-config
+fqdn: $nodename.$clustername.alces.network
+users:
+  - default
+  - name: flight
+    sudo: ALL=(ALL) NOPASSWD:ALL
+write_files:
+  - content: |
+      SERVER=$gateway-pri-ip
+    path: /opt/flight/cloudinit.in
+    permissions: '0600'
+    owner: root:root
+  - content: |
+      /opt/flight/bin/flight profile prepare openflight-kubernetes-multinode
+    path: /var/lib/firstrun/scripts/00-prepare-profile.bash
+    permissions: '0600'
+    owner: root:root

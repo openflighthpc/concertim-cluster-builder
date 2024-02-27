@@ -208,10 +208,10 @@ class HeatClusterTypeFactory(BaseClusterTypeFactory):
                 "items": {
                     "type": "object",
                     "properties": {
-                        "file": {"type": "string"},
+                        "name": {"type": "string"},
                         "optional": {"type": "boolean"},
                     },
-                    "required": ["file"],
+                    "required": ["name"],
                 }
             },
         },
@@ -238,7 +238,7 @@ class HeatClusterTypeFactory(BaseClusterTypeFactory):
         components_dir = os.path.join(base_dir, "components")
         components = []
         for c in component_defs:
-            path = c["file"]
+            path = c["name"]
             if not os.path.isabs(path):
                 path = os.path.join(components_dir, f'{path}.yaml')
             component = ComponentLoader(self.logger).load(path, optional=c.get("optional", False))
