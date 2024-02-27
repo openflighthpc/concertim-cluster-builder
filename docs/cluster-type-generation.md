@@ -21,6 +21,7 @@ docker run --rm \
     --volume .:/app \
     --user $(id -u):$(id -g) \
     concertim-cluster-builder \
+    /app/scripts/generate-cluster-types.py \
     path/to/cluster/type/
 ```
 
@@ -64,7 +65,7 @@ templates/
     └── ...
 ```
 
-The components that constitue a cluster type are defined in the
+The components that constitute a cluster type are defined in the
 `templates/components/` directory.  They are expected to be a HOT template.  If
 any of their resources require user data they should load it via the `get_file`
 intrinsic function, e.g.,
@@ -155,7 +156,7 @@ found it is appended to the `write_files` array in the base user data snippet.
 Once the user data is generated it is saved to the cluster type's `user_data`
 directory as `<user data name>.yaml`.
 
-NOTE: This process requires that the user data is (1) referenced via the
+NOTE: This process requires that (1) the user data is referenced via the
 `get_file` intrinsic function; (2) the reference is a relative path to
 `../user_data/<user data name>.yaml`; and (3) that the `<user data name>` used
 in the component matches the `<user data name>` used for that component in the

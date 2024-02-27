@@ -11,8 +11,8 @@ kind: heat
 
 # The components that compose this cluster type definition.
 #
-# `name`: either the name of a name in the `components` subdirectory without
-# the `.yaml` extension; or the absolute path to a name including extension.
+# `name`: either the name of a file in the `components` subdirectory without
+# the `.yaml` extension; or the absolute path to a file including extension.
 #
 # `optional`: whether this component is optional.
 components:
