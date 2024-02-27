@@ -11,13 +11,14 @@ of the build process are not suitable for your requirements.
 
 ## Running the build script
 
-The build script can be ran as follows.  Replace `path/to/cluster/type` with
-the path to the cluster type you wish to generate.
+To run the build script you will need to have [built the docker
+image](../README.md#building-the-docker-image). The build script can then be
+ran as follows.  Replace `path/to/cluster/type` with the path to the cluster
+type you wish to generate.
 
 ```bash
 docker run --rm \
-    --stop-signal SIGINT \
-    --network=host \
+    --tty \
     --volume .:/app \
     --user $(id -u):$(id -g) \
     concertim-cluster-builder \
@@ -99,6 +100,22 @@ owner: root:root
 These snippets are used, by the build script, to dynamically build the user
 data for different clusters types.
 
+### Parameters and resource dependencies
+
+Each component should specify any parameters that it requires.  This will
+result in duplicated parameters, e.g., `clustername`, across the various
+components.  It is required that each parameter sharing the same name is
+semantically the same parameter.
+
+When the HOT for a cluster-type is generated, it will take the parameter
+definition from the first referenced component that defines it.
+
+When the final generation of the HOT for a cluster-type takes place it will
+assemble all mandatory and selected optional components referenced in the
+cluster-type's `components` list into a single HOT.  As such, components can
+use `get_resource` to reference resources defined in other components.  This
+will work as long as the component defining the resource is also included.
+Currently, there is no tooling help with such dependencies.
 
 
 ## cluster-type.yaml format
