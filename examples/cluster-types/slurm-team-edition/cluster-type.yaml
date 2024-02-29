@@ -26,7 +26,6 @@ components:
         - passwords.slurm-multinode
         - post-apply-tweaks.slurm-multinode
   - name: infra
-    optional: true
     user_data:
       name: infra
       write_files:
@@ -87,10 +86,6 @@ parameter_groups:
     description: "Parameters for configuring infra01 if requested"
     parameters:
       - infra-flavour
-    optional:
-      label: Create an infrastructure node?
-      default: True
-      name: "infra"
 
   - label: "Compute node parameters"
     description: "Parameters for configuring compute nodes if requested"
