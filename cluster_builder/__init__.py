@@ -41,7 +41,6 @@ def create_app(instance_path=None, test_config=None):
     os.makedirs(app.instance_path, exist_ok=True)
     os.makedirs(os.path.join(app.instance_path, "cluster-types-enabled"), exist_ok=True)
     os.makedirs(os.path.join(app.instance_path, "cluster-types-available"), exist_ok=True)
-    os.makedirs(os.path.join(app.instance_path, "hot"), exist_ok=True)
 
     from .models import ClusterTypeRepo
     ClusterTypeRepo.configure(
