@@ -2,7 +2,7 @@
 
 To setup for development you will need to:
 
-1. Copy the example cluter type definitions to the flask app's instance
+1. Copy the example cluster type definitions to the flask app's instance
    directory.
 2. Build the docker image.
 3. Start the docker container with the correct volumes and user settings.
