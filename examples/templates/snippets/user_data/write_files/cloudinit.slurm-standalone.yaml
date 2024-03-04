@@ -1,6 +1,6 @@
 content: |
   AUTOPARSEMATCH=$clustername
-  PROFILE_ANSWERS='{ "cluster_type": "openflight-slurm-standalone", "cluster_name": "$clustername", "default_password": "$password" }' 
+  PROFILE_ANSWERS='{ "cluster_type": "openflight-slurm-standalone", "cluster_name": "$clustername", "default_password": "$password" }'
   AUTOAPPLY="gateway: all-in-one"
 path: /opt/flight/cloudinit.in
 permissions: '0600'

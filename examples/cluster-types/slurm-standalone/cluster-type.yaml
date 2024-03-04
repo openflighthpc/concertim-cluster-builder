@@ -14,7 +14,7 @@ components:
     user_data:
       name: gateway
       write_files:
-        - cloudinit.jupyter-standalone
+        - cloudinit.slurm-standalone
 
 hardcoded_parameters:
   external-network: public1
