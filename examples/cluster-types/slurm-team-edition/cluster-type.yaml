@@ -36,16 +36,6 @@ components:
       write_files:
         - cloudinit.compute-multinode
 
-# Any of the parameters defined in `parameters.yaml` can be hardcoded here. If
-# they are hardcoded, the value provided here will be passed to Heat when
-# launching the cluster.  It will not be possible for the user to override
-# these values.
-hardcoded_parameters:
-  external-network: public1
-  network-cidr-pri: '10.100.0.0/16'
-  gateway-pri-ip: '10.100.0.101'
-  solo-image: "Flight Solo 2024.1"
-  node-count: 5
 
 # parameter_groups defines the parameter groups for this cluster type.
 #
@@ -92,3 +82,59 @@ parameter_groups:
     parameters:
       - node-flavour
       - node-count
+
+
+# Any of the parameters defined in `parameters.yaml` can be hardcoded here. If
+# they are hardcoded, the value provided here will be passed to Heat when
+# launching the cluster.  It will not be possible for the user to override
+# these values.
+hardcoded_parameters:
+  external-network: public1
+  network-cidr-pri: '10.100.0.0/16'
+  gateway-pri-ip: '10.100.0.101'
+  solo-image: "Flight Solo 2024.1"
+  node-count: 5
+
+
+# parameter_overrides allows for overriding any of the parameters loaded from
+# any component for this particular cluster type.
+#
+# This might be useful for defining, say, a generic node-count parameter in
+# the component template library.
+#
+#     node-count:
+#       type: number
+#       label: Number of Nodes
+#       constraints:
+#         - range: { min: 1 }
+#
+# Three cluster types could be created from this, say, small, medium and large.
+# Each cluster type could override the default and constraints suitable
+# for that cluster type.  E.g., the small might specify the following:
+#
+#     parameter_overrides:
+#       node-count:
+#         default: 5
+#         constraints:
+#           - range: { min: 1, max: 5 }
+#
+# This would allow the user to launch a multi-node cluster, limited to 5 nodes,
+# whilst still allowing them to reduce the cost consumption if they wanted to.
+#
+# All values specified here replace the values specified in the template
+# library, so when overriding the constraints you need to specify every desired
+# constraint for that parameter.
+#
+# If a parameter also appears in hardcoded_parameters, that hardcoded value
+# will be used without the user having the option to adjust it.  The hardcoded
+# value will need to be consistent with any constraints set here or in
+# the template library.
+parameter_overrides:
+  node-count:
+    default: 5
+    constraints:
+      - range: { min: 1, max: 5 }
+  storage-size:
+    default: 1024
+    constraints:
+      - range: { min: 16, max: 4096 }

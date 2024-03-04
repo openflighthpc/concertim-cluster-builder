@@ -51,7 +51,7 @@ parameters:
     label: Size of the shared storage disk for NFS in GB
     default: 1024
     constraints:
-      - range: { min: 1 }
+      - range: { min: 16 }
 
 resources:
   gateway-pri-port:

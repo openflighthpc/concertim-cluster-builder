@@ -49,17 +49,21 @@ def main(cluster_types, templates_dir, verbose):
         if verbose:
             click.echo(f"--> Using cluster type definition {format_path(definition_path)}")
 
-        components = load_definition(definition_path, verbose=verbose)
-        if components is None:
+        definition = load_definition(definition_path, verbose=verbose)
+        if definition is None:
             click.echo(f'--> {click.style("Failed", fg="red")}')
             continue
-        success = generate_cluster_type(cluster_type_dir, components, templates_dir, verbose)
+        success = generate_cluster_type(cluster_type_dir, definition, templates_dir, verbose)
         if verbose:
             if success:
                 click.echo(f'--> {click.style("Completed", fg="green")}')
             else:
                 click.echo(f'--> {click.style("Failed", fg="red")}')
 
+
+Components = list[Any]
+ParameterOverrides = dict[str, Any]
+Definition = tuple[Components, ParameterOverrides]
 
 SCHEMA = {
     "type": "object",
@@ -113,11 +117,11 @@ SCHEMA = {
     },
     "required": ["kind", "components"],
 }
-def load_definition(definition_path, verbose) -> list[Any] | None:
+def load_definition(definition_path, verbose) -> Definition | None:
     try:
         definition = yaml.load(definition_path)
         jsonschema.validate(instance=definition, schema=SCHEMA)
-        return definition["components"]
+        return definition["components"], definition.get("parameter_overrides", {})
     except FileNotFoundError as exc:
         click.secho(f"  {exc.strerror}: {exc.filename}", err=True, fg="red")
         return None
@@ -132,7 +136,9 @@ def load_definition(definition_path, verbose) -> list[Any] | None:
         return None
 
 
-def generate_cluster_type(cluster_type_dir, components, templates_dir, verbose) -> bool:
+def generate_cluster_type(cluster_type_dir, definition, templates_dir, verbose) -> bool:
+    components = definition[0]
+    param_overrides = definition[1]
     snippets_dir = templates_dir.joinpath('snippets')
     cluster_template_src_path = snippets_dir.joinpath('cluster', 'base.yaml')
     user_data_snippets_dir = snippets_dir.joinpath('user_data/')
@@ -217,6 +223,26 @@ def generate_cluster_type(cluster_type_dir, components, templates_dir, verbose) 
                 click.echo(f"    Installing user_data to {format_path(dest)}")
             yaml.dump(user_data, dest)
 
+    if len(param_overrides) > 0:
+        if verbose:
+            click.echo(f"--> Merging parameter overrides")
+        # Merge parameter overrides.
+        for component in components:
+            if not component.get('optional', False):
+                # Ignore mandatory components.  We'll deal with them as part of `cluster.yaml`.
+                continue
+            component_path = component_dest_dir.joinpath(f"{component['name']}.yaml")
+            if verbose:
+                click.echo(f"    Merging overrides into {format_path(component_path)}")
+            if not merge_parameter_overrides(param_overrides, component_path):
+                click.secho(f"    Failed to merge parameter overrides into {format_path(component_path)}", err=True, fg="red")
+                return False
+        if verbose:
+            click.echo(f"    Merging overrides into {format_path(cluster_template_path)}")
+            if not merge_parameter_overrides(param_overrides, cluster_template_path):
+                click.secho(f"    Failed to merge parameter overrides into {format_path(cluster_template_path)}", err=True, fg="red")
+                return False
+
     if len(list(set(heat_template_versions))) > 1:
                 # XXX This should be named exception.
         raise RuntimeError(f"no good! incompatible heat template versions {heat_template_versions}")
@@ -260,6 +286,20 @@ def merge_components(base_file, extra_file) -> bool:
     base['conditions'].update(conditions)
 
     yaml.dump(base, base_file)
+    return True
+
+
+def merge_parameter_overrides(param_overrides, component_file) -> bool:
+    component = parse_file(component_file)
+    if component is None:
+        return False
+    for id, overrides in param_overrides.items():
+        if id not in component['parameters']:
+            continue
+        for key, value in overrides.items():
+            component['parameters'][id][key] = value
+
+    yaml.dump(component, component_file)
     return True
 
 
