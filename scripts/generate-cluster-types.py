@@ -2,6 +2,7 @@
 
 from typing import Any
 from urllib.parse import urlparse
+import os
 import pathlib
 import shutil
 
@@ -15,6 +16,10 @@ yaml = ruamel.yaml.YAML(typ="rt", pure=True)
 yaml.indent(sequence=4, offset=2)
 
 DEFAULT_TEMPLATES_DIR = pathlib.Path(__file__).parent.parent.joinpath('examples', 'templates')
+
+class DuplicateIdentifier(Exception):
+    def __init__(self, message):
+        self.message = message
 
 @click.command()
 @click.argument('cluster_types', nargs=-1, type=click.Path(exists=True, path_type=pathlib.Path))
@@ -56,7 +61,6 @@ def main(cluster_types, templates_dir, verbose):
                 click.echo(f'--> {click.style("Failed", fg="red")}')
 
 
-
 SCHEMA = {
     "type": "object",
     "properties": {
@@ -86,10 +90,30 @@ SCHEMA = {
                 "required": ["name"],
             }
         },
+        "parameter_overrides": {
+            "type": "object",
+            "patternProperties": {
+                "^.*$": {
+                    "type": "object",
+                    "properties": {
+                        "label": { "type": "string" },
+                        "description": { "type": "string" },
+                        "default": {},
+                        "hidden": { "type": "boolean" },
+                        "constraints": {
+                            "type": "array",
+                        },
+                        "immutable": { "type": "boolean" },
+                        "tags": {}
+                    },
+                    "additionalProperties": False,
+                }
+            }
+        }
     },
     "required": ["kind", "components"],
 }
-def load_definition(definition_path, verbose) -> dict[str, Any]|None:
+def load_definition(definition_path, verbose) -> list[Any] | None:
     try:
         definition = yaml.load(definition_path)
         jsonschema.validate(instance=definition, schema=SCHEMA)
@@ -109,24 +133,45 @@ def load_definition(definition_path, verbose) -> dict[str, Any]|None:
 
 
 def generate_cluster_type(cluster_type_dir, components, templates_dir, verbose) -> bool:
-    user_data_snippets_dir = templates_dir.joinpath('snippets', 'user_data/')
+    snippets_dir = templates_dir.joinpath('snippets')
+    cluster_template_src_path = snippets_dir.joinpath('cluster', 'base.yaml')
+    user_data_snippets_dir = snippets_dir.joinpath('user_data/')
     component_templates_dir = templates_dir.joinpath('components')
     component_dest_dir = cluster_type_dir.joinpath('components')
     user_data_dest_dir = cluster_type_dir.joinpath('user_data')
+    cluster_template_path = component_dest_dir.joinpath('cluster.yaml')
+
+    heat_template_versions = []
+    have_mandatory_components = False
+
+    # Install base cluster.yaml
+    if verbose:
+        click.echo(f"--> Installing {format_path(cluster_template_src_path)} to {format_path(cluster_template_path)}")
+    component_dest_dir.mkdir(exist_ok=True)
+    shutil.copyfile(cluster_template_src_path, cluster_template_path)
 
     for component in components:
         if verbose:
             click.echo(f"--> Processing component {component['name']}")
 
-        # Install the component itself.
         template_path = component_templates_dir.joinpath(f"{component['name']}.yaml")
         if not template_path.exists():
             click.secho(f"    Component {template_path} does not exist", err=True, fg="red")
             return False
-        component_dest_dir.mkdir(exist_ok=True)
-        if verbose:
-            click.echo(f"    Installing component from {format_path(template_path)} to {format_path(component_dest_dir)}")
-        shutil.copy(template_path, component_dest_dir)
+
+        if component.get('optional', False):
+            # Install optional components.
+            if verbose:
+                click.echo(f"    Installing optional component from {format_path(template_path)} to {format_path(component_dest_dir)}")
+            shutil.copy(template_path, component_dest_dir)
+        else:
+            # Merge mandatory components.
+            if verbose:
+                click.echo(f"    Merging component from {format_path(template_path)} into {format_path(cluster_template_path)}")
+            have_mandatory_components = True
+            if not merge_components(cluster_template_path, template_path):
+                click.secho(f"    Failed to merge {template_path}", err=True, fg="red")
+                return False
 
         # Install any files the component references.  These might be
         # referenced via the `get_file` intrinsic function or via a `type`
@@ -172,6 +217,49 @@ def generate_cluster_type(cluster_type_dir, components, templates_dir, verbose) 
                 click.echo(f"    Installing user_data to {format_path(dest)}")
             yaml.dump(user_data, dest)
 
+    if len(list(set(heat_template_versions))) > 1:
+                # XXX This should be named exception.
+        raise RuntimeError(f"no good! incompatible heat template versions {heat_template_versions}")
+
+    if not have_mandatory_components:
+        if verbose:
+            click.echo(f"--> Removing unused {format_path(cluster_template_path)}")
+        os.unlink(str(cluster_template_path))
+
+    return True
+
+
+def merge_components(base_file, extra_file) -> bool:
+    base = parse_file(base_file)
+    if base is None:
+        return False
+    extra = parse_file(extra_file)
+    if extra is None:
+        return False
+
+    for id, parameter in extra.get('parameters', {}).items():
+        if id not in base['parameters']:
+            base['parameters'][id] = parameter
+
+    resources = extra.get('resources', {})
+    for resource in resources:
+        if resource in base['resources']:
+            raise DuplicateIdentifier(f"Duplicate resource identifier {resource}")
+    base['resources'].update(resources)
+
+    outputs = extra.get('outputs', {})
+    for output in outputs:
+        if output in base['outputs']:
+            raise DuplicateIdentifier(f"Duplicate resource identifier {output}")
+    base['outputs'].update(outputs)
+
+    conditions = extra.get('conditions', {})
+    for condition in conditions:
+        if condition in base['conditions']:
+            raise DuplicateIdentifier(f"Duplicate resource identifier {condition}")
+    base['conditions'].update(conditions)
+
+    yaml.dump(base, base_file)
     return True
 
 

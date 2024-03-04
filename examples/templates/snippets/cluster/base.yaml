@@ -1,0 +1,9 @@
+heat_template_version: 2021-04-16
+
+parameters: {}
+
+conditions: {}
+
+resources: {}
+
+outputs: {}
