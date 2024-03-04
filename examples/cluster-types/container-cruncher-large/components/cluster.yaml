@@ -61,8 +61,7 @@ parameters:
     label: Size of the shared storage disk for NFS in GB
     default: 1024
     constraints:
-      - range: {min: 1}
-
+      - range: {min: 16, max: 1024}
   node-flavour:
     type: string
     label: Compute node flavour
@@ -74,8 +73,8 @@ parameters:
     type: number
     label: Number of Nodes
     constraints:
-      - range: {min: 1}
-
+      - range: {min: 1, max: 10}
+    default: 10
 conditions: {}
 
 resources:

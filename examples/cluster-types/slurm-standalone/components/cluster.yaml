@@ -61,8 +61,7 @@ parameters:
     label: Size of the shared storage disk for NFS in GB
     default: 100
     constraints:
-      - range: {min: 16}
-
+      - range: {min: 16, max: 100}
   access-password:
     type: string
     label: Password for the 'flight' user
