@@ -106,7 +106,9 @@ class BaseClusterTypeFactory:
             "description": definition["description"],
             "kind": definition["kind"],
             "parameter_groups": definition.get("parameter_groups", []),
-            "last_modified": datetime.datetime.fromtimestamp(os.path.getmtime(path))
+            "last_modified": datetime.datetime.fromtimestamp(os.path.getmtime(path)),
+            "order": definition.get("order"),
+            "logo_url": definition.get("logo_url"),
         }
         return fields
 
@@ -131,9 +133,11 @@ class MagnumClusterTypeFactory(BaseClusterTypeFactory):
             },
             "magnum_cluster_template": { "type": "string" },
             "parameters": {"$ref": "/schemas/parameters"},
-            "parameter_groups": {"$ref": "/schemas/parameter_groups"}
+            "parameter_groups": {"$ref": "/schemas/parameter_groups"},
+            "order": { "type": "number" },
+            "logo_url": { "type": "string" },
         },
-        "required": ["title", "description", "kind", "parameters", "magnum_cluster_template"],
+        "required": ["title", "description", "kind", "parameters", "magnum_cluster_template", "order", "logo_url"],
     }
 
     def _extract_fields(self, id, path, definition):
@@ -163,9 +167,11 @@ class SaharaClusterTypeFactory(BaseClusterTypeFactory):
             },
             "sahara_cluster_template": { "type": "string" },
             "parameters": {"$ref": "/schemas/parameters"},
-            "parameter_groups": {"$ref": "/schemas/parameter_groups"}
+            "parameter_groups": {"$ref": "/schemas/parameter_groups"},
+            "order": { "type": "number" },
+            "logo_url": { "type": "string" },
         },
-        "required": ["title", "description", "kind", "parameters", "sahara_cluster_template"],
+        "required": ["title", "description", "kind", "parameters", "sahara_cluster_template", "order", "logo_url"],
     }
 
     def _extract_fields(self, id, path, definition):
@@ -214,8 +220,10 @@ class HeatClusterTypeFactory(BaseClusterTypeFactory):
                     "required": ["name"],
                 }
             },
+            "order": { "type": "number" },
+            "logo_url": { "type": "string" },
         },
-        "required": ["title", "description", "kind", "components"],
+        "required": ["title", "description", "kind", "components", "order", "logo_url"],
         "additionalProperties": False,
     }
 

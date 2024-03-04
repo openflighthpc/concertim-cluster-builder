@@ -5,6 +5,8 @@ description: |
   short projects.
 
 kind: heat
+order: 100
+logo_url: /images/cluster-types/slurm-standalone.svg
 
 components:
   - name: network

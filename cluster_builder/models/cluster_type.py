@@ -19,6 +19,8 @@ class BaseClusterType:
     last_modified: str
     parameter_groups: list
     hardcoded_parameters: dict = field(default_factory=dict)
+    order: int
+    logo_url: str
 
 
     def asdict(self, attributes=None):

@@ -9,6 +9,22 @@ description: |
 # The kind or type of this cluster template.
 kind: heat
 
+# Used to order the list sent to visualiser.  Cluster types with lower values
+# appear earlier in the list.  If the values is the same, the order is
+# undefined.
+order: 150
+
+# The URL for the logo to use for this cluster type.  This could be an absolute
+# URL or an absolute path.
+#
+# If an absolute URL, e.g.,
+# https://www.openflighthpc.org/images/slurm-team-edition.svg, the logo will be
+# loaded from that URL.
+#
+# If an absolute path, e.g., /images/cluster-types/slurm-team-edition.svg, the
+# logo will be loaded from that path on the visualiser service.
+logo_url: /images/cluster-types/slurm-team-edition.svg
+
 # The components that compose this cluster type definition.
 #
 # `name`: either the name of a file in the `components` subdirectory without

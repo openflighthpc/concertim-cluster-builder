@@ -6,6 +6,11 @@ description: |
   Launch a cluster of web servers with Kubernetes to provide high availability and fault
   tolerance.
 
+# The kind or type of this cluster template.
+kind: magnum
+order: 925
+logo_url: /images/cluster-types/container-cruncher-small.svg
+
 parameter_groups:
   - label: "Cluster parameters"
     description: "Configuration for parameters common across the cluster"
@@ -66,9 +71,6 @@ parameters:
     constraints:
       - custom_constraint: nova.flavor
 
-
-# The kind or type of this cluster template.
-kind: magnum
 
 # The name of the magnum cluster template used when creating magnum clusters
 # from this cluster type definition.

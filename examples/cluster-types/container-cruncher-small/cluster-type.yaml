@@ -5,6 +5,8 @@ description: |
   and running a few microservices.
 
 kind: heat
+order: 200
+logo_url: /images/cluster-types/container-cruncher-small.svg
 
 components:
   - name: network

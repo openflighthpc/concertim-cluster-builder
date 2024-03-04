@@ -5,6 +5,8 @@ description: |
   development of various scientific workflows.
 
 kind: heat
+order: 300
+logo_url: /images/cluster-types/jupyterlab-jumpstart.svg
 
 components:
   - name: network

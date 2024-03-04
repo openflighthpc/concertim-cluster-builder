@@ -5,6 +5,8 @@ description: |
   OpenMPI ready to go
 
 kind: heat
+order: 350
+logo_url: /images/cluster-types/cfd-jumpstart.svg
 
 components:
   - name: network

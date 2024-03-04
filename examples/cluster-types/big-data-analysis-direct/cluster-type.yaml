@@ -7,6 +7,11 @@ description: |
   distributed computing environment.  The Sahara cluster is launched directly
   (not via a Heat template).  A network is not created.
 
+# The kind or type of this cluster template.
+kind: sahara
+order: 950
+logo_url: /images/cluster-types/container-cruncher-small.svg
+
 parameter_groups:
   - label: "Cluster parameters"
     description: ""
@@ -50,9 +55,6 @@ parameters:
     #  default: "ab7e7129-9962-413a-9bf1-3e1965424f43"
     constraints:
       - custom_constraint: sahara.image
-
-# The kind or type of this cluster template.
-kind: sahara
 
 # The name of the sahara cluster template used when creating sahara clusters
 # from this cluster type definition.

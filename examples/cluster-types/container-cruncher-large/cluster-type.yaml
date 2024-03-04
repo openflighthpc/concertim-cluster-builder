@@ -5,6 +5,8 @@ description: |
   workflows and many microservices.
 
 kind: heat
+order: 230
+logo_url: /images/cluster-types/container-cruncher-large.svg
 
 components:
   - name: network
