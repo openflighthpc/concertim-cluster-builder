@@ -28,6 +28,7 @@ parameter_groups:
       - clustername
       - solo-image
       - key_name
+      - access-password
 
   - label: "Network settings"
     description: "Configuration for the external and internal cluster networks"

@@ -57,6 +57,7 @@ parameters:
     type: string
     label: Password for the 'flight' user
     description: Enter the password to set for the 'flight' user.  You can use this to gain access to the cluster via Flight Web Suite
+    hidden: true
     constraints:
       - length: { min: 6 }
         description: The password must be at least 6 characters
