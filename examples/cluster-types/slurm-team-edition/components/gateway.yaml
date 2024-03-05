@@ -53,6 +53,9 @@ parameters:
     default: 1024
     constraints:
       - range: {min: 16, max: 4096}
+  cluster-type:
+    type: string
+
 resources:
   gateway-pri-port:
     type: OS::Neutron::Port
@@ -114,3 +117,9 @@ outputs:
   gateway_ext_ip:
     description: Gateway External IP
     value: {get_attr: [gateway-ip, floating_ip_address]}
+  web_access:
+    description: The URL at which to gain access to the cluster via Flight Websuite
+    value: {list_join: ['', [https://, get_attr: [gateway-ip, floating_ip_address]]]}
+  concertim_cluster_type:
+    description: The Concertim Cluster Type used to launch this cluster
+    value: {get_param: cluster-type}

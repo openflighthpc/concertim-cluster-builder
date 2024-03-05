@@ -4,6 +4,54 @@ description: |
   A small single-user Kubernetes environment, suitable for evaluating workflows
   and running a few microservices.
 
+instructions:
+  - id: launch
+    title: Launch instructions
+    text: |
+      It will take about 10 minutes for the cluster to launch and fully
+      configure itself to be ready for usage. Progress of the application can
+      be verified as complete when `flight profile list` on `gateway1` shows
+      all nodes with a status of `complete`.
+
+      Once launched, you can access the cluster via ssh to the public IP of
+      `gateway1` as the user `flight` with the private key that corresponds
+      with the key-pair you selected.
+
+  - id: usage
+    title: Usage instructions
+    text: |
+      ### Accessing System
+
+      Once launched, you can access the cluster via ssh to the public IP of
+      `gateway1` as the user `flight` with the private key that corresponds
+      with the key-pair you selected.  You can find the public IP of `gateway1`
+      on the rack's "Overview" tab.
+
+      ### Copying Data Across
+
+      The IP address of the `gateway1` node should be shared with you by the
+      system administrator for this cluster.  Once received, see the [HPC
+      Environment Basics guide to Working with Data and
+      Files](https://www.openflighthpc.org/latest/docs/hpc-environment-basics/linux-usage/working-with-data/).
+
+      The cluster has shared storage configured for the following directories:
+
+      - `/home`: For user home directories. Note that this directory does not utilise the shared storage disk of `gateway1`
+      and therefore should not be used for project data
+      - `/opt/apps`: For installing shared applications
+      - `/opt/data`: For user project data
+      - `/opt/service`: For admin data and shared system configuration scripts
+      - `/opt/site`: For any other shared data or information on the cluster or site
+
+      Note that, while the `/home` directory is shared across the cluster, it
+      does not utilise the shared storage disk of `gateway1` and therefore
+      should not be used for project data
+
+      Additionally, data can be copied to the cluster using the [Flight File
+      Manager](https://www.openflighthpc.org/latest/docs/flight-environment/use-flight/flight-web-suite/file-manager/)
+      in Flight Web Suite.
+
+
 kind: heat
 order: 200
 logo_url: /images/cluster-types/container-cruncher-small.svg
@@ -60,6 +108,7 @@ hardcoded_parameters:
   solo-image: "Flight Solo 2024.1"
   node-count: 2
   storage-size: 100
+  cluster-type: container-cruncher-small
 
 parameter_overrides:
   node-count:
