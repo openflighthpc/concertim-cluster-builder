@@ -6,10 +6,11 @@ parameters:
     label: Cluster Name
     description: The name to give the cluster
     constraints:
-      - length: { min: 6, max: 255 }
+      - length: {min: 6, max: 255}
         description: Cluster name must be between 6 and 255 characters
-      - allowed_pattern: "^[a-zA-Z][a-zA-Z0-9\\-_]*$"
-        description: Cluster name can contain only alphanumeric characters, hyphens and underscores
+      - allowed_pattern: ^[a-zA-Z][a-zA-Z0-9\-_]*$
+        description: Cluster name can contain only alphanumeric characters, hyphens
+          and underscores
 
   external-network:
     type: string
@@ -22,7 +23,7 @@ parameters:
   gateway-pri-ip:
     type: string
     label: Gateway Primary IP Address
-    default: '10.100.0.101'
+    default: 10.100.0.101
     constraints:
       - custom_constraint: ip_addr
 
@@ -49,68 +50,67 @@ parameters:
   storage-size:
     type: number
     label: Size of the shared storage disk for NFS in GB
-    default: 1024
+    default: 500
     constraints:
-      - range: { min: 1 }
-
+      - range: {min: 16, max: 500}
 resources:
   gateway-pri-port:
     type: OS::Neutron::Port
     depends_on: cluster-network-pri
     properties:
-      name: { list_join: ['-', ['gateway1', 'pri', { get_param: clustername }]] }
-      network: { get_resource: cluster-network }
+      name: {list_join: ['-', [gateway1, pri, get_param: clustername]]}
+      network: {get_resource: cluster-network}
       security_groups:
-        - { get_resource: cluster-sg }
+        - {get_resource: cluster-sg}
       fixed_ips:
-        - subnet: { get_resource: cluster-network-pri }
-          ip_address: { get_param: gateway-pri-ip }
+        - subnet: {get_resource: cluster-network-pri}
+          ip_address: {get_param: gateway-pri-ip}
 
   gw:
     type: OS::Nova::Server
     properties:
-      name: { list_join: ['.', ['gateway1', { get_param: clustername }, 'alces.network']] }
-      flavor: { get_param: gateway-flavour }
-      key_name: { get_param: key_name }
+      name: {list_join: [., [gateway1, get_param: clustername, alces.network]]}
+      flavor: {get_param: gateway-flavour}
+      key_name: {get_param: key_name}
       admin_user: flight
       networks:
-          - port: { get_resource: gateway-pri-port }
+        - port: {get_resource: gateway-pri-port}
       block_device_mapping_v2:
-        - volume_id: { get_resource: gateway-vol }
+        - volume_id: {get_resource: gateway-vol}
           boot_index: 0
       user_data_format: RAW
       user_data:
         str_replace:
-          template: { get_file: ../user_data/gateway.yaml }
+          template: {get_file: ../user_data/gateway.yaml}
           params:
-            $clustername: { get_param: clustername }
+            $clustername: {get_param: clustername}
             $nodename: gateway1
-            $sharedstorageid: { get_resource: gateway-vol-shared-storage }
+            $sharedstorageid: {get_resource: gateway-vol-shared-storage}
 
   gateway-vol:
     type: OS::Cinder::Volume
     properties:
-      image: { get_param: solo-image }
+      image: {get_param: solo-image}
       size: 16
 
   gateway-vol-shared-storage:
     type: OS::Cinder::Volume
     properties:
-      size: { get_param: storage-size }
+      size: {get_param: storage-size}
 
   gateway-vol-shared-storage-attach:
     type: OS::Cinder::VolumeAttachment
     properties:
-      instance_uuid: { get_resource: gw }
-      volume_id: { get_resource: gateway-vol-shared-storage }
+      instance_uuid: {get_resource: gw}
+      volume_id: {get_resource: gateway-vol-shared-storage}
 
   gateway-ip:
-     type: "OS::Neutron::FloatingIP"
-     properties:
-        floating_network_id: {get_param: external-network}
-        port_id: {get_resource: gateway-pri-port}
+    type: OS::Neutron::FloatingIP
+    properties:
+      floating_network_id: {get_param: external-network}
+      port_id: {get_resource: gateway-pri-port}
 
 outputs:
   gateway_ext_ip:
     description: Gateway External IP
-    value:  { get_attr: [gateway-ip, floating_ip_address] }
+    value: {get_attr: [gateway-ip, floating_ip_address]}

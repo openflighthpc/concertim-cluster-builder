@@ -6,15 +6,16 @@ parameters:
     label: Cluster Name
     description: The name to give the cluster
     constraints:
-      - length: { min: 6, max: 255 }
+      - length: {min: 6, max: 255}
         description: Cluster name must be between 6 and 255 characters
-      - allowed_pattern: "^[a-zA-Z][a-zA-Z0-9\\-_]*$"
-        description: Cluster name can contain only alphanumeric characters, hyphens and underscores
+      - allowed_pattern: ^[a-zA-Z][a-zA-Z0-9\-_]*$
+        description: Cluster name can contain only alphanumeric characters, hyphens
+          and underscores
 
   gateway-pri-ip:
     type: string
     label: Gateway Primary IP Address
-    default: '10.100.0.101'
+    default: 10.100.0.101
     constraints:
       - custom_constraint: ip_addr
 
@@ -42,22 +43,22 @@ parameters:
     type: number
     label: Number of Nodes
     constraints:
-      - range: { min: 1 }
-
+      - range: {min: 1, max: 10}
+    default: 10
 resources:
   node-group:
     type: OS::Heat::ResourceGroup
     properties:
-      count: { get_param: node-count }
+      count: {get_param: node-count}
       resource_def:
         type: ../components/node.yaml
         properties:
-          clustername: { get_param: clustername }
-          cluster-network: { get_resource: cluster-network }
-          cluster-network-pri: { get_resource: cluster-network-pri }
-          cluster-sg: { get_resource: cluster-sg }
-          solo-image: { get_param: solo-image }
-          node-flavour: { get_param: node-flavour }
-          gateway-pri-ip: { get_param: gateway-pri-ip }
-          key_name: { get_param: key_name }
+          clustername: {get_param: clustername}
+          cluster-network: {get_resource: cluster-network}
+          cluster-network-pri: {get_resource: cluster-network-pri}
+          cluster-sg: {get_resource: cluster-sg}
+          solo-image: {get_param: solo-image}
+          node-flavour: {get_param: node-flavour}
+          gateway-pri-ip: {get_param: gateway-pri-ip}
+          key_name: {get_param: key_name}
           index: '%index%'
