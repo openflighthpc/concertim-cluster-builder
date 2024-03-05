@@ -43,6 +43,26 @@ SCHEMA_DEFS = {
             },
             "additionalProperties": False
         },
+        "parameter_overrides": {
+            "$id": "/schemas/parameter_overrides",
+            "type": "object",
+            "patternProperties": {
+                "^.*$": {
+                    "type": "object",
+                    "properties": {
+                        "label": { "type": "string" },
+                        "description": { "type": "string" },
+                        "default": {},
+                        "hidden": { "type": "boolean" },
+                        "constraints": { "type": "array" },
+                        "immutable": { "type": "boolean" },
+                        "tags": {}
+                    },
+                    "additionalProperties": False,
+                }
+            },
+            "additionalProperties": False
+        },
         "parameter_groups": {
             "$id": "/schemas/parameter_groups",
             "type": "array",
@@ -209,6 +229,7 @@ class HeatClusterTypeFactory(BaseClusterTypeFactory):
                 "additionalProperties": False
             },
             "parameter_groups": {"$ref": "/schemas/parameter_groups"},
+            "parameter_overrides": {"$ref": "/schemas/parameter_overrides"},
             "components": {
                 "type": "array",
                 "items": {

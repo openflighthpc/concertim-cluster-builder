@@ -16,13 +16,6 @@ components:
       write_files:
         - cloudinit.jupyter-standalone
 
-hardcoded_parameters:
-  external-network: public1
-  network-cidr-pri: '10.100.0.0/16'
-  gateway-pri-ip: '10.100.0.101'
-  solo-image: "Flight Solo 2024.1"
-  gateway-vol-size: 100
-
 parameter_groups:
   - label: "Cluster parameters"
     description: "Configuration for parameters common across the cluster"
@@ -44,3 +37,16 @@ parameter_groups:
       - gateway-pri-ip
       - gateway-flavour
       - gateway-vol-size
+
+hardcoded_parameters:
+  external-network: public1
+  network-cidr-pri: '10.100.0.0/16'
+  gateway-pri-ip: '10.100.0.101'
+  solo-image: "Flight Solo 2024.1"
+  gateway-vol-size: 100
+
+parameter_overrides:
+  gateway-vol-size:
+    default: 100
+    constraints:
+      - range: { min: 16, max: 100 }
