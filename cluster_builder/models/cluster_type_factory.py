@@ -197,7 +197,7 @@ class HeatClusterTypeFactory(BaseClusterTypeFactory):
                 "type": "object",
                 "patternProperties": {
                     "^.*$": {
-                        "type": "string",
+                        "type": ["string", "number", "boolean"],
                     }
                 },
                 "additionalProperties": False

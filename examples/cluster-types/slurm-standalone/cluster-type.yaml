@@ -1,36 +1,25 @@
-title: "Container Cruncher (Medium)"
+title: "SLURM: Single User Edition"
 
 description: |
-  A medium single-user Kubernetes environment, suitable for running workflows
-  and microservices.
+  A standalone, single-user environment, suitable for individual users running
+  short projects.
 
 kind: heat
 
 components:
   - name: network
-  - name: gateway
+  - name: gateway-standalone
     user_data:
       name: gateway
       write_files:
-        - cloudinit.kubernetes-multinode
-        - prepare-profile.kubernetes-multinode
-        - shared-storage-mount
-        - shared-secret
-        - passwords.kubernetes-multinode
-  - name: nodes
-    user_data:
-      name: node
-      write_files:
-        - cloudinit.compute-multinode
-        - prepare-profile.kubernetes-multinode
+        - cloudinit.jupyter-standalone
 
 hardcoded_parameters:
   external-network: public1
-  network-cidr-pri: 10.100.0.0/16
+  network-cidr-pri: '10.100.0.0/16'
   gateway-pri-ip: '10.100.0.101'
   solo-image: "Flight Solo 2024.1"
-  node-count: 5
-  storage-size: 500
+  gateway-vol-size: 100
 
 parameter_groups:
   - label: "Cluster parameters"
@@ -39,6 +28,7 @@ parameter_groups:
       - clustername
       - solo-image
       - key_name
+      - access-password
 
   - label: "Network settings"
     description: "Configuration for the external and internal cluster networks"
@@ -51,10 +41,4 @@ parameter_groups:
     parameters:
       - gateway-pri-ip
       - gateway-flavour
-      - storage-size
-
-  - label: "Compute node parameters"
-    description: "Parameters for configuring compute nodes if requested"
-    parameters:
-      - node-flavour
-      - node-count
+      - gateway-vol-size

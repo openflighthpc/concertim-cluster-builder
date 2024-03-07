@@ -1,0 +1,18 @@
+content: |
+  # Wait for Login profile application to complete
+  until /opt/flight/bin/flight profile list |grep login |grep -q complete ; do
+    echo "Waiting for login identity to complete"
+    sleep 15
+  done
+  # Ensure write access to NFS mounts for flight user
+  chgrp flight /opt/{apps,data,service,site}
+  chmod 775 /opt/{apps,data,service,site}
+  # Install OpenFOAM to /opt/apps
+  su - flight -c '/opt/flight/bin/flight silo software pull OpenFOAM 22.12 --repo openflight --dir /opt/apps/'
+  # Install Paraview
+  dnf -y install paraview
+  # Install openmpi on all nodes
+  /opt/flight/opt/pdsh/bin/pdsh -g all 'dnf install -y openmpi'
+path: /var/lib/firstrun/scripts/99-install-openfoam.bash
+permissions: '0600'
+owner: root:root

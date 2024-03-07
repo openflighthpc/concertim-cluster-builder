@@ -80,17 +80,17 @@ follow the steps below:
 Create the directory structure.
 
 ```bash
-mkdir -p /usr/share/concertim-cluster-builder/{cluster-types-available,cluster-types-enabled,hot}
+mkdir -p /usr/share/concertim-cluster-builder/{cluster-types-available,cluster-types-enabled,templates}
 ```
 
-Copy across the example definitions and their HOT templates.
+Copy across the example definitions and the template library.
 
 ```bash
 for i in examples/cluster-types/* ; do
   cp -a $i /usr/share/concertim-cluster-builder/cluster-types-available/
 done
-for i in examples/hot/* ; do
-  cp -a $i /usr/share/concertim-cluster-builder/hot/
+for i in examples/templates/* ; do
+  cp -a $i /usr/share/concertim-cluster-builder/templates/
 done
 ```
 

@@ -1,8 +1,8 @@
-title: "Container Cruncher (Medium)"
+title: "CFD Jumpstart"
 
 description: |
-  A medium single-user Kubernetes environment, suitable for running workflows
-  and microservices.
+  A multinode, single-user SLURM environment with OpenFOAM 22.12, Paraview &
+  OpenMPI ready to go
 
 kind: heat
 
@@ -12,25 +12,22 @@ components:
     user_data:
       name: gateway
       write_files:
-        - cloudinit.kubernetes-multinode
-        - prepare-profile.kubernetes-multinode
+        - cloudinit.cfd-multinode
         - shared-storage-mount
-        - shared-secret
-        - passwords.kubernetes-multinode
+        - passwords.cfd-multinode
+        - install-openfoam
   - name: nodes
     user_data:
       name: node
       write_files:
         - cloudinit.compute-multinode
-        - prepare-profile.kubernetes-multinode
 
 hardcoded_parameters:
   external-network: public1
-  network-cidr-pri: 10.100.0.0/16
+  network-cidr-pri: '10.100.0.0/16'
   gateway-pri-ip: '10.100.0.101'
   solo-image: "Flight Solo 2024.1"
   node-count: 5
-  storage-size: 500
 
 parameter_groups:
   - label: "Cluster parameters"

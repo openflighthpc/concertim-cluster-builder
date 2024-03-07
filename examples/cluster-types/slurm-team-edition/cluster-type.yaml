@@ -26,13 +26,11 @@ components:
         - passwords.slurm-multinode
         - post-apply-tweaks.slurm-multinode
   - name: infra
-    optional: true
     user_data:
       name: infra
       write_files:
         - cloudinit.infra-multinode
   - name: nodes
-    optional: true
     user_data:
       name: node
       write_files:
@@ -47,6 +45,7 @@ hardcoded_parameters:
   network-cidr-pri: '10.100.0.0/16'
   gateway-pri-ip: '10.100.0.101'
   solo-image: "Flight Solo 2024.1"
+  node-count: 5
 
 # parameter_groups defines the parameter groups for this cluster type.
 #
@@ -87,16 +86,9 @@ parameter_groups:
     description: "Parameters for configuring infra01 if requested"
     parameters:
       - infra-flavour
-    optional:
-      label: Create an infrastructure node?
-      default: True
-      name: "infra"
 
   - label: "Compute node parameters"
     description: "Parameters for configuring compute nodes if requested"
     parameters:
       - node-flavour
-    optional:
-      label: Create compute nodes?
-      default: True
-      name: "nodes"
+      - node-count
