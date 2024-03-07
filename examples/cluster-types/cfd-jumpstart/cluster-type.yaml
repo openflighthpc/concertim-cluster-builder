@@ -123,6 +123,7 @@ hardcoded_parameters:
   gateway-pri-ip: '10.100.0.101'
   solo-image: "Flight Solo 2024.1"
   node-count: 5
+  storage-size: 1024
   cluster-type: cfd-jumpstart
 
 parameter_overrides:

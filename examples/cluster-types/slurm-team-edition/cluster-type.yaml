@@ -223,7 +223,8 @@ hardcoded_parameters:
   network-cidr-pri: '10.100.0.0/16'
   gateway-pri-ip: '10.100.0.101'
   solo-image: "Flight Solo 2024.1"
-  # node-count: 5
+  node-count: 5
+  storage-size: 1024
   cluster-type: slurm-team-edition
 
 
