@@ -16,3 +16,4 @@ build/
 notes/
 docker-compose.override.yml
 tmp/
+log/

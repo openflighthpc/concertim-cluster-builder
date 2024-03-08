@@ -1,6 +1,7 @@
-# from logging.config import dictConfig
+from logging.config import dictConfig
 import json
 import os
+import sys
 import traceback
 
 from flask import (Flask, make_response, jsonify)
@@ -8,22 +9,40 @@ from jsonschema import ValidationError
 from jsonschema.exceptions import (best_match)
 from werkzeug.exceptions import HTTPException
 
+def configure_logging():
+    config = {
+        'version': 1,
+        'formatters': {
+            'default': {
+                'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
+                # 'format': '%(message)s',
+            }
+        },
+        'handlers': {
+            'wsgi': {
+                'class': 'logging.StreamHandler',
+                'stream': 'ext://flask.logging.wsgi_errors_stream',
+                'formatter': 'default'
+            },
+            'file': {
+                'class': 'logging.FileHandler',
+                'filename': 'log/cluster-builder.log',
+                'formatter': 'default'
+            }
+        },
+        'root': {
+            'level': 'INFO',
+            'handlers': ['wsgi', 'file']
+        }
+    }
+    if sys.stdout.isatty():
+        config['root']['handlers'] = ['wsgi', 'file']
+    else:
+        config['root']['handlers'] = ['file']
+    dictConfig(config)
+
 def create_app(instance_path=None, test_config=None):
-    # dictConfig({
-    #     'version': 1,
-    #     'formatters': {'default': {
-    #         'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
-    #     }},
-    #     'handlers': {'wsgi': {
-    #         'class': 'logging.StreamHandler',
-    #         'stream': 'ext://flask.logging.wsgi_errors_stream',
-    #         'formatter': 'default'
-    #     }},
-    #     'root': {
-    #         'level': 'INFO',
-    #         'handlers': ['wsgi']
-    #     }
-    # })
+    configure_logging()
     app = Flask(__name__, instance_relative_config=True, instance_path=instance_path)
     # app.config.from_mapping()
 
