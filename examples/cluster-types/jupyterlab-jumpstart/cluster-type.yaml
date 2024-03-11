@@ -4,7 +4,52 @@ description: |
   A standalone, single-user JupyterLab environment, suitable for interactive
   development of various scientific workflows.
 
+instructions:
+  - id: launch
+    title: Launch instructions
+    text: |
+      It will take about 10 minutes for the cluster to launch and fully
+      configure itself to be ready for usage. Progress of the application can
+      be verified as complete when `flight profile list` on `gateway1` shows a
+      status of `complete`.
+
+      Once launched, you can access the cluster via ssh to the public IP of
+      `gateway1` as the user `flight` with the private key that corresponds
+      with the key-pair you selected above.
+
+  - id: usage
+    title: Usage instructions
+    text: |
+      ### Accessing System
+
+      Once the cluster is fully configured, the [Flight Web
+      Suite](https://www.openflighthpc.org/latest/docs/flight-environment/use-flight/flight-web-suite/)
+      will be accessible at the public IP of `gateway1`.  You can find a link
+      on the rack's "Overview" tab.
+
+      The password for both Flight Web Suite and JupyterLab is the password you
+      entered when launching the cluster.
+
+      You can also access the cluster via ssh to the public IP of `gateway1` as the
+      user `flight` with the private key that corresponds with the key-pair you
+      selected.  You can find the public IP of `gateway1` on the rack's "Overview"
+      tab.
+
+      ### Copying Data Across
+
+      The IP address of the `gateway1` node should be shared with you by the
+      system administrator for this cluster.  Once received, see the [HPC
+      Environment Basics guide to Working with Data and
+      Files](https://www.openflighthpc.org/latest/docs/hpc-environment-basics/linux-usage/working-with-data/).
+
+      Additionally, data can be copied to the cluster using the [Flight File
+      Manager](https://www.openflighthpc.org/latest/docs/flight-environment/use-flight/flight-web-suite/file-manager/)
+      in Flight Web Suite.
+
+
 kind: heat
+order: 300
+logo_url: /images/cluster-types/jupyterlab-jumpstart.svg
 
 components:
   - name: network
@@ -13,13 +58,6 @@ components:
       name: gateway
       write_files:
         - cloudinit.jupyter-standalone
-
-hardcoded_parameters:
-  external-network: public1
-  network-cidr-pri: '10.100.0.0/16'
-  gateway-pri-ip: '10.100.0.101'
-  solo-image: "Flight Solo 2024.1"
-  gateway-vol-size: 100
 
 parameter_groups:
   - label: "Cluster parameters"
@@ -42,3 +80,17 @@ parameter_groups:
       - gateway-pri-ip
       - gateway-flavour
       - gateway-vol-size
+
+hardcoded_parameters:
+  external-network: public1
+  network-cidr-pri: '10.100.0.0/16'
+  gateway-pri-ip: '10.100.0.101'
+  solo-image: "Flight Solo 2024.1"
+  gateway-vol-size: 100
+  cluster-type: jupyterlab-jumpstart
+
+parameter_overrides:
+  gateway-vol-size:
+    default: 100
+    constraints:
+      - range: { min: 16, max: 100 }

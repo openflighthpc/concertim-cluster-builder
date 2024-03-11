@@ -36,6 +36,8 @@ def test_last_modified_for_magnum_definition_is_definition_last_modified(client,
         "parameters": {},
         "kind": "magnum",
         "magnum_cluster_template": "test-template",
+        "order": 123,
+        "logo_url": "/images/foo.svg",
     }
     write_cluster_definition(app, definition, "test", last_modified=last_modified)
     response = client.get("/cluster-types/test")
@@ -60,6 +62,8 @@ def test_last_modified_for_heat_template(client, app, definition_last_modified, 
         "kind": "heat",
         "components": [{"name": "test-hot"}],
         "parameter_groups": [],
+        "order": 123,
+        "logo_url": "/images/foo.svg",
     }
     hot = {
         "heat_template_version": "2021-04-16",

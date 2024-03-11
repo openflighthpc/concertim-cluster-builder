@@ -1,6 +1,7 @@
 import glob
 import os
 import yaml
+from operator import attrgetter
 
 from flask import (abort)
 from jsonschema.exceptions import (best_match)
@@ -57,7 +58,7 @@ class ClusterTypeRepo:
             if cluster_type is not None:
                 types.append(cluster_type)
 
-        return types
+        return sorted(types, key=attrgetter('order', 'id'))
 
 
     @classmethod

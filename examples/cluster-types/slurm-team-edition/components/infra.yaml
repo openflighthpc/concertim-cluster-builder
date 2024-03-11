@@ -6,15 +6,16 @@ parameters:
     label: Cluster Name
     description: The name to give the cluster
     constraints:
-      - length: { min: 6, max: 255 }
+      - length: {min: 6, max: 255}
         description: Cluster name must be between 6 and 255 characters
-      - allowed_pattern: "^[a-zA-Z][a-zA-Z0-9\\-_]*$"
-        description: Cluster name can contain only alphanumeric characters, hyphens and underscores
+      - allowed_pattern: ^[a-zA-Z][a-zA-Z0-9\-_]*$
+        description: Cluster name can contain only alphanumeric characters, hyphens
+          and underscores
 
   gateway-pri-ip:
     type: string
     label: Gateway Primary IP Address
-    default: '10.100.0.101'
+    default: 10.100.0.101
     constraints:
       - custom_constraint: ip_addr
 
@@ -42,37 +43,37 @@ resources:
   infra01-pri-port:
     type: OS::Neutron::Port
     properties:
-      name: { list_join: ['-', ['infra01', 'pri', { get_param: clustername }]] }
-      network: { get_resource: cluster-network }
+      name: {list_join: ['-', [infra01, pri, get_param: clustername]]}
+      network: {get_resource: cluster-network}
       security_groups:
-        - { get_resource: cluster-sg }
+        - {get_resource: cluster-sg}
       fixed_ips:
-        - subnet: { get_resource: cluster-network-pri }
+        - subnet: {get_resource: cluster-network-pri}
           ip_address: 10.100.0.51
 
   infra01:
     type: OS::Nova::Server
     properties:
-      name: { list_join: ['.', ['infra01', { get_param: clustername }, 'alces.network']] }
-      flavor: { get_param: infra-flavour }
-      key_name: { get_param: key_name }
+      name: {list_join: [., [infra01, get_param: clustername, alces.network]]}
+      flavor: {get_param: infra-flavour}
+      key_name: {get_param: key_name}
       admin_user: flight
       networks:
-          - port: { get_resource: infra01-pri-port }
+        - port: {get_resource: infra01-pri-port}
       block_device_mapping_v2:
-        - volume_id: { get_resource: infra01-vol }
+        - volume_id: {get_resource: infra01-vol}
           boot_index: 0
       user_data_format: RAW
       user_data:
         str_replace:
-          template: { get_file: ../user_data/infra.yaml }
+          template: {get_file: ../user_data/infra.yaml}
           params:
-            $clustername: { get_param: clustername }
+            $clustername: {get_param: clustername}
             $nodename: infra01
-            $gateway-pri-ip: { get_param: gateway-pri-ip }
+            $gateway-pri-ip: {get_param: gateway-pri-ip}
 
   infra01-vol:
     type: OS::Cinder::Volume
     properties:
-      image: { get_param: solo-image }
+      image: {get_param: solo-image}
       size: 16

@@ -3,6 +3,17 @@ import datetime
 
 
 @dataclass(kw_only=True)
+class Instruction:
+    """
+    Instruction contains the written instructions for launching, administering
+    and using a cluster type.
+    """
+    id: str
+    title: str
+    text: str
+
+
+@dataclass(kw_only=True)
 class BaseClusterType:
     """
     BaseClusterType is a base class for the different cluster type kinds.
@@ -19,6 +30,9 @@ class BaseClusterType:
     last_modified: str
     parameter_groups: list
     hardcoded_parameters: dict = field(default_factory=dict)
+    order: int
+    logo_url: str
+    instructions: list[Instruction]
 
 
     def asdict(self, attributes=None):

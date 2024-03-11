@@ -6,10 +6,11 @@ parameters:
     label: Cluster Name
     description: The name to give the cluster
     constraints:
-      - length: { min: 6, max: 255 }
+      - length: {min: 6, max: 255}
         description: Cluster name must be between 6 and 255 characters
-      - allowed_pattern: "^[a-zA-Z][a-zA-Z0-9\\-_]*$"
-        description: Cluster name can contain only alphanumeric characters, hyphens and underscores
+      - allowed_pattern: ^[a-zA-Z][a-zA-Z0-9\-_]*$
+        description: Cluster name can contain only alphanumeric characters, hyphens
+          and underscores
 
   external-network:
     type: string
@@ -23,7 +24,7 @@ parameters:
     type: string
     label: Primary Nework CIDR
     description: Network CIDR to be used for primary network
-    default: '10.100.0.0/16'
+    default: 10.100.0.0/16
     constraints:
       - custom_constraint: net_cidr
 
@@ -32,39 +33,39 @@ resources:
     type: OS::Neutron::Router
     depends_on: cluster-network-pri
     properties:
-      name: { list_join: ['-', [ {get_param: clustername}, 'ext-route']] }
+      name: {list_join: ['-', [get_param: clustername, ext-route]]}
       external_gateway_info:
-        network: { get_param: external-network }
+        network: {get_param: external-network}
 
   external-route-iface:
     type: OS::Neutron::RouterInterface
     properties:
-      router: { get_resource: external-route }
-      subnet: { get_resource: cluster-network-pri }
+      router: {get_resource: external-route}
+      subnet: {get_resource: cluster-network-pri}
 
   cluster-network:
     type: OS::Neutron::Net
     properties:
-      name: { list_join: ['-', [{ get_param: clustername }, 'network']] }
+      name: {list_join: ['-', [get_param: clustername, network]]}
       # dns_domain: { list_join: ['.', [{ get_param: clustername }, 'alces.network.']] }
 
   cluster-network-pri:
     type: OS::Neutron::Subnet
     properties:
-      name: { list_join: ['-', [ {get_param: clustername}, 'network-pri']] }
-      network: { get_resource: cluster-network }
-      cidr: { get_param: network-cidr-pri }
+      name: {list_join: ['-', [get_param: clustername, network-pri]]}
+      network: {get_resource: cluster-network}
+      cidr: {get_param: network-cidr-pri}
       ip_version: 4
 
   cluster-sg:
     type: OS::Neutron::SecurityGroup
     properties:
-      name: { list_join: ['-', [ {get_param: clustername}, 'network-pri-sg']] }
+      name: {list_join: ['-', [get_param: clustername, network-pri-sg]]}
       rules:
         - direction: egress
           remote_ip_prefix: 0.0.0.0/0
         - direction: ingress
-          remote_ip_prefix: { get_param: network-cidr-pri }
+          remote_ip_prefix: {get_param: network-cidr-pri}
         - direction: ingress
           protocol: icmp
           remote_ip_prefix: 0.0.0.0/0

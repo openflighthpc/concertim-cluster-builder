@@ -18,6 +18,8 @@ def test_valid_magnum_definition(client, app):
         "parameters": {},
         "kind": "magnum",
         "magnum_cluster_template": "test-template",
+        "order": 123,
+        "logo_url": "/images/foo.svg",
     }
     write_cluster_definition(app, definition, "test-id")
     response = client.get("/cluster-types/")
@@ -36,6 +38,8 @@ def test_valid_heat_definition(client, app):
         "kind": "heat",
         "components": [{"name": "test-hot"}],
         "parameter_groups": [],
+        "order": 123,
+        "logo_url": "/images/foo.svg",
     }
     hot = {
         "heat_template_version": "2021-04-16",
@@ -72,6 +76,8 @@ def test_heat_definitions_load_params_from_hot(client, app):
         "kind": "heat",
         "components": [{"name": "test-hot"}],
         "parameter_groups": [],
+        "order": 123,
+        "logo_url": "/images/foo.svg",
     }
     hot = {
         "heat_template_version": "2021-04-16",
@@ -106,6 +112,8 @@ def test_hardcoded_params_are_not_included_in_output(client, app):
             "foo": "foo value"
         },
         "parameter_groups": [],
+        "order": 123,
+        "logo_url": "/images/foo.svg",
     }
     hot = {
         "heat_template_version": "2021-04-16",
@@ -144,6 +152,8 @@ def test_invalid_definitions_are_ignored(client, app):
         "kind": "heat",
         "components": [{"name": "test-hot"}],
         "parameter_groups": [],
+        "order": 123,
+        "logo_url": "/images/foo.svg",
     }
     hot = {
         "heat_template_version": "2021-04-16",

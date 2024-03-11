@@ -73,6 +73,8 @@ def test_launch_with_missing_params(client, app):
         "kind": "magnum",
         "magnum_cluster_template": "test-template",
         "components": [{"name": "test-hot"}],
+        "order": 123,
+        "logo_url": "/images/foo.svg",
     }
     write_cluster_definition(app, definition, "test-id")
     body = {

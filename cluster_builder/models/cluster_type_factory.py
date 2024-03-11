@@ -7,7 +7,7 @@ from heatclient import exc as heatclientExceptions
 from jsonschema.exceptions import (best_match)
 import jsonschema
 
-from .cluster_type import (BaseClusterType, SaharaClusterType, MagnumClusterType, HeatClusterType, Component)
+from .cluster_type import (BaseClusterType, SaharaClusterType, MagnumClusterType, HeatClusterType, Component, Instruction)
 
 SCHEMA_DEFS = {
     "$defs": {
@@ -43,6 +43,26 @@ SCHEMA_DEFS = {
             },
             "additionalProperties": False
         },
+        "parameter_overrides": {
+            "$id": "/schemas/parameter_overrides",
+            "type": "object",
+            "patternProperties": {
+                "^.*$": {
+                    "type": "object",
+                    "properties": {
+                        "label": { "type": "string" },
+                        "description": { "type": "string" },
+                        "default": {},
+                        "hidden": { "type": "boolean" },
+                        "constraints": { "type": "array" },
+                        "immutable": { "type": "boolean" },
+                        "tags": {}
+                    },
+                    "additionalProperties": False,
+                }
+            },
+            "additionalProperties": False
+        },
         "parameter_groups": {
             "$id": "/schemas/parameter_groups",
             "type": "array",
@@ -57,7 +77,19 @@ SCHEMA_DEFS = {
                     }
                 }
             }
-        }
+        },
+        "instructions": {
+            "$id": "/schemas/instructions",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string" },
+                    "title": { "type": "string" },
+                    "text": { "type": "string" },
+                }
+            }
+        },
     }
 }
 
@@ -106,8 +138,15 @@ class BaseClusterTypeFactory:
             "description": definition["description"],
             "kind": definition["kind"],
             "parameter_groups": definition.get("parameter_groups", []),
-            "last_modified": datetime.datetime.fromtimestamp(os.path.getmtime(path))
+            "last_modified": datetime.datetime.fromtimestamp(os.path.getmtime(path)),
+            "order": definition.get("order"),
+            "logo_url": definition.get("logo_url"),
         }
+        instructions = []
+        for data in definition.get("instructions", []):
+            instruction = Instruction(id=data["id"], title=data["title"], text=data["text"])
+            instructions.append(instruction)
+        fields["instructions"] = instructions
         return fields
 
 
@@ -131,9 +170,12 @@ class MagnumClusterTypeFactory(BaseClusterTypeFactory):
             },
             "magnum_cluster_template": { "type": "string" },
             "parameters": {"$ref": "/schemas/parameters"},
-            "parameter_groups": {"$ref": "/schemas/parameter_groups"}
+            "parameter_groups": {"$ref": "/schemas/parameter_groups"},
+            "order": { "type": "number" },
+            "logo_url": { "type": "string" },
+            "instructions": { "$ref": "/schemas/instructions" },
         },
-        "required": ["title", "description", "kind", "parameters", "magnum_cluster_template"],
+        "required": ["title", "description", "kind", "parameters", "magnum_cluster_template", "order", "logo_url"],
     }
 
     def _extract_fields(self, id, path, definition):
@@ -163,9 +205,12 @@ class SaharaClusterTypeFactory(BaseClusterTypeFactory):
             },
             "sahara_cluster_template": { "type": "string" },
             "parameters": {"$ref": "/schemas/parameters"},
-            "parameter_groups": {"$ref": "/schemas/parameter_groups"}
+            "parameter_groups": {"$ref": "/schemas/parameter_groups"},
+            "order": { "type": "number" },
+            "logo_url": { "type": "string" },
+            "instructions": { "$ref": "/schemas/instructions" },
         },
-        "required": ["title", "description", "kind", "parameters", "sahara_cluster_template"],
+        "required": ["title", "description", "kind", "parameters", "sahara_cluster_template", "order", "logo_url"],
     }
 
     def _extract_fields(self, id, path, definition):
@@ -203,6 +248,7 @@ class HeatClusterTypeFactory(BaseClusterTypeFactory):
                 "additionalProperties": False
             },
             "parameter_groups": {"$ref": "/schemas/parameter_groups"},
+            "parameter_overrides": {"$ref": "/schemas/parameter_overrides"},
             "components": {
                 "type": "array",
                 "items": {
@@ -214,8 +260,11 @@ class HeatClusterTypeFactory(BaseClusterTypeFactory):
                     "required": ["name"],
                 }
             },
+            "order": { "type": "number" },
+            "logo_url": { "type": "string" },
+            "instructions": { "$ref": "/schemas/instructions" },
         },
-        "required": ["title", "description", "kind", "components"],
+        "required": ["title", "description", "kind", "components", "order", "logo_url"],
         "additionalProperties": False,
     }
 
