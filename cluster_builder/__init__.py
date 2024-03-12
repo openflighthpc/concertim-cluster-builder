@@ -45,21 +45,22 @@ def configure_logging(app):
                 'stream': 'ext://flask.logging.wsgi_errors_stream',
                 'formatter': 'default'
             },
-            'file': {
-                'class': 'logging.FileHandler',
-                'filename': app.config['LOG_FILE'],
-                'formatter': 'default'
-            }
         },
         'root': {
             'level': app.config['LOG_LEVEL'].upper(),
-            'handlers': ['wsgi', 'file']
+            'handlers': []
         }
     }
-    if sys.stdout.isatty():
-        config['root']['handlers'] = ['wsgi', 'file']
-    else:
-        config['root']['handlers'] = ['file']
+    log_file = app.config['LOG_FILE']
+    if log_file is not None:
+        config['handlers']['file'] = {
+            'class': 'logging.FileHandler',
+            'filename': log_file,
+            'formatter': 'default'
+        }
+        config['root']['handlers'].append('file')
+    if log_file is None or sys.stdout.isatty():
+        config['root']['handlers'].append('wsgi')
     dictConfig(config)
 
 
