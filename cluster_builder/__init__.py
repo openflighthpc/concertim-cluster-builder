@@ -1,6 +1,9 @@
-# from logging.config import dictConfig
+from logging.config import dictConfig
 import json
 import os
+import pathlib
+import ruamel.yaml
+import sys
 import traceback
 
 from flask import (Flask, make_response, jsonify)
@@ -8,29 +11,68 @@ from jsonschema import ValidationError
 from jsonschema.exceptions import (best_match)
 from werkzeug.exceptions import HTTPException
 
-def create_app(instance_path=None, test_config=None):
-    # dictConfig({
-    #     'version': 1,
-    #     'formatters': {'default': {
-    #         'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
-    #     }},
-    #     'handlers': {'wsgi': {
-    #         'class': 'logging.StreamHandler',
-    #         'stream': 'ext://flask.logging.wsgi_errors_stream',
-    #         'formatter': 'default'
-    #     }},
-    #     'root': {
-    #         'level': 'INFO',
-    #         'handlers': ['wsgi']
-    #     }
-    # })
-    app = Flask(__name__, instance_relative_config=True, instance_path=instance_path)
-    # app.config.from_mapping()
+yaml = ruamel.yaml.YAML(typ="safe", pure=True)
 
+def default_config(app):
+    return {
+        'LOG_LEVEL': 'info',
+        'LOG_FILE': os.path.join(app.root_path, '..', 'log', 'cluster-builder.log'),
+    }
+
+
+def load_config(path):
+    try:
+        return yaml.load(path)
+    except FileNotFoundError as exc:
+        print(f"Fatal error parsing config file: {str(exc)}", file=sys.stderr)
+        sys.exit(1)
+    except (ruamel.yaml.parser.ParserError, ruamel.yaml.scanner.ScannerError) as exc:
+        print(f"Fatal error parsing config file: {path}: {str(exc)}", file=sys.stderr)
+        sys.exit(1)
+
+
+def configure_logging(app):
+    config = {
+        'version': 1,
+        'formatters': {
+            'default': {
+                'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
+            }
+        },
+        'handlers': {
+            'wsgi': {
+                'class': 'logging.StreamHandler',
+                'stream': 'ext://flask.logging.wsgi_errors_stream',
+                'formatter': 'default'
+            },
+            'file': {
+                'class': 'logging.FileHandler',
+                'filename': app.config['LOG_FILE'],
+                'formatter': 'default'
+            }
+        },
+        'root': {
+            'level': app.config['LOG_LEVEL'].upper(),
+            'handlers': ['wsgi', 'file']
+        }
+    }
+    if sys.stdout.isatty():
+        config['root']['handlers'] = ['wsgi', 'file']
+    else:
+        config['root']['handlers'] = ['file']
+    dictConfig(config)
+
+
+def create_app(instance_path=None, test_config=None):
+    app = Flask(__name__, instance_relative_config=True, instance_path=instance_path)
     if test_config is None:
-        app.config.from_pyfile('config.py', silent=True)
+        app.config.from_mapping(default_config(app))
+        config_file = pathlib.Path(os.getenv('CONFIG_FILE', './config/config.yaml'))
+        config = load_config(config_file)
+        app.config.from_mapping(config)
     else:
         app.config.from_mapping(test_config)
+    configure_logging(app)
 
     if 'JWT_SECRET' not in app.config:
         if 'JWT_SECRET' in os.environ:
