@@ -15,12 +15,14 @@ from cluster_builder import create_app
 def app():
     instance_path = tempfile.mkdtemp()
     print(f"instance_path set to {instance_path}", file=sys.stderr)
-    app = create_app(instance_path=instance_path)
-    app.config.update({
+    test_config = {
         "TESTING": True,
         "DEBUG" : True,
-        "JWT_SECRET": "TEST_SECRET"
-        })
+        "JWT_SECRET": "TEST_SECRET",
+        "LOG_LEVEL": "DEBUG",
+        "LOG_FILE": None,
+    }
+    app = create_app(instance_path=instance_path, test_config=test_config)
 
     yield app
 
