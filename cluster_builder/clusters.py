@@ -136,6 +136,7 @@ def create_cluster():
 
     # Associating Openstack stack ID with Billing order/subscription
     middlewareservice.add_order_tag({'order_id' : order_id, 'tag_name' : 'openstack_stack_id', 'tag_value' : cluster.id})
-      
+    middlewareservice.add_order_tag({'order_id' : order_id, 'tag_name' : 'openstack_stack_name', 'tag_value' : cluster.name})
+
     body = {"id": cluster.id, "name": cluster.name}
     return make_response(body, 201)
