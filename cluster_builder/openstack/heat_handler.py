@@ -6,6 +6,7 @@ import yaml
 
 from heatclient.client import Client as HeatClient
 from heatclient.common import template_utils
+from .error_handling import ProjectLimitError
 
 from ..models import utils as model_utils
 
@@ -155,37 +156,37 @@ class HeatHandler:
             "volume_disk": flavor.disk
         }
 
-    # Try to make this neater/ less repetitive
+    # Try to make this neater/ less repetitive. Should probably list all errors, not just first reached.
     def check_limits(self, counts, project_limits):
         if project_limits["remaining_instances"] and counts["instances"] > project_limits["remaining_instances"]:
             if project_limits["remaining_instances"] < 0:
-                raise RuntimeError(f"Project's maximum number of instances ({project_limits['maxTotalInstances']}) exceeded")
+                raise ProjectLimitError(f"Project's maximum number of instances ({project_limits['maxTotalInstances']}) exceeded")
 
-            raise RuntimeError(f"Cluster would exceed project's instance limit: requires {counts['instances']}, {project_limits['remaining_instances']} possible")
+            raise ProjectLimitError(f"Cluster would exceed project's instance limit: requires {counts['instances']}, {project_limits['remaining_instances']} possible")
 
         if project_limits["remaining_volumes"] and counts["volumes"] > project_limits["remaining_volumes"]:
             if project_limits["remaining_volumes"] < 0:
-                raise RuntimeError(f"Project's maximum number of volumes ({project_limits['maxTotalVolumes']}) exceeded")
+                raise ProjectLimitError(f"Project's maximum number of volumes ({project_limits['maxTotalVolumes']}) exceeded")
 
-            raise RuntimeError(f"Cluster would exceed project's volume limit: requires {counts['volumes']}, {project_limits['remaining_volumes']} possible")
+            raise ProjectLimitError(f"Cluster would exceed project's volume limit: requires {counts['volumes']}, {project_limits['remaining_volumes']} possible")
 
         if project_limits["remaining_cores"] and counts["vcpus"] > project_limits["remaining_cores"]:
             if project_limits["remaining_vcpus"] < 0:
-                raise RuntimeError(f"Project's maximum number of vcpus ({project_limits['maxTotalCores']}) exceeded")
+                raise ProjectLimitError(f"Project's maximum number of vcpus ({project_limits['maxTotalCores']}) exceeded")
 
-            raise RuntimeError(f"Cluster would exceed project's vcpus limit: requires {counts['vcpus']}, {project_limits['remaining_vcpus']} possible")
+            raise ProjectLimitError(f"Cluster would exceed project's vcpus limit: requires {counts['vcpus']}, {project_limits['remaining_vcpus']} possible")
 
         if project_limits["remaining_ram"] and counts["ram"] > project_limits["remaining_ram"]:
             if project_limits["remaining_ram"] < 0:
-                raise RuntimeError(f"Project's maximum RAM ({project_limits['maxTotalRAM']})MB exceeded")
+                raise ProjectLimitError(f"Project's maximum RAM ({project_limits['maxTotalRAM']})MB exceeded")
 
-            raise RuntimeError(f"Cluster would exceed project's RAM limit: requires {counts['ram']}MB, {project_limits['remaining_ram']}MB possible")
+            raise ProjectLimitError(f"Cluster would exceed project's RAM limit: requires {counts['ram']}MB, {project_limits['remaining_ram']}MB possible")
 
         if project_limits["remaining_disk"] and counts["disk"] > project_limits["remaining_disk"]:
             if project_limits["remaining_disk"] < 0:
-                raise RuntimeError(f"Project's maximum volume disk usage ({project_limits['maxTotalVolumeGigabytes']})GB exceeded")
+                raise ProjectLimitError(f"Project's maximum volume disk usage ({project_limits['maxTotalVolumeGigabytes']})GB exceeded")
 
-            raise RuntimeError(f"Cluster would exceed project's volume disk limit: requires {counts['disk']}GB, {project_limits['remaining_disk']}MB possible")
+            raise ProjectLimitError(f"Cluster would exceed project's volume disk limit: requires {counts['disk']}GB, {project_limits['remaining_disk']}MB possible")
 
     def resolve_parameter_value(self, parameters, resource, param_name):
         if param_name not in resource["properties"]: return None

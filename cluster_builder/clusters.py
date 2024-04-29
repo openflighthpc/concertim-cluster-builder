@@ -116,9 +116,6 @@ def create_cluster():
     if not int(billing_account_credits) > 0:
        raise MiddlewareInsufficientCredits("Insufficient credits to launch a cluster")
 
-#     project_limits =  middlewareservice.get_team_limits(g.data['cloud_env']['project_id'])
-#     current_app.logger.info(f"Project limits : {project_limits}")
-
     # Creating Billing Order/Subscription
     order_id = middlewareservice.create_order({'billing_account_id' : g.data['billing_account_id']})
 
