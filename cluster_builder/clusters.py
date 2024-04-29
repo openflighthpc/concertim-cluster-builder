@@ -6,6 +6,8 @@ from .openstack.auth import OpenStackAuth
 from .openstack.heat_handler import HeatHandler
 from .openstack.magnum_handler import MagnumHandler
 from .openstack.sahara_handler import SaharaHandler
+from .openstack.nova_handler import NovaHandler
+from .openstack.cinder_handler import CinderHandler
 from .middleware.middleware import MiddlewareService
 from .middleware.utils.auth import assert_authenticated
 
@@ -113,7 +115,9 @@ def create_cluster():
     # Checking for enough credits
     if not int(billing_account_credits) > 0:
        raise MiddlewareInsufficientCredits("Insufficient credits to launch a cluster")
-    
+
+#     project_limits =  middlewareservice.get_team_limits(g.data['cloud_env']['project_id'])
+#     current_app.logger.info(f"Project limits : {project_limits}")
 
     # Creating Billing Order/Subscription
     order_id = middlewareservice.create_order({'billing_account_id' : g.data['billing_account_id']})
@@ -122,8 +126,14 @@ def create_cluster():
     sess = OpenStackAuth(g.data["cloud_env"], current_app.logger).get_session()
     handler = handler_class(sess, current_app.logger)
 
+    # Get flavours for usage checks
+    nova = NovaHandler(sess, current_app.logger)
+    flavors = nova.list_flavors()
+
+    project_limits = get_project_limits(sess, current_app.logger)
+
     try:
-        cluster = handler.create_cluster(g.data["cluster"], cluster_type)
+        cluster = handler.create_cluster(g.data["cluster"], cluster_type, project_limits, flavors)
     except Exception as e:
         # Deleting Billing order if cluster creation fails
         current_app.logger.error(f"Cluster creation failed : {e}")
@@ -140,3 +150,12 @@ def create_cluster():
 
     body = {"id": cluster.id, "name": cluster.name}
     return make_response(body, 201)
+
+# Project id is determined by session (i.e. whichever project id is used for auth)
+def get_project_limits(session, logger):
+    nova = NovaHandler(session, logger)
+    cinder = CinderHandler(session, logger)
+    limits = nova.get_limits()
+    volume_limits = cinder.get_limits()
+    limits.update(volume_limits)
+    return limits

@@ -46,5 +46,16 @@ ENDPOINTS = {
                     
                 },
                 'headers': {"Content-Type": "application/json", "Accept": "application/json"}
+            },
+            'GET': {
+                'endpoints': {
+                    'GET_TEAM_LIMITS': {
+                        'endpoint': '/team/{}/limits',
+                        'required_vars': [],
+                        'data':{},
+                        'headers': {"Content-Type": "application/json", "Accept": "application/json"}
+                    },
+                },
+                'headers': {"Content-Type": "application/json", "Accept": "application/json"}
             }
 }

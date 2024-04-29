@@ -30,7 +30,7 @@ class SaharaHandler:
 
         raise Exception("Failed to create Sahara client after multiple attempts.")
 
-    def create_cluster(self, cluster_data, cluster_type):
+    def create_cluster(self, cluster_data, cluster_type, project_limits, flavors):
         # Allow errors to be propagated.  They will be caught and handled in
         # either `openstack.error_handling.py` or `__init__.py`.
         cluster_name = "{}-{}".format(cluster_data["name"], secrets.token_urlsafe(4)[0:4])

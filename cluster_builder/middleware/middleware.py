@@ -98,7 +98,19 @@ class MiddlewareService(object):
             self.__LOGGER.error("*** add_order_tag Middleware API failed ***")
             raise MiddlewareServiceError(str(e))
 
-   
+    def get_team_limits(self, project_id):
+        self.__LOGGER.info(" *** Calling get_team_limits Middleware API ***")
+
+        try:
+            response = self._api_call('get', 'GET_TEAM_LIMITS', endpoint_var=project_id)
+            self.__LOGGER.info("*** Finished get_team_limits Middleware API ***")
+            self.__LOGGER.debug(f"{response}")
+            return response
+
+        except Exception as e:
+            self.__LOGGER.error("*** get_team_limits Middleware API failed ***")
+            raise MiddlewareServiceError(str(e))
+
     # Generic method for handling Concertim API calls.
     def _api_call(self, method, endpoint_name, variables_dict={}, endpoint_var=''):
         """

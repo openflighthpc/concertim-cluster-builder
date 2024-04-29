@@ -28,3 +28,11 @@ class NovaHandler:
 
     def list_keypairs(self):
         return self.nova.keypairs.list()
+
+    # A limit of -1 represents no limit
+    def get_limits(self):
+        limits = self.nova.limits.get().to_dict()["absolute"]
+        limits["remaining_ram"] = None if limits["maxTotalRAMSize"] == -1 else limits["maxTotalRAMSize"] - limits["totalRAMUsed"]
+        limits["remaining_cores"] = None if limits["maxTotalCores"] == -1 else limits["maxTotalCores"] - limits["totalCoresUsed"]
+        limits["remaining_instances"] = None if limits["maxTotalInstances"] == -1 else limits["maxTotalInstances"] - limits["totalInstancesUsed"]
+        return limits

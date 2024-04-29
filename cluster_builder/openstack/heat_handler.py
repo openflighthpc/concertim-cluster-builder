@@ -35,15 +35,19 @@ class HeatHandler:
         raise Exception("Failed to create Heat client after multiple attempts.")
 
 
-    def create_cluster(self, cluster_data, cluster_type):
+    def create_cluster(self, cluster_data, cluster_type, project_limits, flavors):
         self.logger.info(f"Creating cluster {cluster_data['name']} from {cluster_data['cluster_type_id']}")
+        self.logger.debug(f"type: {cluster_type}")
         # Allow errors to be propagated.  They will be caught and handled in
         # either `openstack.error_handling.py` or `__init__.py`.
         parameters = model_utils.merge_parameters(cluster_type, cluster_data.get("parameters"))
         parameters = model_utils.remove_unwanted_answers(cluster_type, cluster_data.get("selections"), parameters)
-        self.logger.debug(f"parameters: {parameters}")
         stack_name = "{}--{}".format(cluster_data["name"], secrets.token_urlsafe(16))
         files, template = self._get_template_contents(cluster_type, cluster_data.get("selections"))
+        counts = self.determine_quota_counts(parameters, template["resources"], cluster_data.get("selections"), flavors)
+        self.logger.debug(f"gibbons {counts}")
+        self.logger.debug(f"limits {project_limits}")
+        self.check_limits(counts, project_limits)
         response = self.client.stacks.create(
                 stack_name=stack_name,
                 template=yaml.safe_dump(template, sort_keys=False),
@@ -112,3 +116,82 @@ class HeatHandler:
             files, hot_template = template_utils.get_template_contents(tf.name, fetch_child=True)
             os.unlink(tf.name)
             return files, hot_template
+
+    def determine_quota_counts(self, parameters, resources, selections, flavors):
+        instances = 0
+        volumes = 0
+        ram = 0
+        vcpus = 0
+        volume_disk = 0
+        for resource in resources.values():
+            if resource["type"] == "OS::Nova::Server":
+                instances += 1
+                flavor_name = self.resolve_parameter_value(parameters, resource, 'flavor')
+                details = self.get_flavour_details(flavors, flavor_name)
+                ram += details["ram"]
+                vcpus += details["vcpus"]
+                volume_disk += details["volume_disk"]
+            elif resource["type"] == "OS::Cinder::Volume":
+                volumes += 1
+                volume_disk += self.resolve_parameter_value(parameters, resource, "size")
+            elif resource["type"] == "OS::Heat::ResourceGroup":
+                file_path = resource["properties"]["resource_def"]["type"].replace("file://", "")
+                with open(file_path, "r") as f:
+                    file_data = yaml.safe_load(f)
+                group_counts = self.determine_quota_counts(parameters, file_data["resources"], selections, flavors)
+                multiplier = self.resolve_parameter_value(parameters, resource, "count") or 1
+                instances += group_counts["instances"] * multiplier
+                volumes += group_counts["volumes"] * multiplier
+                ram += group_counts["ram"] * multiplier
+                vcpus += group_counts["vcpus"] * multiplier
+                volume_disk += group_counts["volume_disk"] * multiplier
+        return { "instances": instances, "volumes": volumes, "ram": ram, "vcpus": vcpus, "volume_disk": volume_disk }
+
+    def get_flavour_details(self, flavors, flavor_name):
+        flavor = next((flavor for flavor in flavors if flavor.name == flavor_name), None)
+        return {
+            "ram": flavor.ram,
+            "vcpus": flavor.vcpus,
+            "volume_disk": flavor.disk
+        }
+
+    # Try to make this neater/ less repetitive
+    def check_limits(self, counts, project_limits):
+        if project_limits["remaining_instances"] and counts["instances"] > project_limits["remaining_instances"]:
+            if project_limits["remaining_instances"] < 0:
+                raise RuntimeError(f"Project's maximum number of instances ({project_limits['maxTotalInstances']}) exceeded")
+
+            raise RuntimeError(f"Cluster would exceed project's instance limit: requires {counts['instances']}, {project_limits['remaining_instances']} possible")
+
+        if project_limits["remaining_volumes"] and counts["volumes"] > project_limits["remaining_volumes"]:
+            if project_limits["remaining_volumes"] < 0:
+                raise RuntimeError(f"Project's maximum number of volumes ({project_limits['maxTotalVolumes']}) exceeded")
+
+            raise RuntimeError(f"Cluster would exceed project's volume limit: requires {counts['volumes']}, {project_limits['remaining_volumes']} possible")
+
+        if project_limits["remaining_cores"] and counts["vcpus"] > project_limits["remaining_cores"]:
+            if project_limits["remaining_vcpus"] < 0:
+                raise RuntimeError(f"Project's maximum number of vcpus ({project_limits['maxTotalCores']}) exceeded")
+
+            raise RuntimeError(f"Cluster would exceed project's vcpus limit: requires {counts['vcpus']}, {project_limits['remaining_vcpus']} possible")
+
+        if project_limits["remaining_ram"] and counts["ram"] > project_limits["remaining_ram"]:
+            if project_limits["remaining_ram"] < 0:
+                raise RuntimeError(f"Project's maximum RAM ({project_limits['maxTotalRAM']})MB exceeded")
+
+            raise RuntimeError(f"Cluster would exceed project's RAM limit: requires {counts['ram']}MB, {project_limits['remaining_ram']}MB possible")
+
+        if project_limits["remaining_disk"] and counts["disk"] > project_limits["remaining_disk"]:
+            if project_limits["remaining_disk"] < 0:
+                raise RuntimeError(f"Project's maximum volume disk usage ({project_limits['maxTotalVolumeGigabytes']})GB exceeded")
+
+            raise RuntimeError(f"Cluster would exceed project's volume disk limit: requires {counts['disk']}GB, {project_limits['remaining_disk']}MB possible")
+
+    def resolve_parameter_value(self, parameters, resource, param_name):
+        if param_name not in resource["properties"]: return None
+
+        result = resource["properties"][param_name]
+        if type(result) is dict:
+            return parameters[result["get_param"]]
+        else:
+            return result
