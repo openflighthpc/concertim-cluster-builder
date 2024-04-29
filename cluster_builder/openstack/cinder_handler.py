@@ -25,7 +25,16 @@ class CinderHandler:
 
     # A limit of -1 represents no limit
     def get_limits(self):
+        grouped_limits = {}
         limits = self.cinder.limits.get().to_dict()["absolute"]
-        limits["remaining_disk"] = None if limits["maxTotalVolumeGigabytes"] == -1 else  limits["maxTotalVolumeGigabytes"] - limits["totalGigabytesUsed"]
-        limits["remaining_volumes"] = None if limits["maxTotalVolumes"] == -1 else limits["maxTotalVolumes"] - limits["totalVolumesUsed"]
-        return limits
+        grouped_limits["volume_disk"] = {
+            "total_allowed": limits["maxTotalVolumeGigabytes"], "used": limits["totalGigabytesUsed"], "units": "GB"
+        }
+        grouped_limits["volume_disk"]["remaining"] = None if limits["maxTotalVolumeGigabytes"] == -1 else limits["maxTotalVolumeGigabytes"] - limits["totalGigabytesUsed"]
+
+        grouped_limits["volumes"] = {
+            "total_allowed": limits["maxTotalVolumes"], "used": limits["totalVolumesUsed"], "units": ""
+        }
+        grouped_limits["volumes"]["remaining"] = None if limits["maxTotalVolumes"] == -1 else limits["maxTotalVolumes"] - limits["totalVolumesUsed"]
+
+        return grouped_limits

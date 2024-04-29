@@ -131,7 +131,6 @@ class HeatHandler:
                 details = self.get_flavour_details(flavors, flavor_name)
                 ram += details["ram"]
                 vcpus += details["vcpus"]
-                volume_disk += details["volume_disk"]
             elif resource["type"] == "OS::Cinder::Volume":
                 volumes += 1
                 volume_disk += self.resolve_parameter_value(parameters, resource, "size")
@@ -153,40 +152,23 @@ class HeatHandler:
         return {
             "ram": flavor.ram,
             "vcpus": flavor.vcpus,
-            "volume_disk": flavor.disk
         }
 
     # Try to make this neater/ less repetitive. Should probably list all errors, not just first reached.
     def check_limits(self, counts, project_limits):
-        if project_limits["remaining_instances"] and counts["instances"] > project_limits["remaining_instances"]:
-            if project_limits["remaining_instances"] < 0:
-                raise ProjectLimitError(f"Project's maximum number of instances ({project_limits['maxTotalInstances']}) exceeded")
+        exceeded = []
+        for resource, figures in project_limits.items():
+            if figures["remaining"] and counts[resource] > figures["remaining"]:
+                if figures["remaining"] < 0:
+                    exceeded.append(f"Project's maximum {resource} ({figures['total_allowed']}{figures['units']}) exceeded")
+                else:
+                   exceeded.append(f"would exceed project's {resource} limit: requires \
+                   {counts[resource]}{figures['units']}, {figures['remaining']}{figures['units']} available")
 
-            raise ProjectLimitError(f"Cluster would exceed project's instance limit: requires {counts['instances']}, {project_limits['remaining_instances']} possible")
+        if len(exceeded) > 0:
+            raise ProjectLimitError("; ".join(exceeded))
 
-        if project_limits["remaining_volumes"] and counts["volumes"] > project_limits["remaining_volumes"]:
-            if project_limits["remaining_volumes"] < 0:
-                raise ProjectLimitError(f"Project's maximum number of volumes ({project_limits['maxTotalVolumes']}) exceeded")
-
-            raise ProjectLimitError(f"Cluster would exceed project's volume limit: requires {counts['volumes']}, {project_limits['remaining_volumes']} possible")
-
-        if project_limits["remaining_cores"] and counts["vcpus"] > project_limits["remaining_cores"]:
-            if project_limits["remaining_vcpus"] < 0:
-                raise ProjectLimitError(f"Project's maximum number of vcpus ({project_limits['maxTotalCores']}) exceeded")
-
-            raise ProjectLimitError(f"Cluster would exceed project's vcpus limit: requires {counts['vcpus']}, {project_limits['remaining_vcpus']} possible")
-
-        if project_limits["remaining_ram"] and counts["ram"] > project_limits["remaining_ram"]:
-            if project_limits["remaining_ram"] < 0:
-                raise ProjectLimitError(f"Project's maximum RAM ({project_limits['maxTotalRAM']})MB exceeded")
-
-            raise ProjectLimitError(f"Cluster would exceed project's RAM limit: requires {counts['ram']}MB, {project_limits['remaining_ram']}MB possible")
-
-        if project_limits["remaining_disk"] and counts["disk"] > project_limits["remaining_disk"]:
-            if project_limits["remaining_disk"] < 0:
-                raise ProjectLimitError(f"Project's maximum volume disk usage ({project_limits['maxTotalVolumeGigabytes']})GB exceeded")
-
-            raise ProjectLimitError(f"Cluster would exceed project's volume disk limit: requires {counts['disk']}GB, {project_limits['remaining_disk']}MB possible")
+        return True
 
     def resolve_parameter_value(self, parameters, resource, param_name):
         if param_name not in resource["properties"]: return None

@@ -123,10 +123,9 @@ def create_cluster():
     sess = OpenStackAuth(g.data["cloud_env"], current_app.logger).get_session()
     handler = handler_class(sess, current_app.logger)
 
-    # Get flavours for usage checks
+    # Get flavours and limits for usage checks
     nova = NovaHandler(sess, current_app.logger)
     flavors = nova.list_flavors()
-
     project_limits = get_project_limits(sess, current_app.logger)
 
     try:

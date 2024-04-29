@@ -31,8 +31,16 @@ class NovaHandler:
 
     # A limit of -1 represents no limit
     def get_limits(self):
+        grouped_limits = {}
         limits = self.nova.limits.get().to_dict()["absolute"]
-        limits["remaining_ram"] = None if limits["maxTotalRAMSize"] == -1 else limits["maxTotalRAMSize"] - limits["totalRAMUsed"]
-        limits["remaining_cores"] = None if limits["maxTotalCores"] == -1 else limits["maxTotalCores"] - limits["totalCoresUsed"]
-        limits["remaining_instances"] = None if limits["maxTotalInstances"] == -1 else limits["maxTotalInstances"] - limits["totalInstancesUsed"]
-        return limits
+
+        grouped_limits["ram"] = { "total_allowed":  limits["maxTotalRAMSize"], "used": limits["totalRAMUsed"], "units": "MB" }
+        grouped_limits["ram"]["remaining"] = None if limits["maxTotalRAMSize"] == -1 else limits["maxTotalRAMSize"] - limits["totalRAMUsed"]
+
+        grouped_limits["vcpus"] = { "total_allowed": limits["maxTotalCores"], "used": limits["totalCoresUsed"], "units": "" }
+        grouped_limits["vcpus"]["remaining"] = None if limits["maxTotalCores"] == -1 else limits["maxTotalCores"] - limits["totalCoresUsed"]
+
+        grouped_limits["instances"] = { "total_allowed": limits["maxTotalInstances"], "used": limits["totalInstancesUsed"], "units": "" }
+        grouped_limits["instances"]["remaining"] = None if limits["maxTotalInstances"] == -1 else limits["maxTotalInstances"] - limits["totalInstancesUsed"]
+
+        return grouped_limits
