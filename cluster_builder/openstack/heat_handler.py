@@ -46,8 +46,6 @@ class HeatHandler:
         stack_name = "{}--{}".format(cluster_data["name"], secrets.token_urlsafe(16))
         files, template = self._get_template_contents(cluster_type, cluster_data.get("selections"))
         counts = self.determine_quota_counts(parameters, template["resources"], cluster_data.get("selections"), flavors)
-        self.logger.debug(f"gibbons {counts}")
-        self.logger.debug(f"limits {project_limits}")
         self.check_limits(counts, project_limits)
         response = self.client.stacks.create(
                 stack_name=stack_name,
@@ -133,18 +131,18 @@ class HeatHandler:
                 vcpus += details["vcpus"]
             elif resource["type"] == "OS::Cinder::Volume":
                 volumes += 1
-                volume_disk += self.resolve_parameter_value(parameters, resource, "size")
+                volume_disk += int(self.resolve_parameter_value(parameters, resource, "size"))
             elif resource["type"] == "OS::Heat::ResourceGroup":
                 file_path = resource["properties"]["resource_def"]["type"].replace("file://", "")
                 with open(file_path, "r") as f:
                     file_data = yaml.safe_load(f)
                 group_counts = self.determine_quota_counts(parameters, file_data["resources"], selections, flavors)
-                multiplier = self.resolve_parameter_value(parameters, resource, "count") or 1
-                instances += group_counts["instances"] * multiplier
-                volumes += group_counts["volumes"] * multiplier
-                ram += group_counts["ram"] * multiplier
-                vcpus += group_counts["vcpus"] * multiplier
-                volume_disk += group_counts["volume_disk"] * multiplier
+                multiplier = int(self.resolve_parameter_value(parameters, resource, "count")) or 1
+                instances += (group_counts["instances"] * multiplier)
+                volumes += (group_counts["volumes"] * multiplier)
+                ram += (group_counts["ram"] * multiplier)
+                vcpus += (group_counts["vcpus"] * multiplier)
+                volume_disk += (group_counts["volume_disk"] * multiplier)
         return { "instances": instances, "volumes": volumes, "ram": ram, "vcpus": vcpus, "volume_disk": volume_disk }
 
     def get_flavour_details(self, flavors, flavor_name):
@@ -154,7 +152,6 @@ class HeatHandler:
             "vcpus": flavor.vcpus,
         }
 
-    # Try to make this neater/ less repetitive. Should probably list all errors, not just first reached.
     def check_limits(self, counts, project_limits):
         exceeded = []
         for resource, figures in project_limits.items():
