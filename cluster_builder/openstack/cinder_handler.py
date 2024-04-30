@@ -14,7 +14,7 @@ class CinderHandler:
         while time.time() - start_time < 30:  # Try for up to 30 seconds
             try:
                 nova = client.Client(VERSION, session=sess)
-                self.logger.debug("Nova client connected")
+                self.logger.debug("Cinder client connected")
                 return nova
             except Exception as e:
                 self.logger.error(f"Failed to create Cinder client: {e}. Retrying...")

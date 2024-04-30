@@ -28,6 +28,7 @@ class MagnumHandler:
 
         raise Exception("Failed to create Magnum client after multiple attempts.")
 
+    # Project limit checks not implemented
     def create_cluster(self, cluster_data, cluster_type, project_limits, flavors):
         self.logger.info(f"Creating cluster {cluster_data['name']} from {cluster_data['cluster_type_id']}")
         # Allow errors to be propagated.  They will be caught and handled in

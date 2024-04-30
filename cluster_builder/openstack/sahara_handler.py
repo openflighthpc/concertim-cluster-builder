@@ -30,6 +30,7 @@ class SaharaHandler:
 
         raise Exception("Failed to create Sahara client after multiple attempts.")
 
+    # Project limit checks not implemented
     def create_cluster(self, cluster_data, cluster_type, project_limits, flavors):
         # Allow errors to be propagated.  They will be caught and handled in
         # either `openstack.error_handling.py` or `__init__.py`.

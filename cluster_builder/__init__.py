@@ -150,7 +150,8 @@ def create_app(instance_path=None, test_config=None):
         })
         response.content_type = "application/json"
         return response
-        
+
+
     @app.errorhandler(Exception)
     def handle_exception(error):
         """Return JSON instead of HTML for all errors."""
