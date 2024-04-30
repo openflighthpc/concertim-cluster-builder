@@ -127,6 +127,7 @@ def create_cluster():
     nova = NovaHandler(sess, current_app.logger)
     flavors = nova.list_flavors()
     project_limits = get_project_limits(sess, current_app.logger)
+    current_app.logger.info(f"Project limits : {project_limits}")
 
     try:
         cluster = handler.create_cluster(g.data["cluster"], cluster_type, project_limits, flavors)

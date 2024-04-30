@@ -155,9 +155,9 @@ class HeatHandler:
     def check_limits(self, counts, project_limits):
         exceeded = []
         for resource, figures in project_limits.items():
-            if figures["remaining"] and counts[resource] > figures["remaining"]:
-                if figures["remaining"] < 0:
-                    exceeded.append(f"Project's maximum {resource} ({figures['total_allowed']}{figures['units']}) exceeded")
+            if figures["remaining"] != None and counts[resource] > figures["remaining"]:
+                if figures["remaining"] <= 0:
+                    exceeded.append(f"project's maximum {resource} ({figures['total_allowed']}{figures['units']}) reached/exceeded")
                 else:
                    exceeded.append(f"would exceed project's {resource} limit: requires \
                    {counts[resource]}{figures['units']}, {figures['remaining']}{figures['units']} available")
