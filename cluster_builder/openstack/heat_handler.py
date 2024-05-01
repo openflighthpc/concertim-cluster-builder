@@ -38,7 +38,6 @@ class HeatHandler:
 
     def create_cluster(self, cluster_data, cluster_type, project_limits, flavors):
         self.logger.info(f"Creating cluster {cluster_data['name']} from {cluster_data['cluster_type_id']}")
-        self.logger.debug(f"type: {cluster_type}")
         # Allow errors to be propagated.  They will be caught and handled in
         # either `openstack.error_handling.py` or `__init__.py`.
         parameters = model_utils.merge_parameters(cluster_type, cluster_data.get("parameters"))
