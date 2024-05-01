@@ -238,6 +238,21 @@ For example if `cloud_env.username` was set to `null`:
 }
 ```
 
+If the requested cluster is calculated to exceed the target project's limits (for heat templates only), a 400
+error response is given, with a body of:
+
+```
+{
+  "errors": [
+    {
+      "detail": "would exceed project's vcpus limit: requires 13, 9 available; would exceed project's volume_disk limit: requires 1136GB, 812GB available",
+      "status": "400",
+      "title": "ProjectLimitError"
+    }
+  ]
+}
+```
+
 # Authentication
 
 Any requests requiring authentication send the necessary credentials in the

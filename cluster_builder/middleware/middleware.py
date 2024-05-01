@@ -98,7 +98,6 @@ class MiddlewareService(object):
             self.__LOGGER.error("*** add_order_tag Middleware API failed ***")
             raise MiddlewareServiceError(str(e))
 
-   
     # Generic method for handling Concertim API calls.
     def _api_call(self, method, endpoint_name, variables_dict={}, endpoint_var=''):
         """

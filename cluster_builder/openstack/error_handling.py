@@ -9,6 +9,11 @@ import heatclient.exc as heat_exceptions
 import magnumclient.exceptions as magnum_exceptions
 import saharaclient.api.base as sahara_exceptions
 
+class ProjectLimitError(Exception):
+    def __init__(self, msg):
+        self.message = msg
+        self.http_status = 400
+
 def setup_error_handling(app):
     """
     Configure the given Flask app with error handling for openstack exceptions.
@@ -41,6 +46,9 @@ def setup_error_handling(app):
     for exc in map(sahara_exceptions.__dict__.get, sahara_exceptions.__dict__):
         if inspect.isclass(exc) and issubclass(exc, Exception):
             _register_error_handler(app, exc, SaharaHttpErrorHandler)
+
+    # For handling custom exceptions:
+    _register_error_handler(app, ProjectLimitError, ProjectLimitErrorHandler)
 
     app.logger.debug("done configuring error handlers")
 
@@ -186,3 +194,6 @@ class SaharaHttpErrorHandler(BaseErrorHandler):
                 if val == match.group(1):
                     errors[0]["source"] = {"pointer": f"/cluster/parameters/{param}"}
         return errors
+
+class ProjectLimitErrorHandler(BaseErrorHandler):
+    pass
