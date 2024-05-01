@@ -159,8 +159,8 @@ class HeatHandler:
                 if figures["remaining"] <= 0:
                     exceeded.append(f"project's maximum {resource} ({figures['total_allowed']}{figures['units']}) reached/exceeded")
                 else:
-                   exceeded.append(f"would exceed project's {resource} limit: requires \
-                   {counts[resource]}{figures['units']}, {figures['remaining']}{figures['units']} available")
+                   exceeded.append((f"would exceed project's {resource} limit: requires "
+                                    f"{counts[resource]}{figures['units']}, {figures['remaining']}{figures['units']} available"))
 
         if len(exceeded) > 0:
             raise ProjectLimitError("; ".join(exceeded))
