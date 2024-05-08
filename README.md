@@ -4,9 +4,9 @@ The Concertim Cluster Builder is a Python daemon process providing an HTTP API
 to receive requests to build clusters of pre-defined types.
 
 It is expected that such requests will be made by the [Concertim Visualisation
-App](https://github.com/alces-flight/concertim-ct-visualisation-app) and that
+App](https://github.com/openflighthpc/concertim-ct-visualisation-app) and that
 the [Concertim OpenStack
-Service](https://github.com/alces-flight/concertim-openstack-service) will
+Service](https://github.com/openflighthpc/concertim-openstack-service) will
 report the existence of those clusters to Concertim Visualisation App as and
 when they become available.
 
@@ -14,7 +14,7 @@ when they become available.
 
 1. Clone the repository
     ```bash
-    git clone https://github.com/alces-flight/concertim-cluster-builder.git
+    git clone https://github.com/openflighthpc/concertim-cluster-builder.git
     ```
 2. Build the docker image
     ```bash
@@ -30,9 +30,9 @@ when they become available.
     ```
 
 Use [Concertim Visualisation
-App](https://github.com/alces-flight/concertim-ct-visualisation-app) and the
+App](https://github.com/openflighthpc/concertim-ct-visualisation-app) and the
 [Concertim OpenStack
-Service](https://github.com/alces-flight/concertim-openstack-service) as the
+Service](https://github.com/openflighthpc/concertim-openstack-service) as the
 Cluster Builder clients.
 
 ## Building the docker image
@@ -42,7 +42,7 @@ There is a Dockerfile in this repo for building the image.
 
 1. Clone the repository
     ```bash
-    git clone https://github.com/alces-flight/concertim-cluster-builder.git
+    git clone https://github.com/openflighthpc/concertim-cluster-builder.git
     ```
 2. Build the docker image
     ```bash
@@ -145,3 +145,30 @@ The HTTP API is documented in the [API documentation](/docs/api.md).
 
 See the [development docs](docs/DEVELOPMENT.md) for details on development and
 getting started with development.
+
+# Contributing
+
+Fork the project. Make your feature addition or bug fix. Send a pull
+request. Bonus points for topic branches.
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md) for more details.
+
+# Copyright and License
+
+Eclipse Public License 2.0, see [LICENSE.txt](LICENSE.txt) for details.
+
+Copyright (C) 2024-present Alces Flight Ltd.
+
+This program and the accompanying materials are made available under
+the terms of the Eclipse Public License 2.0 which is available at
+[https://www.eclipse.org/legal/epl-2.0](https://www.eclipse.org/legal/epl-2.0),
+or alternative license terms made available by Alces Flight Ltd -
+please direct inquiries about licensing to
+[licensing@alces-flight.com](mailto:licensing@alces-flight.com).
+
+Concertim Cluster Builder is distributed in the hope that it will be
+useful, but WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, EITHER
+EXPRESS OR IMPLIED INCLUDING, WITHOUT LIMITATION, ANY WARRANTIES OR
+CONDITIONS OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY OR FITNESS FOR
+A PARTICULAR PURPOSE. See the [Eclipse Public License 2.0](https://opensource.org/licenses/EPL-2.0) for more
+details.
