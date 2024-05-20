@@ -93,12 +93,14 @@ resources:
   gateway-vol:
     type: OS::Cinder::Volume
     properties:
+      name: {list_join: ['-', [gateway-vol, get_param: clustername]]}
       image: {get_param: solo-image}
       size: 16
 
   gateway-vol-shared-storage:
     type: OS::Cinder::Volume
     properties:
+      name: {list_join: ['-', [gateway-vol-shared-storage, get_param: clustername]]}
       size: {get_param: storage-size}
 
   gateway-vol-shared-storage-attach:

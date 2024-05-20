@@ -76,4 +76,5 @@ resources:
     type: OS::Cinder::Volume
     properties:
       image: {get_param: solo-image}
+      name: {list_join: ['-', [infra01-vol, get_param: clustername]]}
       size: 16
