@@ -113,5 +113,6 @@ resources:
   node-vol:
     type: OS::Cinder::Volume
     properties:
+      name: { list_join: ['-', [{ list_join: [ '', ['node', {get_attr: [node-pad, value]} ]]}, 'vol', { get_param: clustername }]] }
       image: { get_param: solo-image }
       size: 16

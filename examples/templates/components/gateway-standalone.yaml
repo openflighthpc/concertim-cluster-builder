@@ -103,6 +103,7 @@ resources:
     type: OS::Cinder::Volume
     properties:
       image: { get_param: solo-image }
+      name: {list_join: ['-', [gateway-vol, get_param: clustername]]}
       size: { get_param: gateway-vol-size }
 
   gateway-ip:
