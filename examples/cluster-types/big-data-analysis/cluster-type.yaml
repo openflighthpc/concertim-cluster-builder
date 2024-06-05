@@ -7,6 +7,7 @@ description: |
 
 kind: heat
 order: 975
+base_credits: 99
 logo_url: /images/cluster-types/container-cruncher-small.svg
 
 components:

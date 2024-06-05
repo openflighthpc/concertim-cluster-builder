@@ -49,6 +49,7 @@ instructions:
 kind: heat
 order: 100
 logo_url: /images/cluster-types/slurm-standalone.svg
+base_credits: 25
 
 components:
   - name: network

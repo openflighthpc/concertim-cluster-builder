@@ -34,7 +34,7 @@ from flask import request
 from .models import ClusterTypeRepo
 
 bp = Blueprint('cluster-types', __name__, url_prefix="/cluster-types")
-ATTRIBUTES = ["id", "title", "description", "parameters", "parameter_groups", "last_modified", "order", "logo_url", "instructions"]
+ATTRIBUTES = ["id", "title", "description", "parameters", "parameter_groups", "last_modified", "order", "base_credits", "logo_url", "instructions"]
 
 @bp.route('/')
 def index():

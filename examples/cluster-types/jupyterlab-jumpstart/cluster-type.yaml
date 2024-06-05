@@ -49,6 +49,7 @@ instructions:
 
 kind: heat
 order: 300
+base_credits: 77
 logo_url: /images/cluster-types/jupyterlab-jumpstart.svg
 
 components:

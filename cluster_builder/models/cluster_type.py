@@ -62,6 +62,7 @@ class BaseClusterType:
     order: int
     logo_url: str
     instructions: list[Instruction]
+    base_credits :int
 
 
     def asdict(self, attributes=None):

@@ -139,6 +139,9 @@ order: 150
 # logo will be loaded from that path on the visualiser service.
 logo_url: /images/cluster-types/slurm-team-edition.svg
 
+# Hourly credit cost for the cluster, excluding instances and volumes
+base_credits: 100
+
 # The components that compose this cluster type definition.
 #
 # `name`: either the name of a file in the `components` subdirectory without

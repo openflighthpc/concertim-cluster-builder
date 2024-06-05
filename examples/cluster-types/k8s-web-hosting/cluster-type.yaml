@@ -9,6 +9,7 @@ description: |
 # The kind or type of this cluster template.
 kind: magnum
 order: 925
+base_credits: 30
 logo_url: /images/cluster-types/container-cruncher-small.svg
 
 parameter_groups:

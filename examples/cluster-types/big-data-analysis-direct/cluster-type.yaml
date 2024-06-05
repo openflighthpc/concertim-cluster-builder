@@ -10,6 +10,7 @@ description: |
 # The kind or type of this cluster template.
 kind: sahara
 order: 950
+base_credits: 32
 logo_url: /images/cluster-types/container-cruncher-small.svg
 
 parameter_groups:

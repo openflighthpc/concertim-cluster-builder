@@ -72,6 +72,7 @@ instructions:
 
 kind: heat
 order: 350
+base_credits: 66
 logo_url: /images/cluster-types/cfd-jumpstart.svg
 
 components:

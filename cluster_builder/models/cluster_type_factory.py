@@ -170,6 +170,7 @@ class BaseClusterTypeFactory:
             "last_modified": datetime.datetime.fromtimestamp(os.path.getmtime(path)),
             "order": definition.get("order"),
             "logo_url": definition.get("logo_url"),
+            "base_credits": definition.get("base_credits"),
         }
         instructions = []
         for data in definition.get("instructions", []):
@@ -202,6 +203,7 @@ class MagnumClusterTypeFactory(BaseClusterTypeFactory):
             "parameter_groups": {"$ref": "/schemas/parameter_groups"},
             "order": { "type": "number" },
             "logo_url": { "type": "string" },
+            "base_credits": { "type": "number"},
             "instructions": { "$ref": "/schemas/instructions" },
         },
         "required": ["title", "description", "kind", "parameters", "magnum_cluster_template", "order", "logo_url"],
@@ -237,6 +239,7 @@ class SaharaClusterTypeFactory(BaseClusterTypeFactory):
             "parameter_groups": {"$ref": "/schemas/parameter_groups"},
             "order": { "type": "number" },
             "logo_url": { "type": "string" },
+            "base_credits": { "type": "number"},
             "instructions": { "$ref": "/schemas/instructions" },
         },
         "required": ["title", "description", "kind", "parameters", "sahara_cluster_template", "order", "logo_url"],
@@ -291,6 +294,7 @@ class HeatClusterTypeFactory(BaseClusterTypeFactory):
             },
             "order": { "type": "number" },
             "logo_url": { "type": "string" },
+            "base_credits": { "type": "number"},
             "instructions": { "$ref": "/schemas/instructions" },
         },
         "required": ["title", "description", "kind", "components", "order", "logo_url"],

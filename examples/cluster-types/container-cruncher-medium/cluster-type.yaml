@@ -53,6 +53,7 @@ instructions:
 
 kind: heat
 order: 220
+base_credits: 40
 logo_url: /images/cluster-types/container-cruncher-medium.svg
 
 components:
