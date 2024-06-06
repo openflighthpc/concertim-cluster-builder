@@ -37,10 +37,8 @@ from .openstack.magnum_handler import MagnumHandler
 from .openstack.sahara_handler import SaharaHandler
 from .openstack.nova_handler import NovaHandler
 from .openstack.cinder_handler import CinderHandler
-from .middleware.middleware import MiddlewareService
 from .middleware.utils.auth import assert_authenticated
 
-from .middleware.utils.exceptions import MiddlewareInsufficientCredits
 
 bp = Blueprint('clusters', __name__, url_prefix="/clusters")
 
@@ -131,22 +129,6 @@ def create_cluster():
     handler_class = handlers.get(cluster_type.kind)
     if handler_class is None:
         raise TypeError(f"Unknown cluster type kind '{cluster_type.kind}' for cluster type '{cluster_type.id}'")
-    
-
-    # Creating Middleware Service Object
-    middlewareservice  = MiddlewareService(current_app.config, current_app.logger, g.data['middleware_url'])
-
-
-    # Obtaining Billing account credits
-    billing_account_credits = middlewareservice.get_credits({'billing_account_id' : g.data['billing_account_id']})
-    current_app.logger.info(f"Billing account credits available : {billing_account_credits}")
-
-    # Checking for enough credits
-    if not int(billing_account_credits) > 0:
-       raise MiddlewareInsufficientCredits("Insufficient credits to launch a cluster")
-
-    # Creating Billing Order/Subscription
-    order_id = middlewareservice.create_order({'billing_account_id' : g.data['billing_account_id']})
 
     # Creating Openstack Cluster
     sess = OpenStackAuth(g.data["cloud_env"], current_app.logger).get_session()
@@ -158,21 +140,9 @@ def create_cluster():
     project_limits = get_project_limits(sess, current_app.logger)
     current_app.logger.info(f"Project limits : {project_limits}")
 
-    try:
-        cluster = handler.create_cluster(g.data["cluster"], cluster_type, project_limits, flavors)
-    except Exception as e:
-        # Deleting Billing order if cluster creation fails
-        current_app.logger.error(f"Cluster creation failed : {e}")
-        middlewareservice.delete_order({'order_id' : order_id})
-        # Re-raise error so that it is processed by the error handling defined
-        # in the .openstack.error_handling module.
-        raise e
+    cluster = handler.create_cluster(g.data["cluster"], cluster_type, project_limits, flavors)
 
     current_app.logger.debug(f"created cluster {cluster.id}:{cluster.name}")
-
-    # Associating Openstack stack ID with Billing order/subscription
-    middlewareservice.add_order_tag({'order_id' : order_id, 'tag_name' : 'openstack_stack_id', 'tag_value' : cluster.id})
-    middlewareservice.add_order_tag({'order_id' : order_id, 'tag_name' : 'openstack_stack_name', 'tag_value' : cluster.name})
 
     body = {"id": cluster.id, "name": cluster.name}
     return make_response(body, 201)
